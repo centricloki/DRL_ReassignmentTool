@@ -1,0 +1,29 @@
+.btn:hover {
+    background-color: #464636;
+    color: #ffffff;
+}
+.btn-groups {
+    padding: 0px !important;
+    border-top: none !important;
+}
+.btn-default
+{
+    width: 80px !important;
+}
+
+.custom-dropdown{
+    width: 100%
+  }
+  
+@media (max-width:1140px){
+    ul.icn-grp-box:first-child {
+        margin-bottom: 5px;
+    }
+    .btn-style{
+      display: flex;
+    }
+    .btn-style .btn{
+      font-size: 12px;
+    }
+    }
+  

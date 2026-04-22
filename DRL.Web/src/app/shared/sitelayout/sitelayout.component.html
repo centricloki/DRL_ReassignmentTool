@@ -1,0 +1,89 @@
+<div id="navList">
+  <nav class="asidebar-nav" id='menu'>
+    <ul class="nav-list" *ngIf="_appConstant.isAuthenticate">
+
+      <!-- DASHBOARD - LinkCode: DASHBOARD -->
+      <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('DASHBOARD')">
+        <a class="btnLi" id="dashboardLink">
+          <i class="icon-01"></i><span>Tool</span>
+        </a>
+      </li>
+
+      <!-- USERS - LinkCode: USERS -->
+      <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('USERS')">
+        <a id="lnkUser" class="btnLi active" (click)="clear('user')" [routerLink]='["/users"]'>
+          <i class="icon-08"></i><span>Users</span>
+        </a>
+      </li>
+
+      <!-- ROLES - LinkCode: ROLES -->
+      <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('ROLES')">
+        <a id="lnkRole" class="btnLi" (click)="clear('role')" [routerLink]='["/roles"]'>
+          <i class="icon-05"></i><span>Roles</span>
+        </a>
+      </li>
+
+      <!-- TEAMS - LinkCode: TEAMS -->
+      <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('TEAMS')">
+        <a id="lnkTeam" class="btnLi" (click)="clear('team')" [routerLink]='["/teams"]'>
+          <i class="icon-09"></i><span>Teams</span>
+        </a>
+      </li>
+
+      <!-- REGIONS - LinkCode: REGIONS -->
+      <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('REGIONS')">
+        <a id="lnkRegion" class="btnLi" (click)="clear('region')" [routerLink]='["/regions"]'>
+          <i class="icon-05"></i><span>Regions</span>
+        </a>
+      </li>
+
+      <!-- USER REASSIGNMENT - LinkCode: USER_REASSIGNMENT -->
+      <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('USER_REASSIGNMENT')">
+        <a id="lnkuserreassignment" class="btnLi" (click)="clear('userreassignment')"
+          [routerLink]='["/customers/user-reassignment"]'>
+          <i class="icon-06"></i><span>User Mapping</span>
+        </a>
+      </li>
+
+      <!-- CUSTOMERS - LinkCode: CUSTOMERS -->
+      <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('CUSTOMERS')">
+        <a id="lnkCustomer" [routerLink]='["/customers"]' (click)="clear('customerreassignment')" class='btnLi'>
+          <i class="icon-09"></i><span>Customers</span>
+        </a>
+      </li>
+
+      <!-- ACTION HISTORY - LinkCode: ACTION_HISTORY -->
+      <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('ACTION_HISTORY')">
+        <a id="lnkactionhistory" [routerLink]='["/customers/action-history"]' (click)="clear('actionhistory')"
+          class='btnLi'>
+          <i class="icon-12 icon-custom"></i><span>Action History</span>
+        </a>
+      </li>
+
+      <!-- CUSTOMER IMPORT - LinkCode: CUSTOMER_IMPORT -->
+      <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('CUSTOMER_IMPORT')">
+        <a id="lnkCustomerImport" [routerLink]='["/customers/customer-import"]' (click)="clear('customerimport')"
+          class='btnLi'>
+          <i class="icon-11 icon-custom"></i><span>Customer Import</span>
+        </a>
+      </li>
+
+      <!-- BRAND STYLE - LinkCode: BRAND_STYLE -->
+      <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('BRAND_STYLE')">
+        <a id="lnkBrandStyle" [routerLink]='["/customers/brand-style"]' title="Brand Style"
+          (click)="clear('brandstyle')" class='btnLi'>
+          <i class="icon-10 icon-custom"></i><span>Brand Style</span>
+        </a>
+      </li>
+
+      <!-- USER REPORT - LinkCode: USER_REPORT -->
+      <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('USER_REPORT')">
+        <a id="lnkUserReport" [routerLink]='["/customers/user-report"]' title="User Report"
+          (click)="clear('userreport')" class='btnLi'>
+          <i class="icon-07"></i><span>User Report</span>
+        </a>
+      </li>
+
+    </ul>
+  </nav>
+</div>

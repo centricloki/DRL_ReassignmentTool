@@ -1,0 +1,31 @@
+<!-- <app-header [sidebarToggler]="'lg'" [asideMenuToggler]="'lg'">
+  <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+          <div class="navbar-header">
+             <h1 id="layoutHeader" (click)="redirecttoHome()" style="cursor: pointer" title="Home">DRL Bulk Email</h1>
+          </div>
+      </div>
+  </div>
+</app-header> -->
+<div class="app-body">
+  <div class="container-fluid">
+      <div class="tab-pane active" id="unauthorized" style="margin-top: 100px">
+          <!--<div class="col-md-3 col-lg-3 col-sm-3">&nbsp;</div>-->
+          <div class="col-md-6 col-lg-6 col-sm-6 col-xs-12 " style=" float: none; margin: 0 auto;">
+              <h1 style="color: #127ba3;">Unauthorized Access!</h1>
+              <div>
+                  <span class="un-text"> Access is denied, </span>
+                  <span class="un-text"> you do not have permission to access the DRL Sugar Decommision application.</span>
+              </div>
+              <div class="con-text">
+                  Please contact DRL Sugar Decommision Administrator for assistance.
+              </div>
+              <div>
+                <a  href="javascript:void(0);" (click)="redirecttoHome()">
+                  Back to Home
+                </a>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>

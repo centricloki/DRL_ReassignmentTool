@@ -1,0 +1,69 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Home</a></li>
+    <li class="breadcrumb-item"><a [routerLink]='["/regions"]'>Regions</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{navTitleText}}</li>
+  </ol>
+</nav>
+<div class="top-title-bar">
+  <h2 class="page-title">{{navTitleText}}</h2>
+</div>
+<div class="white-box">
+  <div class="box-head">
+    <h3>{{ titleText }}</h3>
+  </div>
+
+  <form #formRegion="ngForm" (ngSubmit)="saveRegion()" name="formRegion" novalidate>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-6">
+          <div class="form-field-row">
+            <label class="form-label">Name:
+              <span>*</span>
+            </label>
+            <div class="input-field">
+              <input type="text" matInput #regioname="ngModel" name="regioname" [disabled]="_appConstant.regionId!=''"
+                [(ngModel)]="SugarRegion.regioname" required placeholder="Name">
+            </div>
+            <div class="text-danger" *ngIf="regioname.invalid && (regioname.dirty || regioname.touched)">
+              <p *ngIf="regioname.errors.required">Name is required</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-6">
+          <div class="form-field-row">
+            <label class="form-label">Zone:</label>
+            <div class="input-field">
+              <mat-select placeholder="Zone" #zoneId="ngModel" name="zoneId" [(ngModel)]="SugarRegion.zoneId">
+                <mat-option value="">Select Zone</mat-option>
+                <mat-option *ngFor="let item of ZoneList" [value]="item.recordId">
+                  {{item.value}}
+                </mat-option>
+              </mat-select>
+            </div>
+          </div>
+        </div>
+      </div>
+     
+    </div>
+    <div class="btn-groups">
+      <input class="btn btn-gray" type="button" value="Cancel" (click)="cancelRegionClick()">
+      <input class="btn btn-blue" type="submit" value="{{_appConstant.regionId == '' ?  'Save' : 'Update'}}" [disabled]="formRegion.invalid">
+    </div>
+  </form>
+
+  <div class="container-fluid">
+      <div class="">
+          <h6><b>Teams</b></h6>
+    </div>
+    <div class="readony-row" *ngFor="let team of TeamList;let idx = index">
+      <div class="row">
+        <div class="col-md-6 col-lg-2">
+          <div class="readony form-field">
+            <span>{{team.name}}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

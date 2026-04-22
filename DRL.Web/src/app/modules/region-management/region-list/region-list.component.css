@@ -1,0 +1,12 @@
+.btn:hover {
+    background-color: #464636;
+    color: #ffffff;
+  }
+  .btn-groups {
+    padding: 0px !important;
+    border-top: none !important;
+  }
+  .btn-default
+  {
+    width: 80px !important;
+  }

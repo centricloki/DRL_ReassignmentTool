@@ -1,0 +1,55 @@
+<div>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Regions</li>
+    </ol>
+  </nav>
+  <div class="top-title-bar">
+    <h2 class="page-title">Regions</h2>
+    <div class="filter-role">
+      <a href="#" [routerLink]='["/regions/create"]' class="btn btn-defult site-btn">
+        <i class="fa fa-plus"></i> Region
+      </a>
+    </div>
+  </div>
+  <div class="white-box">
+    <div class="table-responsive" style="width:100%">
+      <div class="mat-elevation-z8">
+        <kendo-grid  [kendoGridBinding]="regionList" [filterable]="true" [pageSize]="state.take" [skip]="state.skip"
+        [sortable]="true" [columnMenu]="false" [sort]="state.sort" (dataStateChange)="dataStateChange($event)"
+        [pageable]="true">
+          <kendo-grid-messages noRecords="{{_appConstant.noRecordsMessage}}">
+          </kendo-grid-messages>
+          <kendo-grid-column field="regioname" title="Region Name" width="34%">
+          </kendo-grid-column>
+          <kendo-grid-column field="zoneName" title="Zone Name" width="30%">
+          </kendo-grid-column>
+          <kendo-grid-column field="isActive" title="Status" width="18%" filter="boolean">
+            <ng-template kendoGridFilterCellTemplate let-filter>
+              <div>
+                <kendo-dropdownlist [data]="_appConstant.listItems" textField="text" valueField="value" class="custom-dropdown"
+                  [(ngModel)]="_appConstant.selectedValue" [valuePrimitive]="true" (selectionChange)="activeInactiveFilterChange($event)">
+                </kendo-dropdownlist>
+              </div>
+            </ng-template>
+            <ng-template kendoGridCellTemplate let-dataItem>
+              <div class="btn-style">
+                <input type="button" class="{{dataItem.isActive == true ? 'btn btn-default btnStatus btn-active' : 'btn btn-default btnStatus btn-inactive'}}"
+                  value="{{dataItem.isActive == true ? 'Active' : 'Inactive'}}" (click)="activeInactiveRegion(dataItem)">
+              </div>
+            </ng-template>
+          </kendo-grid-column>
+          <kendo-grid-command-column title="Actions" width="10%">
+            <ng-template kendoGridCellTemplate kendoTooltip let-dataItem>
+              <li kendoGridEditCommand title="Edit Region" (click)="editRegion(dataItem.regionId)" class="pencil"><i class="fa fa-pencil"
+                  aria-hidden="true"></i></li>
+                  <!-- <li kendoGridEditCommand title="Delete Region" (click)="deleteRegion(dataItem.regionId)" class="trash"><i class="fa fa-trash"
+                    aria-hidden="true"></i></li> -->
+            </ng-template>
+          </kendo-grid-command-column>
+        </kendo-grid>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,84 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]='["/dashboard"]'>Home</a></li>
+    <li class="breadcrumb-item"><a [routerLink]='["/teams"]'>Teams</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{titleText}}</li>
+  </ol>
+</nav>
+<div class="top-title-bar">
+  <h2 class="page-title">{{titleText}}</h2>
+</div>
+<div class="white-box">
+  <!-- <div class="box-head">
+    <h3>{{ titleText }}</h3>
+  </div> -->
+
+  <form #formTeam="ngForm" (ngSubmit)="saveTeam()" name="SugarCRMForm" novalidate>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-6">
+          <div class="form-field-row">
+            <label class="form-label">Name:
+              <span>*</span>
+            </label>
+            <div class="input-field">
+              <input type="text" placeholder="Name" matInput #name="ngModel" name="name" [(ngModel)]="SugarCRMTeam.name"
+                required>
+            </div>
+            <div class="text-danger" *ngIf="name.invalid && (name.dirty || name.touched)">
+              <p *ngIf="name.errors.required">Team Name is required</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-6">
+          <div class="form-field-row">
+            <label class="form-label">Description:
+            </label>
+            <div class="input-field">
+              <input type="text" matInput #description="ngModel" name="description" [(ngModel)]="SugarCRMTeam.description"
+                 placeholder="Description">
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-6">
+          <div class="form-field-row">
+            <label class="form-label">Status: <span>*</span></label>
+            <div class="input-field">
+              <mat-select placeholder="Status" #teamStatusId="ngModel" name="teamStatusId" [(ngModel)]="SugarCRMTeam.teamStatusId"
+                required [disabled]="_appConstant.teamId=='' ">
+                <mat-option value="">Select Status</mat-option>
+                <mat-option *ngFor="let item of TeamStatusList" [value]="item.recordId">
+                  {{item.value}}
+                </mat-option>
+              </mat-select>
+            </div>
+            <div class="text-danger" *ngIf="teamStatusId.invalid && (teamStatusId.dirty || teamStatusId.touched)">
+              <p *ngIf="teamStatusId.errors.required">Status is required</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-6">
+          <div class="form-field-row">
+            <label class="form-label">Region:</label>
+            <div class="input-field">
+              <mat-select placeholder="Region" #regionId="ngModel" name="regionId" [(ngModel)]="SugarCRMTeam.regionId"
+                >
+                <mat-option value="">Select Region</mat-option>
+                <mat-option *ngFor="let item of RegionList" [value]="item.recordId">
+                  {{item.value}}
+                </mat-option>
+              </mat-select>
+            </div>
+            <!-- <div class="text-danger" *ngIf="regionId.invalid && (regionId.dirty || regionId.touched)">
+              <p *ngIf="regionId.errors.required">Region is required</p>
+            </div> -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-groups">
+      <input class="btn btn-gray" type="button" value="Cancel" (click)="cancelTeamClick()">
+      <input class="btn btn-blue" type="submit" value="{{_appConstant.teamId == '' ?  'Save' : 'Update'}}" [disabled]="formTeam.invalid">
+    </div>
+  </form>
+</div>

@@ -1,0 +1,296 @@
+<div class="ur-v3-report">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a [routerLink]='["/customers"]'>Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">User Report</li>
+    </ol>
+  </nav>
+  <div class="top-title-bar">
+    <h2 class="page-title">User Report</h2>
+    <div class="filter-role">
+      <!-- Add Export CSV button next to Clear Filters button -->
+      <button type="button" class="ur-tb-btn" (click)="exportCsv()">⬇ Export CSV</button>
+    </div>
+  </div>
+  <div class="ur-toolbar" *ngIf="!isLoading">
+    <span class="ur-results-badge">{{ visibleCount }} user<span *ngIf="visibleCount !== 1">s</span></span>
+    <div class="ur-tb-sep"></div>
+    <button type="button" class="ur-tb-btn" (click)="expandAll()">⊞ Expand All</button>
+    <button type="button" class="ur-tb-btn" (click)="collapseAll()">⊟ Collapse All</button>
+    <button type="button" class="ur-tb-btn" (click)="clearFilters()">✕ Clear Filters</button>
+    <span class="ur-spacer"></span>
+    <span class="ur-toolbar-hint">Click row to view details</span>
+  </div>
+
+  <div class="ur-main" *ngIf="!isLoading">
+    <div class="ur-table-wrap">
+      <table class="ur-grid-table">
+        <thead>
+          <tr>
+            <th style="min-width:230px">
+              <div class="ur-th-label">Name</div>
+            </th>
+            <th style="min-width:150px">
+              <div class="ur-th-label">Role <span class="ur-sa"></span></div>
+            </th>
+            <th style="min-width:100px">
+              <div class="ur-th-label">AVP <span class="ur-sa"></span></div>
+            </th>
+            <th style="min-width:85px">
+              <div class="ur-th-label">Zone <span class="ur-sa"></span></div>
+            </th>
+            <th style="min-width:85px">
+              <div class="ur-th-label">Region <span class="ur-sa"></span></div>
+            </th>
+            <th style="min-width:100px">
+              <div class="ur-th-label">BD <span class="ur-sa"></span></div>
+            </th>
+            <th>
+              <div class="ur-th-label ur-th-nosort">Territories</div>
+            </th>
+          </tr>
+          <tr class="ur-filter-row">
+            <td class="ur-th-filter"><input class="ur-col-f" type="text" [(ngModel)]="filterName"
+                (ngModelChange)="onFilterChange()" placeholder="Filter name…" /></td>
+            <td class="ur-th-filter">
+              <select class="ur-col-f" [(ngModel)]="filterRole" (ngModelChange)="onFilterChange()">
+                <option value="">All Roles</option>
+                <option *ngFor="let r of optionsRole" [value]="r">{{ r }}</option>
+              </select>
+            </td>
+            <td class="ur-th-filter">
+              <select class="ur-col-f" [(ngModel)]="filterAvp" (ngModelChange)="onFilterChange()">
+                <option value="">All AVPs</option>
+                <option *ngFor="let a of optionsAvp" [value]="a">{{ a }}</option>
+              </select>
+            </td>
+            <td class="ur-th-filter">
+              <select class="ur-col-f" [(ngModel)]="filterZone" (ngModelChange)="onFilterChange()">
+                <option value="">All Zones</option>
+                <option *ngFor="let z of optionsZone" [value]="z">{{ z }}</option>
+              </select>
+            </td>
+            <td class="ur-th-filter">
+              <select class="ur-col-f" [(ngModel)]="filterRegion" (ngModelChange)="onFilterChange()">
+                <option value="">All Regions</option>
+                <option *ngFor="let r of optionsRegion" [value]="r">{{ r }}</option>
+              </select>
+            </td>
+            <td class="ur-th-filter">
+              <!-- Ensure 'optionsBd' is populated in the component and 'filterBd' is handled in onFilterChange() -->
+              <select class="ur-col-f" [(ngModel)]="filterBd" (ngModelChange)="onFilterChange()">
+                <option value="">All BDs</option>
+                <option *ngFor="let b of optionsBd" [value]="b">{{ b }}</option>
+              </select>
+            </td>
+            <td class="ur-th-filter"><input class="ur-col-f" type="text" [(ngModel)]="filterTerritory"
+                (ngModelChange)="onFilterChange()" placeholder="Filter territory…" /></td>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of visibleRows; trackBy: trackRow" class="ur-row"
+            [class.ur-row-selected]="selectedNode && selectedNode.nodeId === row.node.nodeId"
+            (click)="rowClick(row.node)">
+            <td>
+              <div class="ur-nc">
+                <span class="ur-il" *ngFor="let i of indentArray(row.depth)"></span>
+                <span class="ur-tg" [class.ur-tg-leaf]="!hasChildren(row.node)"
+                  (click)="toggleExpand(row.node, $event)">{{ hasChildren(row.node) ? (isCollapsed(row.node) ? '+' :
+                  '−') : '' }}</span>
+                <div>
+                  <div class="ur-uname" [class.ur-uname-vacant]="!(row.node.fullName)">
+                    {{ row.node.fullName || 'Vacant' }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="ur-rb"
+                [ngStyle]="{'background': getRoleStyle(row.node.roleName).bg, 'color': getRoleStyle(row.node.roleName).color}">
+                {{ row.node.roleName }}
+              </span>
+            </td>
+            <td>
+              <span *ngIf="showAvpCell(row.node)" class="ur-rb"
+                [ngStyle]="{'background': getRoleStyle('AVP').bg, 'color': getRoleStyle('AVP').color}">
+                {{ avpPill(row.node) }}
+              </span>
+              <span *ngIf="!showAvpCell(row.node)" class="ur-dash">—</span>
+            </td>
+            <td>
+              <div class="ur-tw" *ngIf="zoneGridDisplay(row.node).length">
+                <span class="ur-rb" *ngFor="let z of zoneGridVisible(row.node)"
+                  [ngStyle]="{'background': getRoleStyle('Zone Manager').bg, 'color': getRoleStyle('Zone Manager').color}">
+                  {{ z }}
+                </span>
+                <span class="ur-tm-more" *ngIf="zoneGridRest(row.node).length"
+                  [matTooltip]="zoneGridRestTooltip(row.node)" matTooltipPosition="above"
+                  matTooltipClass="ur-v3-tooltip-panel">+{{ zoneGridRest(row.node).length }}</span>
+              </div>
+              <span *ngIf="!zoneGridDisplay(row.node).length" class="ur-dash">—</span>
+            </td>
+            <td>
+              <div class="ur-tw" *ngIf="regionGridDisplay(row.node).length">
+                <span class="ur-rb" *ngFor="let r of regionGridVisible(row.node)"
+                  [ngStyle]="{'background': getRoleStyle('Region Manager').bg, 'color': getRoleStyle('Region Manager').color}">
+                  {{ r }}
+                </span>
+                <span class="ur-tm-more" *ngIf="regionGridRest(row.node).length"
+                  [matTooltip]="regionGridRestTooltip(row.node)" matTooltipPosition="above"
+                  matTooltipClass="ur-v3-tooltip-panel">+{{ regionGridRest(row.node).length }}</span>
+              </div>
+              <span *ngIf="!regionGridDisplay(row.node).length" class="ur-dash">—</span>
+            </td>
+            <td>
+              <span *ngIf="bdPillText(row.node)" class="ur-rb"
+                [ngStyle]="{'background': getRoleStyle('BD Manager').bg, 'color': getRoleStyle('BD Manager').color}">
+                {{ bdPillText(row.node) }}
+              </span>
+              <span *ngIf="!bdPillText(row.node)" class="ur-dash">—</span>
+            </td>
+            <td>
+              <div class="ur-tw" *ngIf="territoryGridDisplay(row.node).length">
+                <span class="ur-rb" *ngFor="let t of territoryGridVisible(row.node)"
+                  [ngStyle]="{'background': getRoleStyle('Territory Manager').bg, 'color': getRoleStyle('Territory Manager').color}">
+                  {{ t }}
+                </span>
+                <span class="ur-tm-more" *ngIf="territoryGridRest(row.node).length"
+                  [matTooltip]="territoryGridRestTooltip(row.node)" matTooltipPosition="above"
+                  matTooltipClass="ur-v3-tooltip-panel">+{{ territoryGridRest(row.node).length }}</span>
+              </div>
+              <span *ngIf="!territoryGridDisplay(row.node).length" class="ur-dash">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="ur-empty" [class.ur-empty-visible]="visibleCount === 0">
+        <div class="ur-empty-icon">🔍</div>
+        <div class="ur-empty-title">No users match your filters</div>
+        <div class="ur-empty-sub">Try adjusting or clearing the column filters</div>
+      </div>
+    </div>
+
+    <aside class="ur-detail" [class.open]="detailPanelOpen && selectedNode" *ngIf="selectedNode">
+      <div class="ur-dp-header">
+        <span class="ur-dp-title">User Details</span>
+        <button type="button" class="ur-dp-close" (click)="closeDetail()">✕</button>
+      </div>
+      <div class="ur-dp-body" *ngIf="selectedNode">
+        <div class="ur-dp-hero">
+          <!-- Wrap avatar and name in a flex container -->
+          <div class="ur-dp-hero-flex">
+            <div class="ur-dp-avatar" [ngStyle]="{'background': getRoleStyle(selectedNode.roleName).color}">👤</div>
+            <div>
+              <div class="ur-dp-name" [class.ur-dp-name-vacant]="!(selectedNode.fullName)">{{ selectedNode.fullName ||
+                'Vacant' }}</div>
+              <div class="ur-dp-login" *ngIf="selectedNode.userName && selectedNode.userName !== 'TBD'">{{
+                selectedNode.userName }}</div>
+              <div class="ur-dp-login" *ngIf="!selectedNode.userName || selectedNode.userName === 'TBD'">TBD</div>
+              <div class="ur-dp-role-wrap">
+                <span class="ur-rb"
+                  [ngStyle]="{'background': getRoleStyle(selectedNode.roleName).bg, 'color': getRoleStyle(selectedNode.roleName).color}">
+                  {{ selectedNode.roleName }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ur-dp-divider"></div>
+        <div class="ur-dp-section">
+          <div class="ur-dp-field" *ngIf="selectedNode.avpDetail && selectedNode.avpDetail.trim()">
+            <label>AVP</label>
+            <div class="ur-dp-val">
+              <span class="ur-rb"
+                [ngStyle]="{'background': getRoleStyle('AVP').bg, 'color': getRoleStyle('AVP').color}">
+                {{ selectedNode.avpDetail }}
+              </span>
+            </div>
+          </div>
+          <div class="ur-dp-field" *ngIf="zoneDetailFormatted(selectedNode).length">
+            <label>Zone</label>
+            <div class="ur-dp-terr">
+              <span class="ur-rb" *ngFor="let z of zoneDetailFormatted(selectedNode)"
+                [ngStyle]="{'background': getRoleStyle('Zone Manager').bg, 'color': getRoleStyle('Zone Manager').color}">
+                {{ z }}
+              </span>
+            </div>
+          </div>
+          <div class="ur-dp-field" *ngIf="regionDetailFormatted(selectedNode).length">
+            <label>Region</label>
+            <div class="ur-dp-terr">
+              <span class="ur-rb" *ngFor="let r of regionDetailFormatted(selectedNode)"
+                [ngStyle]="{'background': getRoleStyle('Region Manager').bg, 'color': getRoleStyle('Region Manager').color}">
+                {{ r }}
+              </span>
+            </div>
+          </div>
+          <div class="ur-dp-field" *ngIf="selectedNode.bdDetail && selectedNode.bdDetail.trim()">
+            <label>BD</label>
+            <div class="ur-dp-val">
+              <span class="ur-rb"
+                [ngStyle]="{'background': getRoleStyle('BD Manager').bg, 'color': getRoleStyle('BD Manager').color}">
+                {{ selectedNode.bdDetail }}
+              </span>
+            </div>
+          </div>
+          <div class="ur-dp-field">
+            <label>Territories ({{ territoryDetail(selectedNode).length }})</label>
+            <div class="ur-dp-terr">
+              <span class="ur-rb" *ngFor="let t of territoryDetail(selectedNode)"
+                [ngStyle]="{'background': getRoleStyle('Territory Manager').bg, 'color': getRoleStyle('Territory Manager').color}">
+                {{ t }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <ng-container *ngIf="hasMeaningfulReportParent()">
+          <div class="ur-dp-divider"></div>
+          <div class="ur-dp-section">
+            <label class="ur-dp-section-label">REPORTS TO</label>
+            <div class="ur-dp-report-item">
+              <div class="ur-dp-report-name" [class.ur-dp-report-name-vacant]="!(reportParent.fullName)">{{
+                reportParent.fullName || 'Vacant' }}</div>
+              <div class="ur-dp-report-role">
+                <span class="ur-rb"
+                  [ngStyle]="{'background': getRoleStyle(reportParent.roleName).bg, 'color': getRoleStyle(reportParent.roleName).color}">
+                  {{ reportParent.roleName }}
+                </span>
+                <span *ngIf="getRoleDetailText(reportParent)"> ·
+                  <span [ngStyle]="getRoleDetailStyle(reportParent)">
+                    {{ getRoleDetailText(reportParent) }}
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+        <ng-container *ngIf="directReports().length">
+          <div class="ur-dp-divider"></div>
+          <div class="ur-dp-section">
+            <label class="ur-dp-section-label">DIRECT REPORTS ({{ directReports().length }})</label>
+            <div class="ur-dp-reports">
+              <div class="ur-dp-report-item" *ngFor="let c of directReports()">
+                <div class="ur-dp-report-name" [class.ur-dp-report-name-vacant]="!(c.fullName)">{{ c.fullName ||
+                  'Vacant' }}</div>
+                <div class="ur-dp-report-role">
+                  <span class="ur-rb"
+                    [ngStyle]="{'background': getRoleStyle(c.roleName).bg, 'color': getRoleStyle(c.roleName).color}">
+                    {{ c.roleName }}
+                  </span>
+                  <span *ngIf="getRoleDetailText(c)"> ·
+                    <span [ngStyle]="getRoleDetailStyle(c)">
+                      {{ getRoleDetailText(c) }}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+    </aside>
+  </div>
+
+  <div *ngIf="isLoading" class="ur-loading">
+    <img src="assets/images/ajax-loader.gif" class="custom-loader" alt="Loading" />
+  </div>
+</div>

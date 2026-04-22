@@ -1,0 +1,29 @@
+mat-select
+{
+    border: #c9cbcf solid 1px;
+    padding: 5px 10px;
+    width: 100%;
+    font-size: 15px;
+    color: #646464;
+    font-weight: 400;
+    /* background-image: url('../../../../assets/images/select-arrow.svg'); */
+    background-position: right center;
+    background-repeat: no-repeat;
+    outline: 0;
+    -webkit-appearance: none;
+}
+.site-btn
+{
+    background-color: #127ba3 !important;
+    color: #ffffff !important; 
+    height: 35px !important;
+    width: 73px !important;
+}
+.btn-gray
+{
+    height: 35px !important;
+    width: 73px !important;
+}
+::ng-deep .k-hierarchy-col{
+    width:5px !important;
+}

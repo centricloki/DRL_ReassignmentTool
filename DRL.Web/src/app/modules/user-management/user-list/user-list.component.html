@@ -1,0 +1,73 @@
+<div>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Users</li>
+    </ol>
+  </nav>
+  <div class="top-title-bar">
+    <h2 class="page-title">Users</h2>
+    <div class="filter-role">
+      <a href="#" [routerLink]='["/users/create"]' class="btn btn-defult site-btn">
+        <i class="fa fa-plus"></i> User
+      </a>
+    </div>
+  </div>
+  <div class="white-box">
+    <div class="table-responsive" style="width:100%">
+      <div class="mat-elevation-z8">
+        <kendo-grid [kendoGridBinding]="UserList" [filterable]="true" [pageSize]="state.take" [skip]="state.skip"
+          [sortable]="true" [columnMenu]="false" [sort]="state.sort" (dataStateChange)="dataStateChange($event)"
+          [pageable]="true">
+          <kendo-grid-messages noRecords="{{_appConstant.noRecordsMessage}}">
+          </kendo-grid-messages>
+          <kendo-grid-column field="userName" title="User Name" width="100px">
+          </kendo-grid-column>
+          <kendo-grid-column field="name" title="Name" width="120px" [filterable]="true">
+          </kendo-grid-column>
+          <kendo-grid-column field="pin" title="Honey PIN" width="80px">
+          </kendo-grid-column>
+          <kendo-grid-column field="managerName" title="Reports To" width="120px">
+          </kendo-grid-column>
+          <kendo-grid-column field="roleName" title="User Role" width="110px">
+          </kendo-grid-column>
+          <kendo-grid-column field="avpName" title="AVP" width="100px" [filterable]="true">
+          </kendo-grid-column>
+          <kendo-grid-column field="zoneName" title="Zone" width="80px" [filterable]="true">
+          </kendo-grid-column>
+          <kendo-grid-column field="regionName" title="Region" width="100px" [filterable]="true">
+          </kendo-grid-column>
+          <kendo-grid-column field="bdName" title="BD" width="100px" [filterable]="true">
+          </kendo-grid-column>
+          <kendo-grid-column field="territoryName" title="Territory" width="120px" [filterable]="true">
+          </kendo-grid-column>
+          <kendo-grid-column field="isActive" title="Status" width="80px" filter="boolean" trueText="yes">
+            <ng-template kendoGridFilterCellTemplate let-filter>
+              <div>
+                <kendo-dropdownlist [data]="_appConstant.listItems" textField="text" valueField="value"
+                  class="custom-dropdown" [(ngModel)]="_appConstant.selectedValue" [valuePrimitive]="true"
+                  (selectionChange)="activeInactiveFilterChange($event)" style="width:95% !important">
+                </kendo-dropdownlist>
+              </div>
+            </ng-template>
+            <ng-template kendoGridCellTemplate let-dataItem>
+              <div class="btn-style">
+                <input type="button"
+                  class="{{dataItem.isActive == true ? 'btn btn-default btnStatus btn-active' : 'btn btn-default btnStatus btn-inactive'}}"
+                  value="{{dataItem.isActive == true ? 'Active' : 'Inactive'}}"
+                  (click)="activeInactiveUser(dataItem.userId,dataItem.isActive)">
+              </div>
+            </ng-template>
+          </kendo-grid-column>
+          <kendo-grid-command-column title="Actions" width="80px">
+            <ng-template kendoGridCellTemplate kendoTooltip let-dataItem>
+              <li kendoGridEditCommand title="Edit User" (click)="editUser(dataItem.userId)" class="pencil"
+                [disabled]="dataItem.isActive == false"><i class="fa fa-pencil" aria-hidden="true"></i></li>
+              <li kendoGridRemoveCommand title="Delete User" (click)="deleteUser(dataItem.userId)" class="trash"><i
+                  class="fa fa-trash" aria-hidden="true"></i></li>
+            </ng-template>
+          </kendo-grid-command-column>
+        </kendo-grid>
+      </div>
+    </div>
+  </div>

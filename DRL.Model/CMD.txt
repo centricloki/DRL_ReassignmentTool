@@ -1,0 +1,3 @@
+﻿Scaffold-DbContext "Server=PC74\SQL2017EXP;initial catalog=DRL.Sugar;user id=sa;password=softweb#123;MultipleActiveResultSets=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force
+
+Scaffold-DbContext "Server=PC74\SQL2017EXP;initial catalog=DRLNew;user id=sa;password=softweb#123;MultipleActiveResultSets=True;" Microsoft.EntityFrameworkCore.SqlServer -OutputDir Models -Force

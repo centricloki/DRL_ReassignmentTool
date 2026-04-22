@@ -1,0 +1,67 @@
+<div>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a [routerLink]='["/customers"]'>Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Brand Style</li>
+    </ol>
+  </nav>
+  <div class="top-title-bar">
+    <h2 class="page-title">Brand Style</h2>
+  </div>
+  <div class="white-box">
+    <div class="option-radio-buttons">
+      <label>
+        <input type="radio" name="brandStyleOption" value="brand" (change)="onOptionChange('brand')" checked> Brands
+      </label>
+      <label style="margin-left: 20px;">
+        <input type="radio" name="brandStyleOption" value="rack" (change)="onOptionChange('rack')"> Rack Items
+      </label>
+    </div>
+    <div class="table-responsive" style="width:100%">
+      <div class="mat-elevation-z8">
+        <kendo-grid [data]="filteredBrandStyles" [pageable]="false" [pageSize]="10" [sortable]="true">
+          <kendo-grid-messages noRecords="{{_appConstant.noRecordsMessage}}">
+          </kendo-grid-messages>
+
+          <kendo-grid-column field="brandStyleName" title="Brand Style Name" width="150">
+          </kendo-grid-column>
+
+          <kendo-grid-column field="description" title="Description" width="200">
+          </kendo-grid-column>
+
+          <kendo-grid-column title="Image" width="100">
+            <ng-template kendoGridCellTemplate let-dataItem>
+              <img  [src]="dataItem.imageFilePath" alt="Image" width="100" height="50">
+              <!-- <img *ngIf="dataItem.imageFilePath.endsWith('.jpg')" [src]="dataItem.imageFilePath" alt="Image"
+                width="100" height="50"> -->
+              <!-- <a *ngIf="dataItem.imageFilePath.endsWith('.pdf')" [href]="dataItem.imageFilePath" target="_blank">View
+                PDF</a> -->
+            </ng-template>
+          </kendo-grid-column>
+
+          <kendo-grid-column title="Sort Order" width="100">
+            <ng-template kendoGridCellTemplate let-dataItem>
+              <select [(ngModel)]="dataItem.sortOrder" class="form-control" [disabled]="!editState[dataItem.brandIStyleID]">
+                <option *ngFor="let order of sortOrders" [value]="order">{{ order }}</option>
+              </select>
+            </ng-template>
+          </kendo-grid-column>
+
+          <kendo-grid-column title="Action" width="150">
+            <!-- <ng-template kendoGridCellTemplate let-dataItem>
+              <button (click)="onSave(dataItem.brandIStyleID, dataItem.sortOrder)"
+                class="btn btn-blue center">Update</button>
+            </ng-template> -->
+            <ng-template kendoGridCellTemplate let-dataItem let-rowIndex="rowIndex">
+              <button *ngIf="!editState[dataItem.brandIStyleID]" (click)="onEdit(dataItem.brandIStyleID, dataItem.sortOrder)" class="btn btn-blue">Edit</button>
+              <div *ngIf="editState[dataItem.brandIStyleID]">
+                <button (click)="onSave(dataItem.brandIStyleID, dataItem.sortOrder, dataItem.brandIStyleID)" class="btn btn-default btnStatus btn-active">Save</button>
+                <button (click)="onCancel(dataItem.brandIStyleID)" class="btn btn-default btnStatus btn-inactive margin5">Cancel</button>
+              </div>
+            </ng-template>
+          </kendo-grid-column>
+        </kendo-grid>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,74 @@
+@charset "utf-8";
+/* CSS Document */
+@media only screen and (max-width:1920px){
+}
+@media only screen and (max-width: 1440px){
+}
+@media only screen and (max-width: 1366px){
+	
+}
+@media only screen and (max-width: 1280px){
+	
+}
+@media only screen and (max-width: 1024px){
+}
+@media only screen and (max-width: 980px){
+}
+@media only screen and (max-width: 900px){
+}
+@media only screen and (max-width: 800px){
+}
+@media only screen and (max-width: 768px){
+	.report-box-wrap .report-box-row .reprot-box{width:100%;}
+}
+@media only screen and (max-width: 767px){
+	.login-wrap{padding:100px 0;}
+	.login-wrap .login-box .login-head{min-height:55px;}
+	.login-wrap .login-box .login-head img{padding:10px 0 0 0;width:65%;}
+	/***/
+	.page-title .head-right ul.list li a{font-size:0;}
+	.page-title .head-right ul.list li a i{margin-right:0;}
+	.header .head-right ul.right-list li.user-welcome a span{display:none;}
+		
+}
+@media only screen and (max-width:600px){
+	.login-wrap .login-inner{width:90%;left:50%;margin-left:-45%;}
+	.login-wrap .login-box .login-form{width:100%;}
+
+}
+@media only screen and (max-width:568px){
+}
+@media only screen and (max-width:568px) and (orientation: landscape){
+}
+@media only screen and (max-width:480px){
+}
+@media only screen and (max-width:479px){
+}
+@media only screen and (max-width:320px){
+}
+@media only screen and (min-width:435px) and (max-width:773px){
+}
+@media only screen and (max-width:360px) and (orientation: landscape){
+}
+@media only screen and (-webkit-min-device-pixel-ratio:2), only screen and (min--moz-device-pixel-ratio:2){
+	/*ul.list-with-icons li span{
+		background:url(../images/about-icons@2x.png);
+   		background-repeat:no-repeat;
+	  	-webkit-background-size:769px 84px;
+		background-size:769px 84px;
+	}*/
+}
+
+@media only screen and (min-width: 1280px){
+	.container{max-width:1240px;}
+}
+@media only screen and (min-width: 1366px){
+	.container{max-width:1280px;}
+}
+
+@media (max-width: 1000px) {
+	.top-title-bar{ display:block}
+	.filter-role{ padding-top:5px;}
+	.filter-role .filter-title{ display:block; margin-bottom:5px;}
+	.filter-role .text-box{ margin-bottom:5px; width:100%;}
+}

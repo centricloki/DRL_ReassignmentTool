@@ -1,0 +1,21 @@
+.submenu {
+    display: block;
+    max-height: 0;
+    -webkit-transition: all 0.5s ease-out;
+  }
+ /* .nav-list li:hover .submenu {
+    display: block;
+    max-height: 200px;
+  }  */
+  #menu a.prett::after {
+    /* content: ""; */
+    width: 0;
+    height: 0;
+    border-width: 6px 5px;
+    border-style: solid;
+    border-color: #bab1a9 transparent transparent transparent;
+    position: absolute;
+    top: 20px;
+    right: 9px;
+  }
+  #menu ul.submenu{width:100%;position:static;border:none}

@@ -1,0 +1,96 @@
+<div>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a [routerLink]='["/customers"]'>Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Customer Import</li>
+    </ol>
+  </nav>
+  <div class="top-title-bar">
+    <h2 class="page-title">Customer Import</h2>
+  </div>
+
+  <div class="white-box">
+    <div class="container-fluid" style="padding-bottom:20px;">
+      <input type="file" (change)="onFileChange($event)" class="form-control" accept=".xls,.xlsx"  (click)="$event.target.value=null"/>
+      <div class="btn-groups">
+        <button type="button" (click)="getLatLong()" class="btn btn-blue"
+          [disabled]="isGetLatLongDisabled">Lat/Long</button>
+        <button type="button" (click)="saveDataToDatabase()" class="btn btn-blue"
+          [disabled]="isUploadDisabled">Upload</button>
+        <button type="button" (click)="downloadExcel()" class="btn btn-blue"
+          [disabled]="isUploadDisabled">Export</button>
+        <button id="btnDownloadTemplate" type="button" (click)="downloadTemplate()" class="btn btn-blue">Download
+          Template</button>
+      </div>
+
+      <div class="table-responsive" style="width:100%">
+        <div class="mat-elevation-z8">
+          <ng-template #template let-anchor>
+            <div *ngFor="let item of anchor.nativeElement.innerText?.split(',')">
+              {{ item }}
+            </div>
+          </ng-template>
+          <div kendoTooltip showOn="none" [tooltipTemplate]="template" filter=".k-grid td"
+            (mouseover)="showTooltip($event)">
+            <kendo-grid [data]="gridData" [pageable]="false" [sortable]="false" [filterable]="false"
+              [columnMenu]="false">
+              <kendo-grid-messages noRecords="{{_appConstant.noRecordsMessage}}">
+              </kendo-grid-messages>
+
+              <kendo-grid-column field="storeNumber" title="Store #" width="9%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="storeManager" title="Store Manager" width="15%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="storePhone" title="Phone" width="12%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="storeEmail" title="Email" width="14%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="storeName" title="Customer Name" width="16%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="address" title="Address" width="15%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="city" title="City" width="7%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="state" title="State" width="7%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="zip" title="Zip" width="8%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="territoryNumber" title="Territory #" width="12%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="isParent" title="Is Parent" width="8%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="parentNumber" title="Parent Number" width="10%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="county" title="County" width="10%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="accountType" title="Account Type" width="10%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="accountClassification" title="Account Classification" width="14%">                
+              </kendo-grid-column>
+
+              <kendo-grid-column field="latitude" title="Latitude" width="10%">
+              </kendo-grid-column>
+
+              <kendo-grid-column field="longitude" title="Longitude" width="10%">
+              </kendo-grid-column>
+            </kendo-grid>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

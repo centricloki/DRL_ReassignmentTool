@@ -1,0 +1,210 @@
+<div>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a [routerLink]='["/customers"]'>Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Users</li>
+    </ol>
+  </nav>
+  <div class="top-title-bar">
+    <h2 class="page-title">Users</h2>
+    <div class="filter-role">
+    </div>
+  </div>
+  <div class="white-box" style="padding-bottom:20px;">
+    <div class="container-fluid">
+      <form #formUser="ngForm" (ngSubmit)="apply()" name="SugarCRMForm" novalidate>
+        <div class="row">
+          <div class="col-lg-2 pad-r-0">
+            <div class="input-field">
+              <input type="text" style="width:100%" (keyup)="searchUser($event)" matInput placeholder="User Name"
+                #userName="ngModel" name="userName" [(ngModel)]="SugarCRMUser.userName">
+            </div>
+          </div>
+          <span style="font-size: 13px;line-height: 32px;color: #000;font-weight: 600;margin-left: 15px;">OR</span>
+          <div class="col-lg-2 pad-r-0">
+            <mat-select placeholder="Territory" #TeamId="ngModel" name="TeamId" (selectionChange)="searchTerritory()"
+              [(ngModel)]="SugarCRMUser.defaultTeamId">
+              <mat-option value="">Territory</mat-option>
+              <mat-option *ngFor="let item of TeamList" [value]="item.recordId">
+                {{item.value}}
+              </mat-option>
+            </mat-select>
+          </div>
+          <div class="col-lg-7 pad-r-0">
+            <input class="btn btn-blue" type="submit" value="Apply" [disabled]="formUser.invalid">
+            <input class="btn btn-gray ml-2" type="button" value="Clear" (click)="clearClick()">
+            <button type="button" class="btn btn-blue ml-2" (click)="excelexport.save()">Export</button>
+            <button type="button" class="btn btn-blue ml-2" (click)="excelexportAll.save()">Export All</button>
+          </div>
+        </div>
+      </form>
+      <mat-expansion-panel [expanded]="true">
+        <div class="row" style="margin-top:3px;">
+          <div class="col-lg-12">
+            <p style="display:inline">Select Role to filter Territory/Team selection:</p>
+            &nbsp; &nbsp;
+            <mat-checkbox *ngFor="let item of RoleList; let i = index" color="primary" id="{{item.recordId}}"
+              (change)="getTerritoryFromRole($event)">{{item.value}}
+              &nbsp; &nbsp;
+            </mat-checkbox>
+          </div>
+        </div>
+        <div class="row" style="margin-top:3px;">
+          <div class="col-lg-2 pad-r-0" style="max-width: 118px;">
+            Update Territory
+          </div>
+          <div class="col-lg-2 pad-r-0">
+            <mat-select [formControl]="UpdateTerritoryCtrl" placeholder="Select Territory"
+              (ngModelChange)="dropDownchange()" #singleSelect class="custom-dropdown">
+              <mat-option>
+                <ngx-mat-select-search [formControl]="UpdateTerritoryfilterCtrl" [noEntriesFoundLabel]=noDataFoundLabel
+                  [placeholderLabel]="'Search Territory'">
+                </ngx-mat-select-search>
+              </mat-option>
+              <mat-option [value]="">Select Territory</mat-option>
+              <mat-option *ngFor="let Territory of UpdatefilteredTerritorys | async" [value]="Territory.recordId">
+                {{Territory.value}}
+              </mat-option>
+            </mat-select>
+          </div>
+          <div class="col-lg-2 pad-r-0" style="max-width: 81px;">
+            Add Team
+          </div>
+          <div class="col-lg-2 pad-r-0">
+            <mat-select [formControl]="AddTerritoryCtrl" placeholder="Select Team" (ngModelChange)="dropDownchange()"
+              #singleSelect>
+              <mat-option>
+                <ngx-mat-select-search [formControl]="AddTerritoryfilterCtrl" [noEntriesFoundLabel]=noDataFoundLabel
+                  [placeholderLabel]="'Search Team'">
+                </ngx-mat-select-search>
+              </mat-option>
+              <mat-option [value]="">Select Team</mat-option>
+              <mat-option *ngFor="let Territory of AddfilteredTerritorys | async" [value]="Territory.recordId">
+                {{Territory.value}}
+              </mat-option>
+            </mat-select>
+          </div>
+          <div class="col-lg-2 pad-r-0" style="max-width: 108px;">
+            Remove Team
+          </div>
+          <div class="col-lg-2 pad-r-0">
+            <mat-select [formControl]="RemoveTerritoryCtrl" placeholder="Select Team" (ngModelChange)="dropDownchange()"
+              #singleSelect>
+              <mat-option>
+                <ngx-mat-select-search [formControl]="RemoveTerritoryfilterCtrl" [noEntriesFoundLabel]=noDataFoundLabel
+                  [placeholderLabel]="'Search Team'">
+                </ngx-mat-select-search>
+              </mat-option>
+              <mat-option [value]="">Select Team</mat-option>
+              <mat-option *ngFor="let Territory of RemovefilteredTerritorys | async" [value]="Territory.recordId">
+                {{Territory.value}}
+              </mat-option>
+            </mat-select>
+          </div>
+          <div class="col-lg-3">
+            <div class="">
+              <input class="btn btn-blue" type="button" value="Apply" (click)="Apply()" id="btnApply">
+            </div>
+          </div>
+        </div>
+      </mat-expansion-panel>
+
+
+      <kendo-excelexport [data]="UserList" fileName="Allusers.xlsx" #excelexportAll>
+        <kendo-excelexport-column field="userName" title="User Name" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="name" title="Name" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="role" title="Role" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="territory" title="Territory" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="team" title="Teams" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="keyAccount" title="Key Account" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="insideSales" title="Inside Sales" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="broker" title="Broker" width="200">
+        </kendo-excelexport-column>
+      </kendo-excelexport>
+
+      <kendo-excelexport [data]="gridView.data" fileName="users.xlsx" #excelexport>
+        <kendo-excelexport-column field="userName" title="User Name" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="name" title="Name" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="role" title="Role" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="territory" title="Territory" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="team" title="Teams" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="keyAccount" title="Key Account" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="insideSales" title="Inside Sales" width="200">
+        </kendo-excelexport-column>
+        <kendo-excelexport-column field="broker" title="Broker" width="200">
+        </kendo-excelexport-column>
+      </kendo-excelexport>
+
+      <div class="table-responsive" style="width:100%;margin-top: 10px;">
+        <div class="mat-elevation-z8">
+          <kendo-grid id="UserGrid" [data]="gridView" [filterable]="false" [pageSize]="state.take" [skip]="state.skip"
+            [sortable]="true" [columnMenu]="false" [sort]="state.sort" (dataStateChange)="dataStateChange($event)"
+            [pageable]="true">
+            <kendo-grid-messages noRecords="{{_appConstant.noRecordsMessage}}">
+            </kendo-grid-messages>
+            <kendo-grid-checkbox-column showSelectAll="true" width="5%" [columnMenu]="false">
+              <ng-template kendoGridHeaderTemplate let-dataItem>
+                <mat-checkbox color="primary" (change)="selectAllRows($event)" [checked]="allRowsSelected">
+                </mat-checkbox>
+              </ng-template>
+              <ng-template kendoGridCellTemplate let-dataItem>
+                <mat-checkbox [checked]="dataItem.checked" id="{{dataItem.userId}}" color="primary"
+                  (change)="selectRow($event)">
+                </mat-checkbox>
+              </ng-template>
+            </kendo-grid-checkbox-column>
+            <kendo-grid-column field="userName" title="User Name" width="13%">
+            </kendo-grid-column>
+            <kendo-grid-column field="name" title="Name" width="13%">
+            </kendo-grid-column>
+            <kendo-grid-column field="role" title="Role" width="12%">
+            </kendo-grid-column>
+            <kendo-grid-column field="territory" title="Territory" width="12%">
+            </kendo-grid-column>
+            <kendo-grid-column title="Teams" width="12%" field="team">
+              <ng-template kendoGridCellTemplate let-dataItem>
+                <div *ngFor="let item of dataItem.team?.split(',')">
+                  {{ item }}
+                </div>
+              </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column title="Key Account" width="12%" field="keyAccount">
+              <ng-template kendoGridCellTemplate let-dataItem>
+                <div *ngFor="let item of dataItem.keyAccount?.split(',')">
+                  {{ item }}
+                </div>
+              </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column title="Inside Sales" width="12%" field="insideSales">
+              <ng-template kendoGridCellTemplate let-dataItem>
+                <div *ngFor="let item of dataItem.insideSales?.split(',')">
+                  {{ item }}
+                </div>
+              </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column title="Broker" width="12%" field="broker">
+              <ng-template kendoGridCellTemplate let-dataItem>
+                <div *ngFor="let item of dataItem.broker?.split(',')">
+                  {{ item }}
+                </div>
+              </ng-template>
+            </kendo-grid-column>
+          </kendo-grid>
+        </div>
+      </div>
+
+    </div>
+  </div>

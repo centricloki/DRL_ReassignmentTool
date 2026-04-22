@@ -1,0 +1,87 @@
+mat-select {
+    border: #c9cbcf solid 1px;
+    padding: 5px 10px;
+    width: 100%;
+    font-size: 15px;
+    color: #646464;
+    font-weight: 400;
+    background-position: right center;
+    background-repeat: no-repeat;
+    outline: 0;
+    -webkit-appearance: none;
+}
+.rowMargin {
+    margin-left: 20px;
+}
+.btn-groups {
+    border-top:none !important;
+}
+::ng-deep .mat-checkbox-checked .mat-checkbox-background {
+    background-color: #127ba3 !important;
+}
+::ng-deep .k-grid .k-grid-content td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+::ng-deep .k-tooltip {
+      background-color: #127ba3;
+}
+::ng-deep .k-callout {
+    color: #127ba3;
+}
+.mat-form-field{
+    display: block !important;
+}
+.cdk-overlay-pane .mat-select-search-panel{
+    font-size: 16px;
+}
+.cdk-overlay-pane .mat-select-search-inner{
+    width: 214px !important;
+}
+.cdk-overlay-pane .mat-select-search-input .mat-input-element {
+    background: rgba(0,0,0,.12);
+}
+::ng-deep .mat-select-search-input{
+    border: none !important;
+    outline: none !important;
+}
+ .k-widget
+{
+    font-size: 12px !important;
+}
+@media only screen and (max-width: 1280px)
+{
+    ::ng-deep #customergrid .k-grid-header .k-header{
+    font-size: 8px !important;
+    }
+}
+::ng-deep #customergrid .k-grid-content td {
+    white-space: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+}
+::ng-deep #customergrid .k-grid-content td, ::ng-deep #customergrid .k-grid-header .k-header {
+    padding: 2px 2px !important;
+    font-size: 11px!important;
+}
+::ng-deep #customergrid .mat-checkbox-inner-container{
+    margin-top: 5px;
+}
+::ng-deep #customergrid .mat-checkbox{
+    margin-left: 33%;
+}
+.top-title-bar{
+    display: none!important;
+}
+.container-fluid {
+    padding-top: 10px!important;
+}
+.mat-expansion-panel {
+    border: 1px solid #f1f1f1!important;
+    margin-top: 8px!important;
+}
+::ng-deep .mat-expansion-panel-body {
+    padding: 0 10px 8px!important;
+}

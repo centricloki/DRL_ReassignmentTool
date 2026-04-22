@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RuntimeFrameworkVersion>2.0.9</RuntimeFrameworkVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="Service\NavigationPermissionService" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac" Version="4.9.2" />
+    <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.4.0" />
+    <PackageReference Include="AutoMapper" Version="8.1.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="2.2.4" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+    <PackageReference Include="System.DirectoryServices" Version="4.5.0" />
+    <PackageReference Include="System.DirectoryServices.Protocols" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DRL.Entity\DRL.Entity.csproj" />
+    <ProjectReference Include="..\DRL.Framework.Log\DRL.Framework.Log.csproj" />
+    <ProjectReference Include="..\DRL.Library\DRL.Library.csproj" />
+    <ProjectReference Include="..\DRL.Model\DRL.Model.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Manager\" />
+  </ItemGroup>
+
+</Project>

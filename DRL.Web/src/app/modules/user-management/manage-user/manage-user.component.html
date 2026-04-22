@@ -1,0 +1,295 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Home</a></li>
+    <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Users</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{titleText}}</li>
+  </ol>
+</nav>
+<div class="top-title-bar">
+  <h2 class="page-title">{{ titleText }}</h2>
+</div>
+<div class="white-box">
+  <form #formUser="ngForm" (ngSubmit)="saveUser()" name="SugarCRMForm" novalidate>
+    <mat-expansion-panel [expanded]="true">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          User Info
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row">
+              <label class="form-label">User Name:
+                <span>*</span>
+              </label>
+              <div class="input-field">
+                <input type="text" matInput placeholder="User Name" #userName="ngModel" name="userName"
+                  [(ngModel)]="SugarCRMUser.userName" required>
+              </div>
+              <div class="text-danger" *ngIf="userName.invalid && (userName.dirty || userName.touched)">
+                <p *ngIf="userName.errors.required">User Name is required</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row">
+              <label class="form-label">First Name:
+                <span>*</span>
+              </label>
+              <div class="input-field">
+                <input type="text" placeholder="First Name" matInput #firstName="ngModel" name="firstName"
+                  [(ngModel)]="SugarCRMUser.firstName" required>
+              </div>
+              <div class="text-danger" *ngIf="firstName.invalid && (firstName.dirty || firstName.touched)">
+                <p *ngIf="firstName.errors.required">First Name is required</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row">
+              <label class="form-label">Last Name:
+                <span>*</span>
+              </label>
+              <div class="input-field">
+                <input type="text" placeholder="Last Name" matInput #lastName="ngModel" name="lastName"
+                  [(ngModel)]="SugarCRMUser.lastName" required>
+              </div>
+              <div class="text-danger" *ngIf="lastName.invalid && (lastName.dirty || lastName.touched)">
+                <p *ngIf="lastName.errors.required">Last Name is required</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row">
+              <label class="form-label">Honey PIN:
+                <span>*</span>
+              </label>
+              <div class="input-field">
+                <input type="text" placeholder="Honey PIN" matInput #pin="ngModel" name="pin"
+                  [(ngModel)]="SugarCRMUser.pin" [disabled]="!(SugarCRMUser.userId!='' && SugarCRMUser.userId!=null)">
+              </div>
+              <div class="text-danger" *ngIf="pin.invalid && (pin.dirty || pin.touched)">
+                <p *ngIf="pin.errors.required">Honey PIN is required</p>
+              </div>
+
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row">
+              <label class="form-label">Reports To: </label>
+              <div class="select-field">
+                <mat-select placeholder="Reports To" #managerId="ngModel" name="managerId"
+                  [(ngModel)]="SugarCRMUser.managerId">
+                  <mat-option value="0">Select Reports To</mat-option>
+                  <mat-option *ngFor="let item of ReportsToList" [value]="item.recordId">
+                    {{item.value}}
+                  </mat-option>
+                </mat-select>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row">
+              <label class="form-label">Role:</label>
+              <div class="input-field">
+                <mat-select placeholder="Role" #roleId="ngModel" name="roleId" [(ngModel)]="SugarCRMUser.roleId" (selectionChange)="onRoleChange($event)">
+                  <mat-option value="">Select Role</mat-option>
+                  <mat-option *ngFor="let item of RoleList" [value]="item.recordId">
+                    {{item.value}}
+                  </mat-option>
+                </mat-select>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row">
+              <label class="form-label">Default Team:</label>
+              <div class="input-field">
+                <mat-select placeholder="Default Team" #defaultTeamId="ngModel" name="defaultTeamId"
+                  [(ngModel)]="SugarCRMUser.defaultTeamId">
+                  <mat-option>
+                  <ngx-mat-select-search [formControl]="defTeamSearchControl" placeholderLabel="Search teams..."
+                      noEntriesFoundLabel="No teams found">
+                    </ngx-mat-select-search>
+                  </mat-option>
+                  <mat-option value="">Select Team</mat-option>
+                  <mat-option *ngFor="let item of filteredDefTeamList | async" [value]="item.teamId">
+                    {{item.name}}
+                  </mat-option>
+                </mat-select>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row">
+              <label class="form-label">Status:</label>
+              <div class="input-field">
+                <mat-select placeholder="Status" #isActive="ngModel" name="isActive" [(ngModel)]="SugarCRMUser.isActive"
+                  required>
+                  <mat-option value="">Select Status</mat-option>
+                  <mat-option *ngFor="let item of StatusTypeList" [value]="item.recordId">
+                    {{item.value}}
+                  </mat-option>
+                </mat-select>
+              </div>
+              <div class="text-danger" *ngIf="isActive.invalid && (isActive.dirty || isActive.touched)">
+                <p *ngIf="isActive.errors.required">Status is required</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row">
+              <label class="form-label">Email Id:
+              </label>
+              <div class="input-field">
+                <input type="text" matInput placeholder="Email" #emailId="ngModel" name="email"
+                  [(ngModel)]="SugarCRMUser.email" pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$">
+              </div>
+              <div class="text-danger" *ngIf="emailId.invalid && (emailId.dirty || emailId.touched)">
+                <p *ngIf="emailId.errors?.pattern">Invalid email format</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6" *ngIf="SugarCRMUser.roleId == avpRole.roleId">
+            <div class="form-field-row">
+              <label class="form-label">AVP:
+                <span>*</span>
+              </label>
+              <div class="input-field">
+                <mat-select placeholder="AVP" #avpId="ngModel" name="avpId" [(ngModel)]="SugarCRMUser.avpid" required (selectionChange)="onAVPChange($event)">
+                  <mat-option value="">Select AVP</mat-option>
+                  <mat-option *ngFor="let item of avpList" [value]="item.recordId">
+                    {{item.value}}
+                  </mat-option>
+                </mat-select>
+              </div>
+              <div class="text-danger" *ngIf="avpId.invalid && (avpId.dirty || avpId.touched)">
+                <p *ngIf="avpId.errors.required">AVP is required</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6" *ngIf="SugarCRMUser.roleId == bdRole.roleId" required>
+            <div class="form-field-row">
+              <label class="form-label">BD Manager:
+                <span>*</span>
+              </label>
+              <div class="input-field">
+                <mat-select placeholder="BD Manager" #bdId="ngModel" name="bdId" [(ngModel)]="SugarCRMUser.bdid" required (selectionChange)="onBDChange($event)">
+                  <mat-option value="">Select BD Manager</mat-option>
+                  <mat-option *ngFor="let item of bdList" [value]="item.recordId">
+                    {{item.value}}
+                  </mat-option>
+                </mat-select>
+              </div>
+              <div class="text-danger" *ngIf="bdId.invalid && (bdId.dirty || bdId.touched)">
+                <p *ngIf="bdId.errors.required">BD is required</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-expansion-panel>
+    <mat-expansion-panel [expanded]="true" *ngIf="SugarCRMUser.roleId != avpRole.roleId">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Assign Team
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <div class="container-fluid">
+
+        <div class="row">
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row">
+              <label class="form-label">Team:
+              </label>
+              <div class="select-field">
+                <mat-select placeholder="Team" #team="ngModel" name="team" [(ngModel)]="teamModel.teamId" class="custom-dropdown">
+                  <mat-option>
+                    <ngx-mat-select-search [formControl]="teamSearchControl" placeholderLabel="Search teams..."
+                      noEntriesFoundLabel="No teams found">
+                    </ngx-mat-select-search>
+                  </mat-option>
+                  <mat-option value="">Select Team</mat-option>
+                  <mat-option *ngFor="let item of filteredTeamList | async" [value]="item.teamId">
+                    {{item.name}}
+                  </mat-option>
+                </mat-select>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row"> <label class="form-label"></label>
+              <div class="select-field">
+                <input class="btn btn-default site-btn" type="button" value="Add" (click)="addUserToTeam()"></div>
+            </div>
+          </div>
+        </div>
+        <div class="readony-row" *ngFor="let team of myItems;let idx = index">
+          <div class="row">
+            <div class="col-md-6 col-lg-2">
+              <div class="readony form-field">
+                <label>Team Name:</label>
+                <span>{{team.name}}</span>
+              </div>
+            </div>
+            <div class="col align-self-end text-right">
+              <a class="link-icon" matTooltip="Delete Team" style="cursor: pointer;" (click)="deleteTeamDetail(idx)"><i
+                  class="fa fa-trash-o"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-expansion-panel>
+    <mat-expansion-panel [expanded]="true" *ngIf="SugarCRMUser.roleId == avpRole.roleId">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Assign Zone
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <div class="container-fluid">
+
+        <div class="row">
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row">
+              <label class="form-label">Zone:
+              </label>
+              <div class="select-field">
+                <mat-select placeholder="Zone" #zone="ngModel" name="zone" [(ngModel)]="selectedZoneId">
+                  <mat-option value="">Select Team</mat-option>
+                  <mat-option *ngFor="let item of allZones" [value]="item.zoneId">
+                    {{item.zoneName}}
+                  </mat-option>
+                </mat-select>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row"> <label class="form-label"></label>
+              <div class="select-field">
+                <input class="btn btn-default site-btn" type="button" value="Add" (click)="addUserZone()"></div>
+            </div>
+          </div>
+        </div>
+        <div class="readony-row" *ngFor="let team of userZones;let idx = index">
+          <div class="row">
+            <div class="col-md-6 col-lg-2">
+              <div class="readony form-field">
+                <label>Zone:</label>
+                <span>{{team.zoneName}}</span>
+              </div>
+            </div>
+            <div class="col align-self-end text-right">
+              <a class="link-icon" matTooltip="Delete Zone" style="cursor: pointer;" (click)="deleteUserZone(idx)"><i
+                  class="fa fa-trash-o"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-expansion-panel>
+    <div class="btn-groups">
+      <input class="btn btn-gray" type="button" value="Cancel" (click)="cancelUserClick()">
+      <input class="btn btn-blue" type="submit" value="{{btnText}}" [disabled]="formUser.invalid">
+    </div>
+  </form>
+</div>

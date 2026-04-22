@@ -1,0 +1,71 @@
+<div>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a [routerLink]='["/customers"]'>Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Action History</li>
+    </ol>
+  </nav>
+  <div class="top-title-bar">
+    <h2 class="page-title">Action History</h2>
+  </div>
+  <form [formGroup]="historyForm">
+    <div class="white-box">
+      <div class="table-responsive" style="width:100%">
+        <div class="mat-elevation-z8">
+          <kendo-grid [data]="gridView" [filterable]="true" [pageSize]="pageSize" [skip]="skip" [sortable]="true"
+            [columnMenu]="false" [sort]="state.sort" [pageable]="true" (dataStateChange)="dataStateChange($event)">
+            <kendo-grid-messages noRecords="{{_appConstant.noRecordsMessage}}">
+            </kendo-grid-messages>
+            <kendo-grid-column field="module" title="Module" width="10%">
+              <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                <!-- Input field for filter value -->
+                <input formControlName="module" />
+              </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="operation" title="Operation" width="10%">
+              <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                <!-- Input field for filter value -->
+                <input formControlName="operation" />
+              </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="customerNumber" title="Customer #" width="10%">
+              <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                <!-- Input field for filter value -->
+                <input formControlName="customerNumber" />
+              </ng-template>
+            </kendo-grid-column>
+
+
+            <kendo-grid-column field="accountName" title="Customer Name" width="12%">
+              <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                <!-- Input field for filter value -->
+                <input formControlName="accountName" />
+              </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="team" title="Team" width="10%">
+              <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                <!-- Input field for filter value -->
+                <input formControlName="team" />
+              </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="updatedBy" title="Updated By" width="10%">
+              <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                <!-- Input field for filter value -->
+                <input formControlName="updatedBy" />
+              </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-column field="updateDatestring" title="Updated Date" width="13%" format="{0:MM/dd/yyyy}">
+              <ng-template kendoGridFilterCellTemplate let-filter let-column="column">
+                <div class="example-wrapper">
+                  <kendo-datepicker [(value)]="value" formControlName="updatedDate" (valueChange)="datechange($event)"
+                    format="MM/dd/yyyy" style="width:80%"></kendo-datepicker>
+                  <a href="javaScript:void(0);" class="active" (click)="clearDateFilter()"
+                    style="width:10%;color:#337ab7;padding-left:3px">Clear</a>
+                </div>
+              </ng-template>
+            </kendo-grid-column>
+          </kendo-grid>
+        </div>
+      </div>
+    </div>
+  </form>

@@ -1,0 +1,24 @@
+<div class="wrapper">
+  <form #formLogin="ngForm" class="form-signin" name="LoginForm" novalidate>
+    <h2 class="form-signin-heading">Login</h2>
+    <input type="text" matInput placeholder="Domain" class="form-control" id="domain" #domain="ngModel" name="domain"
+      [(ngModel)]="SugarCRMUser.domain" required>
+    <div class="text-danger" *ngIf="domain.invalid && (domain.dirty || domain.touched)">
+      <p *ngIf="domain.errors.required">Domain is required</p>
+    </div>
+    <input type="text" matInput placeholder="User Name" class="form-control" id="userName" #userName="ngModel" name="userName"
+      [(ngModel)]="SugarCRMUser.userName" required>
+    <div class="text-danger" *ngIf="userName.invalid && (userName.dirty || userName.touched)">
+      <p *ngIf="userName.errors.required">User Name is required</p>
+    </div>
+    <input type="password" placeholder="Password" id="password" class="form-control" #password="ngModel" name="password"
+      matInput [(ngModel)]="SugarCRMUser.password" required>
+    <div class="text-danger" *ngIf="password.invalid && (password.dirty || password.touched)">
+      <p *ngIf="password.errors.required">Password is required</p>
+    </div>
+    <button class="btn btn-lg btn-block" type="submit" [disabled]="formLogin.invalid" (click)="Login()">Login</button>
+  </form>
+  <footer class="site-footer"> 
+      © {{year}} Sugar Decommission, Inc. All Rights Reserved. 
+  </footer>
+</div>

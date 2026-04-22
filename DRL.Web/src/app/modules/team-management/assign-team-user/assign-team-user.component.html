@@ -1,0 +1,114 @@
+<div>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Teams</li>
+    </ol>
+  </nav>
+  <div class="top-title-bar">
+    <h2 class="page-title">{{_appConstant.teamName}}</h2>
+    <div class="filter-role">
+    </div>
+  </div>
+  <div class="white-box" style="padding-bottom:20px;">
+    <div class="container-fluid">
+      <form #formUser="ngForm" (ngSubmit)="UpdateUserTerritory()" name="SugarCRMForm" novalidate>
+        <div class="row" style="margin-top:20px;">
+          <div class="col-lg-1">
+            <label style="margin-top:5px">Users:</label>
+          </div>
+          <div class="col-lg-3">
+            <mat-select placeholder="Users" #managerId="ngModel" name="managerId" [(ngModel)]="SugarCRMUser.managerId"
+              required>
+              <mat-option value="">Select User</mat-option>
+              <mat-option *ngFor="let item of ReportsToList" [value]="item.recordId">
+                {{item.value}}
+              </mat-option>
+            </mat-select>
+            <div class="text-danger" *ngIf="managerId.invalid && (managerId.dirty || managerId.touched)">
+              <p *ngIf="managerId.errors.required">Reports To is required</p>
+            </div>
+          </div>
+          <div class="col-lg-8">
+            <div class="">
+              <input class="btn btn-default site-btn" type="submit" value="Add" [disabled]="formUser.invalid">
+              <input class="btn btn-gray ml-4" type="button" value="Cancel" (click)="cancelClick()">
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <div class="table-responsive" style="width:100%;margin-top: 30px;">
+        <div class="mat-elevation-z8">
+          <kendo-grid #grid (detailExpand)="GetUsersByTerritoryIdAndUserId($event,grid)" [kendoGridBinding]="UserList"
+            [filterable]="true" [pageSize]="_appConstant.pageSize" [skip]="_appConstant.skip" [pageable]="true">
+            <kendo-grid-messages noRecords="{{_appConstant.noRecordsMessage}}">
+            </kendo-grid-messages>
+            <kendo-grid-column field="userName" title="User Name" width="15%">
+            </kendo-grid-column>
+            <kendo-grid-column field="name" title="Name" width="18%" [filterable]="true">
+            </kendo-grid-column>
+            <kendo-grid-column field="honeyPin" title="Honey PIN" width="14%">
+            </kendo-grid-column>
+            <kendo-grid-column field="reportsTo" title="Reports To" width="15%">
+            </kendo-grid-column>
+            <kendo-grid-column field="role" title="User Role" width="17%">
+            </kendo-grid-column>
+            <kendo-grid-column field="isActive" title="Status" width="9%" filter="boolean" trueText="yes">
+              <ng-template kendoGridFilterCellTemplate let-filter>
+                <div>
+                  <kendo-dropdownlist [data]="_appConstant.listItems" textField="text" valueField="value" class="custom-dropdown"
+                    [(ngModel)]="_appConstant.selectedValue" [valuePrimitive]="true" (selectionChange)="activeInactiveFilterChange($event)"
+                    style="width:95% !important">
+                  </kendo-dropdownlist>
+                </div>
+              </ng-template>
+              <ng-template kendoGridCellTemplate let-dataItem>
+                <span class="{{dataItem.isActive == true ? 'activestatus' : 'inActivestatus'}}">{{ dataItem.isActive ==
+                  true ? 'Active' : 'InActive'}}</span>
+              </ng-template>
+            </kendo-grid-column>
+            <kendo-grid-command-column title="Actions" width="8%">
+              <ng-template kendoGridCellTemplate kendoTooltip let-dataItem>
+                <li kendoGridRemoveCommand *ngIf="dataItem.isTerritoryUser" title="Delete User" (click)="DeleteUserTerritory(dataItem.userId)"
+                  class="trash"><i class="fa fa-trash" aria-hidden="true"></i></li>
+              </ng-template>
+            </kendo-grid-command-column>
+            <ng-template kendoGridDetailTemplate>
+
+              <kendo-grid [kendoGridBinding]="ManagerList" [filterable]="false" [pageSize]="_appConstant.pageSize"
+                [skip]="_appConstant.skip" [pageable]="true">
+                <kendo-grid-messages noRecords="{{_appConstant.noRecordsMessage}}">
+                </kendo-grid-messages>
+                <kendo-grid-column field="userName" title="User Name" width="15%">
+                </kendo-grid-column>
+                <kendo-grid-column field="name" title="Name" width="18%" [filterable]="true">
+                </kendo-grid-column>
+                <kendo-grid-column field="honeyPin" title="Honey PIN" width="14%">
+                </kendo-grid-column>
+                <kendo-grid-column field="reportsTo" title="Reports To" width="15%">
+                </kendo-grid-column>
+                <kendo-grid-column field="role" title="User Role" width="17%">
+                </kendo-grid-column>
+                <kendo-grid-column field="isActive" title="Status" width="9%" filter="boolean" trueText="yes">
+                  <ng-template kendoGridFilterCellTemplate let-filter>
+                    <div>
+                      <kendo-dropdownlist [data]="_appConstant.listItems" textField="text" valueField="value" class="custom-dropdown"
+                        [(ngModel)]="_appConstant.selectedValue" [valuePrimitive]="true" (selectionChange)="activeInactiveFilterChange($event)"
+                        style="width:95% !important">
+                      </kendo-dropdownlist>
+                    </div>
+                  </ng-template>
+                  <ng-template kendoGridCellTemplate let-dataItem>
+                    <span class="{{dataItem.isActive == true ? 'activestatus' : 'inActivestatus'}}">{{
+                      dataItem.isActive ==
+                      true ? 'Active' : 'InActive'}}</span>
+                  </ng-template>
+                </kendo-grid-column>
+              </kendo-grid>
+            </ng-template>
+          </kendo-grid>
+        </div>
+      </div>
+    </div>
+  </div>

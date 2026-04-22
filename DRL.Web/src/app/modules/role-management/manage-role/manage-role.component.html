@@ -1,0 +1,54 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Home</a></li>
+    <li class="breadcrumb-item"><a [routerLink]='["/roles"]'>Roles</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{navTitleText}}</li>
+  </ol>
+</nav>
+<div class="top-title-bar">
+  <h2 class="page-title">{{navTitleText}}</h2>
+</div>
+<div class="white-box">
+  <div class="box-head">
+    <h3>{{ titleText }}</h3>
+  </div>
+
+  <form #formRole="ngForm" (ngSubmit)="saveRole()" name="formRole" novalidate>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-lg-3 col-md-3 col-sm-6">
+          <div class="form-field-row">
+            <label class="form-label">Name:
+              <span>*</span>
+            </label>
+            <div class="input-field">
+              <input type="text" matInput #roleName="ngModel" name="roleName" [disabled]="_appConstant.roleId!=''"
+                [(ngModel)]="SugarRole.roleName" required placeholder="Name">
+            </div>
+            <div class="text-danger" *ngIf="roleName.invalid && (roleName.dirty || roleName.touched)">
+              <p *ngIf="roleName.errors.required">Name is required</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-3 col-sm-6">
+          <div class="form-field-row">
+            <label class="form-label">Description:
+              <span>*</span>
+            </label>
+            <div class="input-field">
+              <input type="text" matInput #description="ngModel" name="description" [(ngModel)]="SugarRole.description"
+                required placeholder="Description">
+            </div>
+            <div class="text-danger" *ngIf="description.invalid && (description.dirty || description.touched)">
+              <p *ngIf="description.errors.required">Description is required</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="btn-groups">
+      <input class="btn btn-gray" type="button" value="Cancel" (click)="cancelRoleClick()">
+      <input class="btn btn-blue" type="submit" value="{{_appConstant.roleId == '' ?  'Save' : 'Update'}}" [disabled]="formRole.invalid">
+    </div>
+  </form>
+</div>

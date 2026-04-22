@@ -1,0 +1,16 @@
+.modal-header button:focus {
+    outline: none
+}
+
+.common-popup .container-fluid {
+    padding: 15px;
+}
+
+.custom-common-popup .container-fluid {
+    padding: 0px;
+    border-top: 0
+}
+
+.custom-common-popup .container-fluid p {
+    margin-bottom: 0px;
+}

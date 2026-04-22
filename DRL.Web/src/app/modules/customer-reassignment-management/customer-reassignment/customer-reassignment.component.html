@@ -1,0 +1,390 @@
+<div>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a [routerLink]='["/customers"]'>Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Customers</li>
+    </ol>
+  </nav>
+  <div class="top-title-bar">
+    <h2 class="page-title"> Customers </h2>
+    <div class="filter-role">
+    </div>
+  </div>
+  <div class="white-box" style="padding-bottom:20px;">
+    <div class="container-fluid">
+      <form #formCustomer="ngForm" name="CustomerForm" novalidate>
+        <div class="row">
+          <div class="col-lg-2 pad-r-0">
+            <mat-select placeholder="User" (selectionChange)="userValChange()" #userId="ngModel" name="userId"
+              [(ngModel)]="SugarCRMUser.userId">
+              <mat-option value="0">Select User</mat-option>
+              <mat-option *ngFor="let item of UsersList" [value]="item.recordId">
+                {{item.value}}
+              </mat-option>
+            </mat-select>
+          </div>
+          <span style="font-size: 13px;line-height: 32px;color: #000;font-weight: 600;margin-left: 15px;">OR</span>
+          <div class="col-lg-2 pad-r-0">
+            <mat-select placeholder="Territory" #team="ngModel" name="team" (selectionChange)="territoryValChange()"
+              [(ngModel)]="SugarCRMUser.territoryId" style="width:100%">
+              <mat-option>
+                <ngx-mat-select-search [formControl]="searchTerritoryfilterCtrl" noEntriesFoundLabel=noDataFoundLabel
+                  placeholderLabel="Search Territory">
+                </ngx-mat-select-search>
+              </mat-option>
+              <mat-option value="0">Select Territory</mat-option>
+              <mat-option *ngFor="let item of filteredSearchTerritoryList | async" [value]="item.recordId">
+                {{item.value}}
+              </mat-option>
+            </mat-select>
+          </div>
+          <div class="col-lg-2 pad-r-0">
+            <mat-select placeholder="Account Type" #accountTypeId="ngModel" name="accountTypeId"
+              [(ngModel)]="CustomerModel.accountTypeId">
+              <mat-option *ngFor="let item of AccountTypeList" [value]="item.recordId">
+                {{item.value}}
+              </mat-option>
+            </mat-select>
+          </div>
+          <div class="col-lg-2 pad-r-0">
+            <label style="margin: 5px 3px 0px 0px; font-size:13px;">
+              <mat-checkbox #includeDeleted="ngModel" name="includeDeleted" color="primary"
+                [(ngModel)]="CustomerModel.includeDeleted">
+              </mat-checkbox>
+              Include InActive
+            </label>
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div class="col-lg-2 pad-r-0">
+            <div class="input-field">
+              <input type="text" style="width:100%" matInput placeholder="Customer Name" #customerName="ngModel"
+                name="customerName" [(ngModel)]="CustomerModel.customerName" [maxLength]="500">
+            </div>
+          </div>
+          <div class="col-auto pad-r-0" style="font-size: 13px;">
+            <label style="margin: 5px 10px 0px 0px;">
+              <input type="radio" #exactMatch="ngModel" name="exactMatch" (change)="exactValChange('exact')"
+                [value]="CustomerModel.exactMatch" [(ngModel)]="CustomerModel.exactMatch">
+              Exact Match
+            </label>
+            <label style="margin: 5px 1px 0px 0px;">
+              <input type="radio" #partialMatch="ngModel" name="exactMatch" (change)="exactValChange('partial')"
+                [value]="CustomerModel.partialMatch" [(ngModel)]="CustomerModel.partialMatch">
+              Partial Match
+            </label>
+          </div>
+          <div class="col-lg-2 pad-r-0" style="font-size: 14px">
+            <div class="input-field">
+              <input type="text" matInput placeholder="Address" #address="ngModel" name="address"
+                [(ngModel)]="CustomerModel.address">
+            </div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div class="col-auto pad-r-0" style="font-size: 15px;margin: 5px 0px 0px 0px;">
+            Parent Number
+          </div>
+          <div class="col-lg-2 pad-r-0">
+            <div class="input-field">
+              <input type="text" matInput placeholder="Parent Number" #parentNumber="ngModel" name="parentNumber"
+                [(ngModel)]="CustomerModel.parentNumber" maxlength="10">
+            </div>
+          </div>
+          <div class="col-auto pad-r-0" style="font-size: 15px;margin: 5px 0px 0px 0px;">
+            Secondary Assignment
+          </div>
+          <div class="col-lg-2 pad-r-0">
+            <mat-select placeholder="Select Team" #team="ngModel" name="team" [(ngModel)]="SugarCRMUser.teamId"
+              style="width:100%">
+              <mat-option>
+                <ngx-mat-select-search [formControl]="searchTeamfilterCtrl" noEntriesFoundLabel=noDataFoundLabel
+                  placeholderLabel="Select Team">
+                </ngx-mat-select-search>
+              </mat-option>
+              <mat-option value="0">Select Team</mat-option>
+              <mat-option *ngFor="let item of filteredSearchTeamList | async" [value]="item.recordId">
+                {{item.value}}
+              </mat-option>
+            </mat-select>
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div class="col-lg-2 pad-r-0">
+            <mat-select placeholder="State" #stateId="ngModel" name="stateId" [(ngModel)]="CustomerModel.stateId"
+              (selectionChange)="GetAllCities()">
+              <mat-option value="">Select State</mat-option>
+              <mat-option *ngFor="let item of StateList" [value]="item.value">
+                {{item.value}}
+              </mat-option>
+            </mat-select>
+          </div>
+          <div class="col-lg-2 pad-r-0">
+            <mat-select placeholder="City" #cityId="ngModel" name="cityId" [(ngModel)]="CustomerModel.cityId">
+              <mat-option value="">Select City</mat-option>
+              <mat-option *ngFor="let item of CityList" [value]="item.value">
+                {{item.value}}
+              </mat-option>
+            </mat-select>
+          </div>
+          <div class="col-lg-1 pad-r-0">
+            <div class="input-field">
+              <input type="text" matInput placeholder="Zip Code" #zipCode="ngModel" name="zipCode"
+                [(ngModel)]="CustomerModel.zipCode">
+            </div>
+          </div>
+          <div class="col-lg-7 pad-r-0">
+            <input class="btn btn-blue ml-2" type="submit" value="Apply" (click)="Apply()">
+            <button type="button" class="btn btn-blue  ml-2" [disabled]="customerIds.length == 0"
+              (click)="deleteCustomers()">InActive</button>
+            <button type="button" class="btn btn-blue  ml-2" [disabled]="customerIds.length == 0"
+              (click)="activateCustomers()">Active</button>
+            <button type="button" class="btn btn-blue ml-2" (click)="exportFiltereData(excelexport)">Export</button>
+            <button type="button" class="btn btn-blue ml-2" (click)="excelexportAll.save()">Export All</button>
+            <input class="btn btn-blue ml-2 text-warning" type="button" value="Clear" (click)="Clear()">
+          </div>
+        </div>
+        <mat-expansion-panel [expanded]="true">
+          <div class="row" style="margin-top:3px;">
+            <div class="col-lg-12">
+              <p style="display:inline">Select Role to filter Territory/Team selection: </p>
+              &nbsp; &nbsp;
+              <mat-checkbox *ngFor="let item of RoleList; let i = index" color="primary" id="{{item.recordId}}"
+                [checked]="checkedRoles[item.recordId]" value="{{item.value}}"
+                (change)="getTerritoryFromRole($event)">{{item.value}} &nbsp; &nbsp;
+              </mat-checkbox>
+            </div>
+          </div>
+          <div class="row" style="margin-top:3px;">
+            <div class="col-lg-2 pad-r-0" style="max-width: 118px;">
+              Update Territory
+            </div>
+            <div class="col-lg-2 pad-r-0">
+              <mat-select placeholder="Select Territory" #UpdateTeamId="ngModel" name="UpdateTeamId"
+                [(ngModel)]="teamAssignmentModel.UpdateTeamId">
+                <mat-option>
+                  <ngx-mat-select-search [formControl]="UpdateTerritoryfilterCtrl" noEntriesFoundLabel=noDataFoundLabel
+                    placeholderLabel="Search Territory">
+                  </ngx-mat-select-search>
+                </mat-option>
+                <mat-option value="0">Select Territory</mat-option>
+                <mat-option *ngFor="let item of filteredUpdateTerritoryList | async" [value]="item.recordId">
+                  {{item.value}}
+                </mat-option>
+              </mat-select>
+            </div>
+            <div class="col-lg-2 pad-r-0" style="max-width: 81px;">
+              Add Team
+            </div>
+            <div class="col-lg-2 pad-r-0">
+              <mat-select placeholder="Select Team" #AddTeamId="ngModel" name="AddTeamId"
+                [(ngModel)]="teamAssignmentModel.AddTeamId">
+                <mat-option>
+                  <ngx-mat-select-search [formControl]="AddTerritoryfilterCtrl" [noEntriesFoundLabel]=noDataFoundLabel
+                    [placeholderLabel]="'Search Team'">
+                  </ngx-mat-select-search>
+                </mat-option>
+                <mat-option value="">Select Team</mat-option>
+                <mat-option *ngFor="let item of filteredAddTerritoryList | async" [value]="item.recordId">
+                  {{item.value}}
+                </mat-option>
+              </mat-select>
+            </div>
+            <div class="col-lg-2 pad-r-0" style="max-width: 108px;">
+              Remove Team
+            </div>
+            <div class="col-lg-2 pad-r-0">
+              <mat-select placeholder="Select Team" #RemoveTeamId="ngModel" name="RemoveTeamId"
+                [(ngModel)]="teamAssignmentModel.RemoveTeamId">
+                <mat-option>
+                  <ngx-mat-select-search [formControl]="RemoveTerritoryfilterCtrl"
+                    [noEntriesFoundLabel]=noDataFoundLabel [placeholderLabel]="'Search Team'">
+                  </ngx-mat-select-search>
+                </mat-option>
+                <mat-option value="">Select Team</mat-option>
+                <mat-option *ngFor="let item of filteredRemoveTerritoryList | async" [value]="item.recordId">
+                  {{item.value}}
+                </mat-option>
+              </mat-select>
+            </div>
+            <div class="ml-2 pad-r-0">
+              <input class="btn btn-blue" type="submit" value="Apply" (click)="saveCustomerDetails()"
+                [disabled]="(teamAssignmentModel.RemoveTeamId == 0 && teamAssignmentModel.AddTeamId == 0 && teamAssignmentModel.UpdateTeamId == 0)">
+            </div>
+          </div>
+        </mat-expansion-panel>
+        <kendo-excelexport [data]="CustomerList" fileName="AllCustomers.xlsx" #excelexportAll>
+          <kendo-excelexport-column field="customerName" title="Customer Name" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="customerNumber" title="Customer No." width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="shippingAddress" title="Shipping Address" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="shippingAddressCity" title="Shipping City" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="shippingAddressState" title="Shipping State" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="shippingAddressZipCode" title="Shipping Zipcode" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="territory" title="Territory" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="team" title="Teams" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="accountType" title="Type" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="insideSales" title="Inside Sales" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="physicalAddress" title="Physical Address" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="physicalAddressCity" title="Physical City" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="physicalAddressState" title="Physical State" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="physicalAddressZipCode" title="Physical Zipcode" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="broker" title="Broker" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="isDeleted" title="Is InActive" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="keyAccount" title="Key Account" width="200">
+          </kendo-excelexport-column>
+        </kendo-excelexport>
+
+        <kendo-excelexport [data]="gridView.data" fileName="Customers.xlsx" #excelexport>
+          <kendo-excelexport-column field="customerName" title="Customer Name" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="customerNumber" title="Customer No." width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="shippingAddress" title="Shipping Address" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="shippingAddressCity" title="Shipping City" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="shippingAddressState" title="Shipping State" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="shippingAddressZipCode" title="Shipping Zipcode" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="territory" title="Territory" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="team" title="Teams" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="accountType" title="Type" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="insideSales" title="Inside Sales" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="physicalAddress" title="Physical Address" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="physicalAddressCity" title="Physical City" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="physicalAddressState" title="Physical State" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="physicalAddressZipCode" title="Physical Zipcode" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="broker" title="Broker" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="isDeleted" title="Is InActive" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="keyAccount" title="Key Account" width="200">
+          </kendo-excelexport-column>
+        </kendo-excelexport>
+
+        <div class="table-responsive" style="width:100%;margin-top: 10px;">
+          <div class="mat-elevation-z8">
+            <ng-template #template let-anchor>
+              <div *ngFor="let item of anchor.nativeElement.innerText?.split(',')">
+                {{ item }}
+              </div>
+            </ng-template>
+            <div *ngIf="showGrid">
+              <div kendoTooltip showOn="none" [tooltipTemplate]="template" filter=".k-grid td"
+                (mouseover)="showTooltip($event)">
+                <kendo-grid id="customergrid" [kendoGridBinding]="CustomerList" [filterable]="isGridFilterable"
+                  [pageSize]="state.take" [skip]="state.skip" [sortable]="true" [columnMenu]="false" [sort]="state.sort"
+                  (dataStateChange)="dataStateChange($event)" [pageable]="true" [resizable]="true"
+                  style="width: 2500px;">
+                  <kendo-grid-checkbox-column showSelectAll="true" width="5px" [columnMenu]="false">
+                    <ng-template kendoGridHeaderTemplate let-dataItem>
+                      <mat-checkbox (change)="selectAllRows($event)" [checked]="allRowsSelected">
+                      </mat-checkbox>
+                    </ng-template>
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                      <mat-checkbox [checked]="dataItem.checked" id="{{dataItem.customerId}}"
+                        (change)="selectRow($event)">
+                      </mat-checkbox>
+                    </ng-template>
+                  </kendo-grid-checkbox-column>
+                  <kendo-grid-messages noRecords="{{_appConstant.noRecordsMessage}}">
+                  </kendo-grid-messages>
+                  <kendo-grid-column field="customerName" title="Name" width="20" [minResizableWidth]="150">
+                  </kendo-grid-column>
+                  <kendo-grid-column field="customerNumber" title="Customer #" width="10" [minResizableWidth]="150">
+                  </kendo-grid-column>
+                  <kendo-grid-column field="shippingAddress" title="Shipping Address" width="15"
+                    [minResizableWidth]="150">
+                  </kendo-grid-column>
+                  <kendo-grid-column field="shippingAddressCity" title="Shipping City" width="10"
+                    [minResizableWidth]="150">
+                  </kendo-grid-column>
+                  <kendo-grid-column field="shippingAddressState" title="Shipping State" width="10"
+                    [minResizableWidth]="150">
+                  </kendo-grid-column>
+                  <kendo-grid-column field="shippingAddressZipCode" title="Shipping Zipcode" width="10"
+                    [minResizableWidth]="150">
+                  </kendo-grid-column>
+                  <kendo-grid-column field="territory" title="Territory" width="10" [minResizableWidth]="150">
+                  </kendo-grid-column>
+                  <kendo-grid-column field="team" title="Teams" width="10" [minResizableWidth]="150">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                      <div *ngFor="let item of dataItem.team?.split(',')">
+                        {{ item }}
+                      </div>
+                    </ng-template>
+                  </kendo-grid-column>
+                  <kendo-grid-column field="accountType" title="Account Type" width="10" [minResizableWidth]="150">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                      <span style="color:green">{{ dataItem.accountType}}</span>
+                    </ng-template>
+                  </kendo-grid-column>
+                  <kendo-grid-column field="insideSales" title="Inside Sales" width="15" [minResizableWidth]="150">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                      <div *ngFor="let item of dataItem.insideSales?.split(',')">
+                        {{ item }}
+                      </div>
+                    </ng-template>
+                  </kendo-grid-column>
+                  <kendo-grid-column field="physicalAddress" title="Physical Address" width="15"
+                    [minResizableWidth]="150">
+                  </kendo-grid-column>
+                  <kendo-grid-column field="physicalAddressCity" title="Physical City" width="10"
+                    [minResizableWidth]="150">
+                  </kendo-grid-column>
+                  <kendo-grid-column field="physicalAddressState" title="Physical State" width="10"
+                    [minResizableWidth]="150">
+                  </kendo-grid-column>
+                  <kendo-grid-column field="physicalAddressZipCode" title="Physical Zipcode" width="10"
+                    [minResizableWidth]="150">
+                  </kendo-grid-column>
+                  <kendo-grid-column field="broker" title="Broker" width="10" [minResizableWidth]="150">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                      <div *ngFor="let item of dataItem.broker?.split(',')">
+                        {{ item }}
+                      </div>
+                    </ng-template>
+                  </kendo-grid-column>
+                  <kendo-grid-column field="isDeleted" title="Is InActive" width="10" [minResizableWidth]="150">
+                  </kendo-grid-column>
+                  <kendo-grid-column field="keyAccount" title="Key Account" width="10" [minResizableWidth]="150">
+                    <ng-template kendoGridCellTemplate let-dataItem>
+                      <div *ngFor="let item of dataItem.keyAccount?.split(',')">
+                        {{ item }}
+                      </div>
+                    </ng-template>
+                  </kendo-grid-column>
+                </kendo-grid>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

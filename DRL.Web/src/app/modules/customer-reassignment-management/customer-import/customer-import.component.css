@@ -1,0 +1,32 @@
+.btn-groups {
+    padding-left: 0px !important;
+}
+
+#btnDownloadTemplate {
+    width: 160px !important;
+}
+
+
+::ng-deep .k-grid .k-grid-content td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+::ng-deep .k-tooltip {
+    background-color: #127ba3;
+}
+
+::ng-deep .k-callout {
+    color: #127ba3;
+}
+
+::ng-deep .k-grid-header .k-header {
+    white-space: normal !important;  /* Allows wrapping */
+    overflow: visible !important;    /* Ensure content is visible */
+    text-overflow: clip !important;  /* Disable ellipsis */
+    word-wrap: break-word;           /* Break long words if necessary */
+    word-break: break-word;
+    padding: 5px;                    /* Add padding to header cells */
+    height: auto;                    /* Allow the header height to adjust */
+  }

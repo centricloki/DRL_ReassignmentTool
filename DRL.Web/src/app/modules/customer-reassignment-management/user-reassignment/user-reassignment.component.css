@@ -1,0 +1,54 @@
+mat-select
+{
+    border: #c9cbcf solid 1px;
+    padding: 5px 10px;
+    width: 100%;
+    font-size: 15px;
+    color: #646464;
+    font-weight: 400;
+    background-position: right center;
+    background-repeat: no-repeat;
+    outline: 0;
+    -webkit-appearance: none;
+}
+::ng-deep .mat-select-placeholder {
+    color: rgba(0,0,0,.87) !important;
+}
+::ng-deep .mat-select-search-input{
+    border: white 0px !important;
+    outline: none !important;
+}
+::ng-deep .mat-input-element {
+    caret-color: white !important;
+    outline: none !important;
+}
+.site-btn
+{
+    background-color: #127ba3 !important;
+    color: #ffffff !important; 
+    height: 35px !important;
+}
+::ng-deep .mat-checkbox-checked .mat-checkbox-background {
+    background-color: #127ba3 !important;
+  }
+
+/* 22 May */
+.cdk-overlay-pane .mat-select-search-panel{
+    font-size: 16px;
+}
+.cdk-overlay-pane .mat-select-search-inner{
+    width: 214px !important;
+}
+.cdk-overlay-pane .mat-select-search-input .mat-input-element {
+    background: rgba(0,0,0,.12);
+}
+.mat-expansion-panel {
+    border: 1px solid #f1f1f1!important;
+    margin-top: 8px!important;
+}
+::ng-deep .mat-expansion-panel-body {
+    padding: 0 10px 8px!important;
+}
+.top-title-bar{
+    display: none!important;
+}
