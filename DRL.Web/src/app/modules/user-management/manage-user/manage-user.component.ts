@@ -39,18 +39,17 @@ export class ManageUserComponent implements OnInit, OnDestroy {
 
   myItems: TeamModel[] = [];
   userZones: ZoneModel[] = [];
-  selectedZoneId:number;
+  selectedZoneId: number;
   allZones: ZoneModel[] = [];
   teamModel = new TeamModel();
-  avpRole : RoleModel = new RoleModel();
-  bdRole : RoleModel = new RoleModel();
+  avpRole: RoleModel = new RoleModel();
+  bdRole: RoleModel = new RoleModel();
   private unsubscribe$ = new Subject<void>();
 
   teamSearchControl = new FormControl('');
   defTeamSearchControl = new FormControl('');
   filteredTeamList: Observable<any[]>;
   filteredDefTeamList: Observable<any[]>;
-
 
   ngOnDestroy() {
     this._appConstant.userId = undefined;
@@ -87,17 +86,28 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     );
   }
 
- private filterTeams(value: string): any[] {
+  triggerEditValidation(): void {
+    // Defer execution to ensure Angular has registered the 'pin' control
+    Promise.resolve().then(() => {
+      const pinControl = this.userInfoForm?.controls['pin'];
+      if (pinControl && pinControl.invalid) {
+        pinControl.markAsTouched();
+        pinControl.updateValueAndValidity();
+      }
+    });
+  }
+
+  private filterTeams(value: string): any[] {
     // Handle undefined/null TeamList
     if (!this.TeamList || !Array.isArray(this.TeamList)) {
       return [];
     }
-    
+
     // Handle undefined/null search value
     if (!value) {
       return this.TeamList;
     }
-    
+
     const filterValue = value.toLowerCase();
     return this.TeamList.filter(team => {
       // Handle undefined/null team or team.name
@@ -106,6 +116,50 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       }
       return team.name.toLowerCase().includes(filterValue);
     });
+  }
+
+
+  get isPinActive(): boolean {
+    return this.SugarCRMUser.userId != null && this.SugarCRMUser.userId !== '';
+  }
+  get isPinRequired(): boolean {
+    return this.isPinActive;
+  }
+  get isPinDisabled(): boolean {
+    return !this.isPinActive;
+  }
+
+  // Allow only numeric keypress (0-9)
+  onPinKeypress(event: KeyboardEvent): boolean {
+    const charCode = event.which || event.keyCode;
+    // Allow: backspace, delete, tab, escape, enter
+    if ([8, 9, 13, 27, 46].includes(charCode)) {
+      return true;
+    }
+    // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+    if ((event.ctrlKey || event.metaKey) && [65, 67, 86, 88].includes(charCode)) {
+      return true;
+    }
+    // Block non-numeric characters
+    if (charCode < 48 || charCode > 57) {
+      event.preventDefault();
+      return false;
+    }
+    // Block if already 4 digits
+    const input = event.target as HTMLInputElement;
+    if (input.value.length >= 4) {
+      event.preventDefault();
+      return false;
+    }
+    return true;
+  }
+
+  // Sanitize input: remove non-digits, enforce max 4
+  onPinInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digitsOnly = input.value.replace(/\D/g, '').slice(0, 4);
+    input.value = digitsOnly;
+    this.SugarCRMUser.pin = digitsOnly; // Sync with model
   }
 
   canDeactivate(): Promise<boolean> | boolean {
@@ -140,14 +194,14 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     });
   }
 
-  getAVPRole(){
+  getAVPRole() {
     this._usersService.getRoleByName('AVP').pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
       var data = this._commonLookupData.parseData(response);
       this.avpRole = data.data as RoleModel;
     });
   }
 
-  getbdRole(){
+  getbdRole() {
     this._usersService.getRoleByName('BD Manager').pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
       var data = this._commonLookupData.parseData(response);
       this.bdRole = data.data as RoleModel;
@@ -164,13 +218,15 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       this.SugarCRMUser.roleId = (this.SugarCRMUser.roleId != null && this.SugarCRMUser.roleId != '') ? this.SugarCRMUser.roleId.toString() : '';
       this.SugarCRMUser.bdid = (this.SugarCRMUser.bdid != null && this.SugarCRMUser.bdid != '') ? this.SugarCRMUser.bdid.toString() : '';
       this.SugarCRMUser.avpid = (this.SugarCRMUser.avpid != null && this.SugarCRMUser.avpid != '') ? this.SugarCRMUser.avpid.toString() : '';
-      this.SugarCRMUser.defaultTeamId = !this.SugarCRMUser.defaultTeamId  ? '' : this.SugarCRMUser.defaultTeamId;
+      this.SugarCRMUser.defaultTeamId = !this.SugarCRMUser.defaultTeamId ? '' : this.SugarCRMUser.defaultTeamId;
       this.myItems = this.SugarCRMUser.teams;
-      if(this.SugarCRMUser.roleId == this.avpRole.roleId){
+      if (this.SugarCRMUser.roleId == this.avpRole.roleId) {
         this.onAVPChange(undefined);
       }
+      // Trigger immediate validation UI if PIN is invalid
+      this.triggerEditValidation();
     });
-    
+
     this.teamModel = new TeamModel();
   }
 
@@ -243,7 +299,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.SugarCRMUser.teams = this.myItems;
     this.SugarCRMUser.zones = this.userZones;
 
-    if(this.SugarCRMUser.roleId != this.avpRole.roleId){
+    if (this.SugarCRMUser.roleId != this.avpRole.roleId) {
       if (this.SugarCRMUser.teams.length > 0) {
         this.SugarCRMUser.territoryId = "";
         for (var i = 0; i < this.SugarCRMUser.teams.length; i++) {
@@ -253,7 +309,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         this.SugarCRMUser.territoryId = "0";
       }
     }
-    
+
     if (this._appConstant.userId == "0" || this._appConstant.userId == null || this._appConstant.userId == '') {
       this.SugarCRMUser.pin = Math.floor(1000 + Math.random() * 9000).toString();
       this.SugarCRMUser.createdBy = "1";
@@ -288,18 +344,18 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         const team = this.TeamList.find(x => x.teamId == this.teamModel.teamId);
 
         if (this.SugarCRMUser.roleId == this.bdRole.roleId && team.bdid && team.bdid != 0 && team.bdid.toString() != this.SugarCRMUser.bdid) {
-            //this._commonLookupData.confirmDialog('This territory is assigned to another BD manager. Do you want to override?', (result: any) => {
-              //if (result) {
-                this.teamModel.createdBy = "0";
-                this.teamModel.createdDate = new Date();
-                this.teamModel.updatedBy = "0";
-                this.teamModel.updateDate = new Date();
-                this.teamModel.name = team.name;
-                this.myItems.push(
-                  this.teamModel
-                );
-              //}
-           // });
+          //this._commonLookupData.confirmDialog('This territory is assigned to another BD manager. Do you want to override?', (result: any) => {
+          //if (result) {
+          this.teamModel.createdBy = "0";
+          this.teamModel.createdDate = new Date();
+          this.teamModel.updatedBy = "0";
+          this.teamModel.updateDate = new Date();
+          this.teamModel.name = team.name;
+          this.myItems.push(
+            this.teamModel
+          );
+          //}
+          // });
         }
         else {
           this.teamModel.createdBy = "0";
@@ -324,12 +380,12 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     });
   }
 
-  addUserZone(){
-    if(this.selectedZoneId && this.selectedZoneId != 0){
+  addUserZone() {
+    if (this.selectedZoneId && this.selectedZoneId != 0) {
       if (this.userZones.find(x => x.zoneId == this.selectedZoneId)) {
         this._toasterService.pop('error', 'Error', "Zone already exist");
       }
-      else{
+      else {
         let selectedZone = this.allZones.find(x => x.zoneId == this.selectedZoneId);
         if (selectedZone.avpid && selectedZone.avpid != 0 && selectedZone.avpid.toString() != this.SugarCRMUser.avpid) {
           this._commonLookupData.confirmDialog('This zone is assigned to another AVP. Do you want to override?', (result: any) => {
@@ -361,7 +417,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     });
   }
 
-  getAllAVPZones(avpid:number): void {
+  getAllAVPZones(avpid: number): void {
     this._usersService.GetAllZonesForAVP(avpid).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
       var data = this._commonLookupData.parseData(res);
       this.userZones = (data.data || []) as ZoneModel[];
@@ -377,7 +433,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     });
   }
 
-  getAllBDTerritories(bdId:number): void {
+  getAllBDTerritories(bdId: number): void {
     this._usersService.GetAllTerritoriesForBD(bdId).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
       var data = this._commonLookupData.parseData(res);
       this.myItems = (data.data || []) as TeamModel[];
@@ -385,7 +441,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadUserTerritories(userId:number): void {
+  loadUserTerritories(userId: number): void {
     this._usersService.GetAllTerritoriesForUser(userId).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
       var data = this._commonLookupData.parseData(res);
       this.myItems = (data.data || []) as TeamModel[];
@@ -408,26 +464,26 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     if (roleId !== this.bdRole.roleId && roleId !== this.avpRole.roleId) {
       if (!isNaN(userId)) {
         this.loadUserTerritories(userId);
-      } 
+      }
     }
   }
 
   onAVPChange(event: any): void {
     let avpId = Number(this.SugarCRMUser.avpid);
-    if(!isNaN(avpId)){
+    if (!isNaN(avpId)) {
       this.getAllAVPZones(avpId);
     }
-    else{
+    else {
       this.userZones = [];
     }
   }
 
   onBDChange(event: any): void {
     let bdId = Number(this.SugarCRMUser.bdid);
-    if(!isNaN(bdId)){
+    if (!isNaN(bdId)) {
       this.getAllBDTerritories(bdId);
     }
-    else{
+    else {
       this.myItems = [];
     }
   }
