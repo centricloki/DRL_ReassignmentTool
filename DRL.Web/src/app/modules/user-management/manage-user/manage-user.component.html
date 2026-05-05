@@ -63,16 +63,18 @@
           <div class="col-lg-3 col-md-3 col-sm-6">
             <div class="form-field-row">
               <label class="form-label">Honey PIN:
-                <span>*</span>
+                <span *ngIf="isPinRequired">*</span>
               </label>
               <div class="input-field">
                 <input type="text" placeholder="Honey PIN" matInput #pin="ngModel" name="pin"
-                  [(ngModel)]="SugarCRMUser.pin" [disabled]="!(SugarCRMUser.userId!='' && SugarCRMUser.userId!=null)">
+                  [(ngModel)]="SugarCRMUser.pin" [disabled]="isPinDisabled" [required]="isPinRequired" pattern="^\d{4}$"
+                  maxlength="4" (input)="onPinInput($event)" (keypress)="onPinKeypress($event)">
               </div>
+              <!-- Validation Errors -->
               <div class="text-danger" *ngIf="pin.invalid && (pin.dirty || pin.touched)">
-                <p *ngIf="pin.errors.required">Honey PIN is required</p>
+                <p *ngIf="pin.errors?.required">Honey PIN is required</p>
+                <p *ngIf="pin.errors?.pattern">Honey PIN must be valid 4 digits</p>
               </div>
-
             </div>
           </div>
           <div class="col-lg-3 col-md-3 col-sm-6">
@@ -93,7 +95,8 @@
             <div class="form-field-row">
               <label class="form-label">Role:</label>
               <div class="input-field">
-                <mat-select placeholder="Role" #roleId="ngModel" name="roleId" [(ngModel)]="SugarCRMUser.roleId" (selectionChange)="onRoleChange($event)">
+                <mat-select placeholder="Role" #roleId="ngModel" name="roleId" [(ngModel)]="SugarCRMUser.roleId"
+                  (selectionChange)="onRoleChange($event)">
                   <mat-option value="">Select Role</mat-option>
                   <mat-option *ngFor="let item of RoleList" [value]="item.recordId">
                     {{item.value}}
@@ -109,7 +112,7 @@
                 <mat-select placeholder="Default Team" #defaultTeamId="ngModel" name="defaultTeamId"
                   [(ngModel)]="SugarCRMUser.defaultTeamId">
                   <mat-option>
-                  <ngx-mat-select-search [formControl]="defTeamSearchControl" placeholderLabel="Search teams..."
+                    <ngx-mat-select-search [formControl]="defTeamSearchControl" placeholderLabel="Search teams..."
                       noEntriesFoundLabel="No teams found">
                     </ngx-mat-select-search>
                   </mat-option>
@@ -157,7 +160,8 @@
                 <span>*</span>
               </label>
               <div class="input-field">
-                <mat-select placeholder="AVP" #avpId="ngModel" name="avpId" [(ngModel)]="SugarCRMUser.avpid" required (selectionChange)="onAVPChange($event)">
+                <mat-select placeholder="AVP" #avpId="ngModel" name="avpId" [(ngModel)]="SugarCRMUser.avpid" required
+                  (selectionChange)="onAVPChange($event)">
                   <mat-option value="">Select AVP</mat-option>
                   <mat-option *ngFor="let item of avpList" [value]="item.recordId">
                     {{item.value}}
@@ -175,7 +179,8 @@
                 <span>*</span>
               </label>
               <div class="input-field">
-                <mat-select placeholder="BD Manager" #bdId="ngModel" name="bdId" [(ngModel)]="SugarCRMUser.bdid" required (selectionChange)="onBDChange($event)">
+                <mat-select placeholder="BD Manager" #bdId="ngModel" name="bdId" [(ngModel)]="SugarCRMUser.bdid"
+                  required (selectionChange)="onBDChange($event)">
                   <mat-option value="">Select BD Manager</mat-option>
                   <mat-option *ngFor="let item of bdList" [value]="item.recordId">
                     {{item.value}}
@@ -204,7 +209,8 @@
               <label class="form-label">Team:
               </label>
               <div class="select-field">
-                <mat-select placeholder="Team" #team="ngModel" name="team" [(ngModel)]="teamModel.teamId" class="custom-dropdown">
+                <mat-select placeholder="Team" #team="ngModel" name="team" [(ngModel)]="teamModel.teamId"
+                  class="custom-dropdown">
                   <mat-option>
                     <ngx-mat-select-search [formControl]="teamSearchControl" placeholderLabel="Search teams..."
                       noEntriesFoundLabel="No teams found">
@@ -221,7 +227,8 @@
           <div class="col-lg-3 col-md-3 col-sm-6">
             <div class="form-field-row"> <label class="form-label"></label>
               <div class="select-field">
-                <input class="btn btn-default site-btn" type="button" value="Add" (click)="addUserToTeam()"></div>
+                <input class="btn btn-default site-btn" type="button" value="Add" (click)="addUserToTeam()">
+              </div>
             </div>
           </div>
         </div>
@@ -267,7 +274,8 @@
           <div class="col-lg-3 col-md-3 col-sm-6">
             <div class="form-field-row"> <label class="form-label"></label>
               <div class="select-field">
-                <input class="btn btn-default site-btn" type="button" value="Add" (click)="addUserZone()"></div>
+                <input class="btn btn-default site-btn" type="button" value="Add" (click)="addUserZone()">
+              </div>
             </div>
           </div>
         </div>
