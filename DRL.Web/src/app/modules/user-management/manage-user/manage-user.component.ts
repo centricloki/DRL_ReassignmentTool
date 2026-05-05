@@ -8,7 +8,7 @@ import { UsersService } from '../users.service';
 import { AppConstant } from '../../../app.constants';
 import { ToasterService } from 'angular2-toaster';
 import { Observable, Subject, Subscription } from 'rxjs';
-import { map, startWith, takeUntil } from 'rxjs/operators';
+import { map, startWith, takeUntil, debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
 import { LookupItemModel } from 'src/app/Models/LookupItemModel';
 import { ZoneModel } from 'src/app/Models/ZoneModel';
 import { RoleModel } from 'src/app/Models/RoleModel';
@@ -50,7 +50,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   defTeamSearchControl = new FormControl('');
   filteredTeamList: Observable<any[]>;
   filteredDefTeamList: Observable<any[]>;
-  private pinValidationSubscription: Subscription | null = null;
+  private pinValidationSub: Subscription | null = null;
 
   ngOnDestroy() {
     this._appConstant.userId = undefined;
@@ -87,41 +87,32 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     );
   }
 
-  setupPinValidationListener(): void {
-    // Clean up any existing subscription first
-    this.pinValidationSubscription?.unsubscribe();
+  triggerEditValidation(): void {
+    this.pinValidationSub?.unsubscribe();
 
-    // Defer to ensure control is registered in NgForm
     Promise.resolve().then(() => {
-      const pinControl = this.userInfoForm?.controls?.['pin'];
+      // Safe access without optional chaining
+      if (!this.userInfoForm || !this.userInfoForm.controls) return;
+
+      const pinControl = this.userInfoForm.controls['pin'];
       if (!pinControl) return;
 
-      // Listen for value changes
-      this.pinValidationSubscription = pinControl.valueChanges.subscribe(() => {
-        this.checkPinValidationState(pinControl);
+      // ✅ Safe subscription with RxJS operators
+      this.pinValidationSub = pinControl.valueChanges.pipe(
+        // Wait 300ms after user stops typing
+        debounceTime(300),
+        // Only emit if value actually changed (ignores same value re-emissions)
+        distinctUntilChanged(),
+        // Only process when control is enabled AND has a value
+        filter(() => !pinControl.disabled && pinControl.value != null && pinControl.value !== '')
+      ).subscribe(() => {
+        // ⚠️ DO NOT call updateValueAndValidity() here - causes infinite loop!
+        // Angular auto-runs validation on value change. Just mark as touched to show UI.
+        if (pinControl.invalid) {
+          pinControl.markAsTouched(); // Triggers red border + error display
+        }
       });
-
-      // Also listen for status changes (enabled/disabled + validation updates)
-      pinControl.statusChanges?.subscribe(() => {
-        this.checkPinValidationState(pinControl);
-      });
-
-      // Initial check in case value is already set
-      this.checkPinValidationState(pinControl);
     });
-  }
-
-  private checkPinValidationState(control: any): void {
-    // Only validate if control is enabled AND has a value
-    if (!control.disabled && control.value != null && control.value !== '') {
-      // Force re-validation to ensure pattern/required run
-      control.updateValueAndValidity();
-
-      // Show errors immediately if invalid
-      if (control.invalid) {
-        control.markAsTouched();
-      }
-    }
   }
 
   private filterTeams(value: string): any[] {
@@ -250,6 +241,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       if (this.SugarCRMUser.roleId == this.avpRole.roleId) {
         this.onAVPChange(undefined);
       }
+      this.triggerEditValidation();
     });
 
     this.teamModel = new TeamModel();
