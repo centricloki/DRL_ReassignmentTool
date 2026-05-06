@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ZoneService } from '../zone.service';
 import { ZoneModel } from 'src/app/Models/ZoneModel';
-import { ToastrService } from 'ngx-toastr';
+
 
 @Component({
   selector: 'app-manage-zone',
@@ -22,7 +22,8 @@ export class ManageZoneComponent implements OnInit {
     private zoneService: ZoneService,
     private router: Router,
     private route: ActivatedRoute,
-    private toastr: ToastrService
+    private toastr: ToastHelper
+
   ) {
     this.zoneForm = this.fb.group({
       zoneId: [0],

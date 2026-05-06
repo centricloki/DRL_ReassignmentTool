@@ -1,7 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { ZoneService } from '../zone.service';
-import { ToastrService } from 'ngx-toastr';
 import { ConfirmDialogComponent } from 'src/app/confirm-dialog/confirm-dialog.component';
 import { WarningDialogComponent } from 'src/app/warning-dialog/warning-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
@@ -20,7 +19,7 @@ export class ZoneListComponent implements OnInit {
   constructor(
     private zoneService: ZoneService,
     private router: Router,
-    private toastr: ToastrService,
+    private toastr: ToastHelper,
     public dialog: MatDialog
   ) { }
 

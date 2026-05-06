@@ -26,6 +26,7 @@ import { AngularFontAwesomeModule } from 'angular-font-awesome';
 import { LoginComponent } from './login/login.component';
 import { HttpClientModule } from '@angular/common/http';
 import { SessionTimeoutService } from './services/SessionTimeoutService';
+import { ToastHelper } from './services/ToastHelper';
 
 const routes: Routes = [
   {
@@ -92,7 +93,7 @@ const routes: Routes = [
     BrowserModule,
     HttpModule,
     FormsModule, ReactiveFormsModule,
-    RouterModule.forRoot(routes, { 
+    RouterModule.forRoot(routes, {
       preloadingStrategy: PreloadAllModules,
       onSameUrlNavigation: 'reload'
     }),
@@ -110,7 +111,8 @@ const routes: Routes = [
   providers: [AuthGuardService, AuthenticationService
     , CommonService, HttpService, AppConstant, ToasterService
     , RolesService, { provide: LocationStrategy, useClass: PathLocationStrategy }
-    , SessionTimeoutService],
+    , SessionTimeoutService
+    , ToastHelper],
   bootstrap: [AppComponent],
   entryComponents: [ConfirmDialogComponent, WarningDialogComponent]
 })
