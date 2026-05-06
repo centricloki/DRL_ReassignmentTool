@@ -177,7 +177,7 @@ namespace DRL.Core.Service
             return true;
         }
 
-        public ENTZone GetZone(int zoneId)
+        public ENTZone GetZone(long zoneId)
         {
             try
             {
@@ -194,65 +194,67 @@ namespace DRL.Core.Service
             return null;
         }
 
+        //public List<ENTZoneResponse> GetZoneList()
+        //{
+        //    List<ENTZoneResponse> result = new List<ENTZoneResponse>();
+        //    try
+        //    {
+        //        var zones = _zoneRepository.GetAllZone().Where(x => x.IsActive && !x.IsDeleted).ToList();
+        //        foreach (var zone in zones)
+        //        {
+        //            var zoneResponse = new ENTZoneResponse
+        //            {
+        //                ZoneId = zone.ZoneId,
+        //                ZoneName = zone.ZoneName,
+        //                IsActive = zone.IsActive,
+        //                UpdatedDate = zone.UpdateDate
+        //            };
+
+        //            // Get AVP details if available
+        //            if (zone.AVPID.HasValue && zone.AVPID > 0)
+        //            {
+        //                var avpUser = _userRepository.GetUser(zone.AVPID.Value);
+        //                if (avpUser != null)
+        //                {
+        //                    zoneResponse.AVPID = zone.AVPID;
+        //                    zoneResponse.AVPName = $"{avpUser.FirstName ?? ""} {avpUser.LastName ?? ""}";
+        //                }
+        //            }
+        //            result.Add(zoneResponse);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.GetZoneList" + ex);
+        //    }
+        //    return result;
+        //}
+
         public List<ENTZoneResponse> GetZoneList()
         {
             List<ENTZoneResponse> result = new List<ENTZoneResponse>();
+            string connString = _configuration.GetConnectionString("DefaultConnection"); ;
             try
             {
-                var zones = _zoneRepository.GetAllZone().Where(x => x.IsActive && !x.IsDeleted).ToList();
-                foreach (var zone in zones)
+                result = SqlDBHelper.RawSqlQuery("EXEC [sp_DSD_GetAllZones] ", x => new ENTZoneResponse
                 {
-                    var zoneResponse = new ENTZoneResponse
-                    {
-                        ZoneId = zone.ZoneId,
-                        ZoneName = zone.ZoneName,
-                        IsActive = zone.IsActive,
-                        CreatedDate = zone.CreatedDate,
-                        UpdatedDate = zone.UpdateDate
-                    };
-
-                    // Get AVP details if available
-                    if (zone.AVPID.HasValue && zone.AVPID > 0)
-                    {
-                        var avpUser = _userRepository.GetUser(zone.AVPID.Value);
-                        if (avpUser != null)
-                        {
-                            zoneResponse.AVPID = zone.AVPID;
-                            zoneResponse.AVPName = $"{avpUser.FirstName ?? ""} {avpUser.LastName ?? ""}";
-                        }
-                    }
-
-                    // Get created by user details
-                    if (zone.CreatedBy > 0)
-                    {
-                        var createdByUser = _userRepository.GetUser(zone.CreatedBy);
-                        if (createdByUser != null)
-                        {
-                            zoneResponse.CreatedBy = createdByUser.UserId.ToString();
-                        }
-                    }
-
-                    // Get updated by user details
-                    if (zone.UpdatedBy.HasValue && zone.UpdatedBy > 0)
-                    {
-                        var updatedByUser = _userRepository.GetUser(zone.UpdatedBy.Value);
-                        if (updatedByUser != null)
-                        {
-                            zoneResponse.UpdatedBy = updatedByUser.UserId.ToString();
-                        }
-                    }
-
-                    result.Add(zoneResponse);
-                }
+                    ZoneId = Convert.ToInt32(x[0]),
+                    ZoneName = x[1].ToString(),
+                    IsActive = Convert.ToBoolean(x[2]),
+                    UpdatedDate = Convert.ToDateTime(x[3]),
+                    AVPID = Convert.ToInt32(x[4]),
+                    AVPName = x[5].ToString(),
+                }, connString).ToList();
             }
             catch (Exception ex)
             {
-                logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.GetZoneList" + ex);
+                logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.GetZoneList", ex);
             }
             return result;
         }
 
-        public ActionStatus CheckZoneNameExists(string zoneName, int zoneId)
+
+        public ActionStatus CheckZoneNameExists(string zoneName, long zoneId)
         {
             var actionStatus = new ActionStatus();
             try
@@ -295,10 +297,7 @@ namespace DRL.Core.Service
                     AVPID = zone.AVPID,
                     IsActive = zone.IsActive,
                     IsDeleted = zone.IsDeleted,
-                    CreatedDate = DateTime.UtcNow,
-                    CreatedBy = 0,
                     UpdateDate = DateTime.UtcNow,
-                    UpdatedBy = 0
                 };
 
                 _zoneRepository.Insert(zoneMaster);
@@ -414,7 +413,6 @@ namespace DRL.Core.Service
                 if (zone != null)
                 {
                     zone.IsDeleted = true;
-                    zone.UpdatedBy = activeStatus.UpdatedBy;
                     zone.UpdateDate = DateTime.UtcNow;
 
                     _zoneRepository.Update(zone);
@@ -446,7 +444,6 @@ namespace DRL.Core.Service
                 if (zone != null)
                 {
                     zone.IsActive = activeStatus.status;
-                    zone.UpdatedBy = activeStatus.UpdatedBy;
                     zone.UpdateDate = DateTime.UtcNow;
 
                     _zoneRepository.Update(zone);
