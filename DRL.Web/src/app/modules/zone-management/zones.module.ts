@@ -1,9 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-<<<<<<< HEAD
 import { RouterModule } from '@angular/router';
-=======
->>>>>>> 44e73274ef4fe5819e1894c044f07ad55a87e462
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ZonesRoutingModule } from './zones-routing.module';
 import { ZoneListComponent } from './zone-list/zone-list.component';
@@ -13,19 +10,13 @@ import { MatRippleModule, MatTableModule, MatPaginatorModule, MatSortModule, Mat
 import { DropDownsModule } from '@progress/kendo-angular-dropdowns';
 import { TooltipModule } from '@progress/kendo-angular-tooltip';
 import { InputsModule } from '@progress/kendo-angular-inputs';
-<<<<<<< HEAD
 
-=======
->>>>>>> 44e73274ef4fe5819e1894c044f07ad55a87e462
 
 @NgModule({
   declarations: [ZoneListComponent, ManageZoneComponent],
   imports: [
     CommonModule,
-<<<<<<< HEAD
     RouterModule,
-=======
->>>>>>> 44e73274ef4fe5819e1894c044f07ad55a87e462
     ZonesRoutingModule,
     FormsModule,
     ReactiveFormsModule,
