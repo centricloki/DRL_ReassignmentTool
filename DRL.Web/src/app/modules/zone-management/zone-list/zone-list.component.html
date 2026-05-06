@@ -1,102 +1,217 @@
-<div>
-  <!-- Breadcrumb Navigation -->
-  <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Home</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Zones</li>
-    </ol>
-  </nav>
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { Router } from '@angular/router';
+import { ZoneService } from '../zone.service';
+import { ConfirmDialogComponent } from 'src/app/confirm-dialog/confirm-dialog.component';
+import { WarningDialogComponent } from 'src/app/warning-dialog/warning-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
+import { ToastHelper } from 'src/app/services/ToastHelper';
+import { State, DataStateChangeEvent } from '@progress/kendo-data-query';
+import { GridDataResult } from '@progress/kendo-angular-grid';
 
-  <!-- Title Bar with Add Button -->
-  <div class="top-title-bar">
-    <h2 class="page-title">Zones</h2>
-    <div class="filter-role">
-      <a href="#" [routerLink]='["/zones/create"]' class="btn btn-defult site-btn">
-        <i class="fa fa-plus"></i> Zone
-      </a>
-    </div>
-  </div>
+@Component({
+  selector: 'app-zone-list',
+  templateUrl: './zone-list.component.html',
+  styleUrls: ['./zone-list.component.css']
+})
+export class ZoneListComponent implements OnInit {
 
-  <!-- White Box Container with Kendo Grid -->
-  <div class="white-box">
-    <div class="table-responsive" style="width:100%">
-      <div class="mat-elevation-z8">
-        <kendo-grid [kendoGridBinding]="zones"
-                    [filterable]="true"
-                    [pageSize]="state.take"
-                    [skip]="state.skip"
-                    [sortable]="true"
-                    [columnMenu]="false"
-                    [sort]="state.sort"
-                    (dataStateChange)="dataStateChange($event)"
-                    [pageable]="true">
+  zones: any[] = [];
+  displayedColumns: string[] = ['zoneName', 'avpName', 'createdBy', 'createdDate', 'isActive', 'actions'];
+  isLoading = false;
 
-          <kendo-grid-messages noRecords="{{_appConstant.noRecordsMessage}}"></kendo-grid-messages>
+  // Kendo Grid state management
+  public state: State = {
+    skip: 0,
+    take: 10,
+    sort: []
+  };
 
-          <!-- Zone Name Column -->
-          <kendo-grid-column field="zoneName" title="Zone Name" width="25%">
-          </kendo-grid-column>
+  // Grid data result for Kendo binding
+  public gridData: GridDataResult = {
+    data: [],
+    total: 0
+  };
 
-          <!-- AVP Column -->
-          <kendo-grid-column field="avpName" title="AVP" width="20%">
-            <ng-template kendoGridCellTemplate let-dataItem>
-              {{ dataItem.avpName || '-' }}
-            </ng-template>
-          </kendo-grid-column>
+  // App constants for filter dropdown (match region-list pattern)
+  public _appConstant: any = {
+    noRecordsMessage: 'No zones found',
+    listItems: [
+      { text: 'All', value: null },
+      { text: 'Active', value: true },
+      { text: 'Inactive', value: false }
+    ],
+    selectedValue: null as boolean | null
+  };
 
-          <!-- Created By Column -->
-          <kendo-grid-column field="createdBy" title="Created By" width="15%">
-            <ng-template kendoGridCellTemplate let-dataItem>
-              {{ dataItem.createdBy || '-' }}
-            </ng-template>
-          </kendo-grid-column>
+  constructor(
+    private zoneService: ZoneService,
+    private router: Router,
+    private toastr: ToastHelper,
+    public dialog: MatDialog
+  ) { }
 
-          <!-- Created Date Column -->
-          <kendo-grid-column field="createdDate" title="Created Date" width="15%">
-            <ng-template kendoGridCellTemplate let-dataItem>
-              {{ dataItem.createdDate | date:'dd/MM/yyyy' }}
-            </ng-template>
-          </kendo-grid-column>
+  ngOnInit(): void {
+    this.loadZones();
+  }
 
-          <!-- Status Column with Toggle -->
-          <kendo-grid-column field="isActive" title="Status" width="15%" filter="boolean">
-            <ng-template kendoGridFilterCellTemplate let-filter>
-              <div>
-                <kendo-dropdownlist [data]="_appConstant.listItems"
-                                    textField="text"
-                                    valueField="value"
-                                    class="custom-dropdown"
-                                    [(ngModel)]="_appConstant.selectedValue"
-                                    [valuePrimitive]="true"
-                                    (selectionChange)="activeInactiveFilterChange($event)">
-                </kendo-dropdownlist>
-              </div>
-            </ng-template>
-            <ng-template kendoGridCellTemplate let-dataItem>
-              <div class="btn-style">
-                <input type="button"
-                       class="{{dataItem.isActive == true ? 'btn btn-default btnStatus btn-active' : 'btn btn-default btnStatus btn-inactive'}}"
-                       value="{{dataItem.isActive == true ? 'Active' : 'Inactive'}}"
-                       (click)="toggleZoneStatus(dataItem)">
-              </div>
-            </ng-template>
-          </kendo-grid-column>
+  /**
+   * Handle Kendo Grid state changes (paging, sorting, filtering)
+   */
+  public dataStateChange(state: DataStateChangeEvent): void {
+    this.state = state;
+    this.loadZones();
+  }
 
-          <!-- Actions Column -->
-          <kendo-grid-command-column title="Actions" width="10%">
-            <ng-template kendoGridCellTemplate kendoTooltip let-dataItem>
-              <li kendoGridEditCommand title="Edit Zone" (click)="editZone(dataItem.zoneId)" class="pencil">
-                <i class="fa fa-pencil" aria-hidden="true"></i>
-              </li>
-              <!-- Optional: Uncomment if delete is needed -->
-              <!-- <li kendoGridEditCommand title="Delete Zone" (click)="deleteZone(dataItem.zoneId)" class="trash">
-                <i class="fa fa-trash" aria-hidden="true"></i>
-              </li> -->
-            </ng-template>
-          </kendo-grid-command-column>
+  /**
+   * Handle status filter dropdown change
+   */
+  public activeInactiveFilterChange(event: any): void {
+    this._appConstant.selectedValue = event.value;
+    this.state.skip = 0; // Reset to first page when filtering
+    this.loadZones();
+  }
 
-        </kendo-grid>
-      </div>
-    </div>
-  </div>
-</div>
+  /**
+   * Load zones with Kendo Grid support
+   */
+  loadZones() {
+    this.isLoading = true;
+
+    // Prepare request parameters
+    const params: any = {
+      skip: this.state.skip,
+      take: this.state.take
+    };
+
+    // Add status filter if selected
+    if (this._appConstant.selectedValue !== null && this._appConstant.selectedValue !== undefined) {
+      params.isActive = this._appConstant.selectedValue;
+    }
+
+    // Add sorting if present
+    if (this.state.sort && this.state.sort.length > 0) {
+      const sortField = this.state.sort[0].field;
+      const sortDir = this.state.sort[0].dir;
+      params.sortBy = sortField;
+      params.sortDirection = sortDir;
+    }
+
+    this.zoneService.GetAllZones(params).subscribe(
+      (response: any) => {
+        if (response.isSuccess) {
+          const data = response.data || [];
+          this.zones = data;
+
+          // Update Kendo Grid data result
+          this.gridData = {
+            data: data,
+            total: response.totalCount || data.length
+          };
+        } else {
+          this.toastr.error('Error', response.message || 'Failed to load zones');
+          this.gridData = { data: [], total: 0 };
+        }
+        this.isLoading = false;
+      },
+      error => {
+        this.isLoading = false;
+        this.gridData = { data: [], total: 0 };
+        this.toastr.error('Error', 'Failed to load zones');
+      }
+    );
+  }
+
+  /**
+   * Navigate to create/edit zone page
+   */
+  editZone(zoneId: number) {
+    this.router.navigate(['/zone-management/create'], { queryParams: { id: zoneId } });
+  }
+
+  /**
+   * Delete zone with confirmation
+   */
+  deleteZone(zone: any) {
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Delete Zone',
+        message: `Are you sure you want to delete zone "${zone.zoneName}"?`,
+        confirmText: 'Delete',
+        cancelText: 'Cancel'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const deleteRequest = {
+          id: zone.zoneId,
+          status: true
+        };
+        this.zoneService.DeleteZone(deleteRequest).subscribe(
+          (response: any) => {
+            if (response.isSuccess) {
+              this.toastr.success('Success', 'Zone deleted successfully');
+              this.loadZones();
+            } else {
+              this.toastr.error('Error', response.message || 'Failed to delete zone');
+            }
+          },
+          error => {
+            this.toastr.error('Error', 'Failed to delete zone');
+          }
+        );
+      }
+    });
+  }
+
+  /**
+   * Toggle zone active/inactive status
+   */
+  toggleZoneStatus(zone: any) {
+    const newStatus = !zone.isActive;
+    const statusText = newStatus ? 'activate' : 'deactivate';
+
+    const dialogRef = this.dialog.open(WarningDialogComponent, {
+      width: '400px',
+      data: {
+        title: `${statusText.charAt(0).toUpperCase() + statusText.slice(1)} Zone`,
+        message: `Are you sure you want to ${statusText} zone "${zone.zoneName}"?`,
+        confirmText: 'Yes',
+        cancelText: 'No'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        const statusRequest = {
+          id: zone.zoneId,
+          status: newStatus
+        };
+        this.zoneService.ManageZoneStatus(statusRequest).subscribe(
+          (response: any) => {
+            if (response.isSuccess) {
+              this.toastr.success('Success', `Zone ${statusText}d successfully`);
+              // Update local state for immediate UI feedback
+              zone.isActive = newStatus;
+              // Optional: reload to ensure data consistency
+              // this.loadZones();
+            } else {
+              this.toastr.error('Error', response.message || `Failed to ${statusText} zone`);
+            }
+          },
+          error => {
+            this.toastr.error('Error', `Failed to ${statusText} zone`);
+          }
+        );
+      }
+    });
+  }
+
+  /**
+   * Navigate to create new zone page
+   */
+  addNewZone() {
+    this.router.navigate(['/zone-management/create']);
+  }
+}
