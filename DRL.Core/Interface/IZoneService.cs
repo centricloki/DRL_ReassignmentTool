@@ -16,9 +16,9 @@ namespace DRL.Core.Interface
         bool RemoveAVPFromZones(List<int> zoneIds);
         
         // CRUD methods similar to RegionService
-        ENTZone GetZone(int zoneId);
+        ENTZone GetZone(long zoneId);
         List<ENTZoneResponse> GetZoneList();
-        ActionStatus CheckZoneNameExists(string zoneName, int zoneId);
+        ActionStatus CheckZoneNameExists(string zoneName, long zoneId);
         ActionStatus Insert(ENTZone zone);
         ActionStatus Update(ENTZone zone);
         ActionStatus DeleteZone(ENTPatchRequest activeStatus);
