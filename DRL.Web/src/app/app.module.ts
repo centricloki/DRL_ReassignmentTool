@@ -58,6 +58,12 @@ const routes: Routes = [
     , canActivate: [AuthGuardService]
   },
   {
+    path: 'zones',
+    loadChildren: 'src/app/modules/zone-management/zones.module#ZonesModule',
+    data: { pageTitle: 'Zone Management' }
+    , canActivate: [AuthGuardService]
+  },
+  {
     path: 'customers',
     loadChildren: 'src/app/modules/customer-reassignment-management/customers.module#CustomersModule',
     data: { pageTitle: 'Customer Reassignment Management' }

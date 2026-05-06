@@ -1,16 +1,21 @@
-﻿using DRL.Core.Interface;
+using DRL.Core.Interface;
 using DRL.Core.Mapper;
 using DRL.Entity;
+using DRL.Entity.Response;
 using DRL.Framework.Log;
 using DRL.Framework.Log.Interface;
 using DRL.Library;
+using DRL.Model.DataBase;
 using DRL.Model.Repository.Interface;
 using DRL.Model.UnitOfWork.Interface;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Text;
+
+using EF = DRL.Model.Models;
 
 namespace DRL.Core.Service
 {
@@ -21,14 +26,16 @@ namespace DRL.Core.Service
         private readonly IUnitOfWork _unitofwork;
         private readonly ILogger logger;
         private readonly CommonHelper CommonHelper;
+        private readonly IConfiguration _configuration;
 
-        public ZoneService(IUnitOfWork unitofwork, IZoneRepository zoneRepository, ILogManager logManager, IUserRepository userRepository)
+        public ZoneService(IUnitOfWork unitofwork, IZoneRepository zoneRepository, ILogManager logManager, IUserRepository userRepository, IConfiguration configuration)
         {
             _zoneRepository = zoneRepository;
             _unitofwork = unitofwork;
             logger = logManager.GetLogger(this.GetType());
             CommonHelper = new CommonHelper();
             _userRepository = userRepository;
+            _configuration = configuration;
         }
         public List<ENTLookUpItem> GetAllZoneLookup()
         {
@@ -87,7 +94,7 @@ namespace DRL.Core.Service
             return result;
         }
 
-        public bool SyncAVPZones(int AVPId,List<int> zoneIds)
+        public bool SyncAVPZones(int AVPId, List<int> zoneIds)
         {
             try
             {
@@ -100,7 +107,7 @@ namespace DRL.Core.Service
                 RemoveAVPFromZones(zonesToRemove);
 
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.SyncAVPZones" + ex);
                 return false;
@@ -168,6 +175,298 @@ namespace DRL.Core.Service
                 return false;
             }
             return true;
+        }
+
+        public ENTZone GetZone(int zoneId)
+        {
+            try
+            {
+                var zone = _zoneRepository.GetById(zoneId);
+                if (zone != null)
+                {
+                    return Configuration.Mapper.Map<ENTZone>(zone);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.GetZone" + ex);
+            }
+            return null;
+        }
+
+        public List<ENTZoneResponse> GetZoneList()
+        {
+            List<ENTZoneResponse> result = new List<ENTZoneResponse>();
+            try
+            {
+                var zones = _zoneRepository.GetAllZone().Where(x => x.IsActive && !x.IsDeleted).ToList();
+                foreach (var zone in zones)
+                {
+                    var zoneResponse = new ENTZoneResponse
+                    {
+                        ZoneId = zone.ZoneId,
+                        ZoneName = zone.ZoneName,
+                        IsActive = zone.IsActive,
+                        CreatedDate = zone.CreatedDate,
+                        UpdatedDate = zone.UpdateDate
+                    };
+
+                    // Get AVP details if available
+                    if (zone.AVPID.HasValue && zone.AVPID > 0)
+                    {
+                        var avpUser = _userRepository.GetUser(zone.AVPID.Value);
+                        if (avpUser != null)
+                        {
+                            zoneResponse.AVPID = zone.AVPID;
+                            zoneResponse.AVPName = $"{avpUser.FirstName ?? ""} {avpUser.LastName ?? ""}";
+                        }
+                    }
+
+                    // Get created by user details
+                    if (zone.CreatedBy > 0)
+                    {
+                        var createdByUser = _userRepository.GetUser(zone.CreatedBy);
+                        if (createdByUser != null)
+                        {
+                            zoneResponse.CreatedBy = createdByUser.UserId.ToString();
+                        }
+                    }
+
+                    // Get updated by user details
+                    if (zone.UpdatedBy.HasValue && zone.UpdatedBy > 0)
+                    {
+                        var updatedByUser = _userRepository.GetUser(zone.UpdatedBy.Value);
+                        if (updatedByUser != null)
+                        {
+                            zoneResponse.UpdatedBy = updatedByUser.UserId.ToString();
+                        }
+                    }
+
+                    result.Add(zoneResponse);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.GetZoneList" + ex);
+            }
+            return result;
+        }
+
+        public ActionStatus CheckZoneNameExists(string zoneName, int zoneId)
+        {
+            var actionStatus = new ActionStatus();
+            try
+            {
+                var existingZone = _zoneRepository.GetAllZone()
+                    .FirstOrDefault(x => x.ZoneName.Equals(zoneName, StringComparison.OrdinalIgnoreCase) &&
+                                       x.ZoneId != zoneId &&
+                                       x.IsActive &&
+                                       !x.IsDeleted);
+
+                if (existingZone != null)
+                {
+                    actionStatus.Success = false;
+                    actionStatus.Message = "Zone already exists with same zone name.";
+                }
+                else
+                {
+                    actionStatus.Success = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                actionStatus.Success = false;
+                actionStatus.Message = ex.Message;
+                logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.CheckZoneNameExists" + ex);
+            }
+            return actionStatus;
+        }
+
+        public ActionStatus Insert(ENTZone zone)
+        {
+            var actionStatus = new ActionStatus();
+            try
+            {
+                var zoneMaster = new EF.ZoneMaster
+                {
+                    ZoneName = zone.ZoneName,
+                    SugarZoneId = zone.SugarZoneId,
+                    ImportedFrom = zone.ImportedFrom,
+                    AVPID = zone.AVPID,
+                    IsActive = zone.IsActive,
+                    IsDeleted = zone.IsDeleted,
+                    CreatedDate = DateTime.UtcNow,
+                    CreatedBy = 0,
+                    UpdateDate = DateTime.UtcNow,
+                    UpdatedBy = 0
+                };
+
+                _zoneRepository.Insert(zoneMaster);
+                _unitofwork.SaveAndContinue();
+
+                actionStatus.Success = true;
+                actionStatus.Result = Configuration.Mapper.Map<ENTZone>(zoneMaster);
+            }
+            catch (Exception ex)
+            {
+                actionStatus.Success = false;
+                actionStatus.Message = ex.Message;
+                logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.Insert" + ex);
+            }
+            return actionStatus;
+        }
+
+        public ActionStatus Update(ENTZone zone)
+        {
+            var actionStatus = new ActionStatus();
+            try
+            {
+                var existingZone = _zoneRepository.GetById(zone.ZoneId);
+                if (existingZone == null)
+                {
+                    actionStatus.Success = false;
+                    actionStatus.Message = "Zone not found.";
+                    return actionStatus;
+                }
+
+                bool avpChanged = existingZone.AVPID != zone.AVPID;
+
+                if (avpChanged)
+                {
+                    actionStatus = UpdateZoneAndMappingTables(zone);
+                }
+                else
+                {
+                    existingZone.ZoneName = zone.ZoneName;
+                    existingZone.SugarZoneId = zone.SugarZoneId;
+                    existingZone.ImportedFrom = zone.ImportedFrom;
+                    existingZone.IsActive = zone.IsActive;
+                    existingZone.IsDeleted = zone.IsDeleted;
+                    existingZone.UpdateDate = DateTime.UtcNow;
+
+                    _zoneRepository.Update(existingZone);
+                    _unitofwork.SaveAndContinue();
+
+                    actionStatus.Success = true;
+                }
+
+                actionStatus.Result = Configuration.Mapper.Map<ENTZone>(existingZone);
+            }
+            catch (Exception ex)
+            {
+                actionStatus.Success = false;
+                actionStatus.Message = ex.Message;
+                logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.Update" + ex);
+            }
+            return actionStatus;
+        }
+
+        public ActionStatus UpdateZoneAndMappingTables(ENTZone zone)
+        {
+            ActionStatus result = new ActionStatus();
+            try
+            {
+                string connString = _configuration.GetConnectionString("DefaultConnection");
+                List<SqlParameter> sqlParameters = new List<SqlParameter>()
+                {
+                    new SqlParameter("@UpdateZoneId", zone.ZoneId),
+                    new SqlParameter("@UpdateName", zone.ZoneName),
+                    new SqlParameter("@UpdateAVPID", (object)zone.AVPID ?? DBNull.Value),
+                    new SqlParameter("@UpdateIsActive", zone.IsActive),
+                    new SqlParameter("@UpdatedBy", 0)
+                };
+
+                string errorMsg;
+                bool bSuccess = SqlDBHelper.ExecuteNonQueryWithErrorHandling(
+                    "sp_DSD_ZoneUpdateAndCorrectMappingTables",
+                    ref sqlParameters,
+                    connString,
+                    out errorMsg);
+
+                if (bSuccess)
+                {
+                    result.Success = true;
+                    result.Message = "";
+                }
+                else
+                {
+                    throw new Exception(errorMsg);
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, nameof(UpdateZoneAndMappingTables) + ex);
+                result = new ActionStatus
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
+            }
+            return result;
+        }
+
+        public ActionStatus DeleteZone(ENTPatchRequest activeStatus)
+        {
+            var actionStatus = new ActionStatus();
+            try
+            {
+                var zone = _zoneRepository.GetById(activeStatus.Id);
+                if (zone != null)
+                {
+                    zone.IsDeleted = true;
+                    zone.UpdatedBy = activeStatus.UpdatedBy;
+                    zone.UpdateDate = DateTime.UtcNow;
+
+                    _zoneRepository.Update(zone);
+                    _unitofwork.SaveAndContinue();
+
+                    actionStatus.Success = true;
+                }
+                else
+                {
+                    actionStatus.Success = false;
+                    actionStatus.Message = "Zone not found.";
+                }
+            }
+            catch (Exception ex)
+            {
+                actionStatus.Success = false;
+                actionStatus.Message = ex.Message;
+                logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.DeleteZone" + ex);
+            }
+            return actionStatus;
+        }
+
+        public ActionStatus ManageZoneStatus(ENTPatchRequest activeStatus)
+        {
+            var actionStatus = new ActionStatus();
+            try
+            {
+                var zone = _zoneRepository.GetById(activeStatus.Id);
+                if (zone != null)
+                {
+                    zone.IsActive = activeStatus.status;
+                    zone.UpdatedBy = activeStatus.UpdatedBy;
+                    zone.UpdateDate = DateTime.UtcNow;
+
+                    _zoneRepository.Update(zone);
+                    _unitofwork.SaveAndContinue();
+
+                    actionStatus.Success = true;
+                }
+                else
+                {
+                    actionStatus.Success = false;
+                    actionStatus.Message = "Zone not found.";
+                }
+            }
+            catch (Exception ex)
+            {
+                actionStatus.Success = false;
+                actionStatus.Message = ex.Message;
+                logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.ManageZoneStatus" + ex);
+            }
+            return actionStatus;
         }
     }
 }

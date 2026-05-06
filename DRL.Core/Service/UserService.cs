@@ -167,8 +167,8 @@ namespace DRL.Core.Manager
                         Success = false,
                         Message = "User not exist!"
                     };
-
-                dbUser = Configuration.Mapper.Map(user, dbUser);
+                DateTime userCreateDateTime=dbUser.CreatedDate; 
+                dbUser = Configuration.Mapper.Map(user, dbUser);                
                 if (user.IsActive == false)
                 {
                     dbUser.Pin = null;
@@ -193,6 +193,7 @@ namespace DRL.Core.Manager
                         }
                     }
                 }
+                dbUser.CreatedDate = userCreateDateTime;
                 dbUser.UpdatedDate = GetDateTime.getDate();
                 var result = _userRepository.Update(dbUser);
                 result.Result = Configuration.Mapper.Map(result.Result, user);

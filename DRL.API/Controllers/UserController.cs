@@ -159,6 +159,22 @@ namespace DRL.API.Controllers
                     {
                         // Set default value of 1 if CurrentUserId is null or invalid
                         user.CreatedBy = CurrentUserId > 0 ? CurrentUserId : 1;
+                        // generate with 3 attempts
+                        string pin = null;
+                        for (int i = 1; i <= 3; i++)
+                        {
+                            try { pin = DRL.Library.PinValidator.GenerateStrongPin(); break; }
+                            catch { if (i == 3) pin = null; }
+                        }
+
+                        if (pin == null)
+                        {
+                            response.IsSuccess = false;
+                            response.Message = "Failed to generate secure PIN after 3 attempts. Please try again.";
+                            return response;
+                        }
+
+                        user.Pin = pin; // server always overwrites any client value
                         serviceResponse = _userService.Insert(user);
                         if (serviceResponse.Success)
                         {
@@ -178,6 +194,18 @@ namespace DRL.API.Controllers
                     {
                         // Set default value of 1 if CurrentUserId is null or invalid
                         user.UpdatedBy = CurrentUserId > 0 ? CurrentUserId : 1;
+                        // Validate PIN only if user tried to change it
+                        if (!string.IsNullOrWhiteSpace(user.Pin))
+                        {
+                            if (DRL.Library.PinValidator.IsWeakPin(user.Pin))
+                            {
+                                response.IsSuccess = false;
+                                response.Message = "PIN does not meet security policy. PIN cannot be all same digits (0000, 1111) or sequential (1234, 4321, 2345).";
+                                response.Data = null;
+                                return response; // stop update
+                            }
+                            // if valid, it will be updated
+                        }
                         serviceResponse = _userService.Update(user);
                         if (serviceResponse.Success)
                         {

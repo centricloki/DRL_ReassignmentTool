@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using DRL.Core.Mapper.Mappings;
 using DRL.Entity;
 using EF = DRL.Model.Models;
@@ -31,6 +31,7 @@ namespace DRL.Core.Mapper
                 mc.CreateMap<EF.AVPMaster, ENTLookUpItem>().ConvertUsing(new AVPMasterToENTLookUpItem());
                 mc.CreateMap<EF.BDMaster, ENTLookUpItem>().ConvertUsing(new BDMasterToENTLookUpItem());
                 mc.CreateMap<EF.ZoneMaster, ENTZone>().ConvertUsing(new ZoneMasterToENTZone());
+                mc.CreateMap<ENTZone, EF.ZoneMaster>().ConvertUsing(new ENTZoneToZoneMaster());
                 
             });
 

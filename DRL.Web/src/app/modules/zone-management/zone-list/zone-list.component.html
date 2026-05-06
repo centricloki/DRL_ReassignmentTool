@@ -1,0 +1,61 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">Zone Management</h4>
+          <button type="button" class="btn btn-primary float-right" (click)="addNewZone()">
+            <i class="fa fa-plus"></i> Add New Zone
+          </button>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped table-bordered" *ngIf="!isLoading">
+              <thead>
+                <tr>
+                  <th>Zone Name</th>
+                  <th>AVP</th>
+                  <th>Created By</th>
+                  <th>Created Date</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let zone of zones">
+                  <td>{{ zone.zoneName }}</td>
+                  <td>{{ zone.avpName || '-' }}</td>
+                  <td>{{ zone.createdBy || '-' }}</td>
+                  <td>{{ zone.createdDate | date:'dd/MM/yyyy' }}</td>
+                  <td>
+                    <span [class]="'badge ' + (zone.isActive ? 'badge-success' : 'badge-danger')">
+                      {{ zone.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button type="button" class="btn btn-sm btn-primary mr-1" (click)="editZone(zone.zoneId)">
+                      <i class="fa fa-edit"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-{{ zone.isActive ? 'warning' : 'success' }} mr-1" 
+                            (click)="toggleZoneStatus(zone)">
+                      <i class="fa fa-{{ zone.isActive ? 'ban' : 'check' }}"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm btn-danger" (click)="deleteZone(zone)">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="zones.length === 0">
+                  <td colspan="6" class="text-center">No zones found</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="text-center" *ngIf="isLoading">
+              <i class="fa fa-spinner fa-spin fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

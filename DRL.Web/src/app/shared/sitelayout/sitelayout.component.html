@@ -37,6 +37,13 @@
         </a>
       </li>
 
+      <!-- ZONES - LinkCode: ZONES -->
+      <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('ZONES')">
+        <a id="lnkZone" class="btnLi" (click)="clear('zone')" [routerLink]='["/zones"]'>
+          <i class="icon-05"></i><span>Zones</span>
+        </a>
+      </li>
+
       <!-- USER REASSIGNMENT - LinkCode: USER_REASSIGNMENT -->
       <li [routerLinkActive]='["link-active"]' *ngIf="_appConstant.hasLinkAccess('USER_REASSIGNMENT')">
         <a id="lnkuserreassignment" class="btnLi" (click)="clear('userreassignment')"

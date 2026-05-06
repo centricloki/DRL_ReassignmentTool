@@ -19,103 +19,98 @@ using System.Threading.Tasks;
 namespace DRL.API.Controllers
 {
     [CustomAuthorizeAttribute]
-    [Route("api/Region")]
-    public class RegionController : BaseController
+    [Route("api/Zone")]
+    public class ZoneController : BaseController
     {
         private static readonly HttpClient _HttpClient = new HttpClient();
-        private readonly IRegionService _RegionService;
+        private readonly IZoneService _ZoneService;
         private readonly CommonHelper _commonHelper = new CommonHelper();
         private IConfiguration _configuration;
         private readonly ICacheService _cacheService;
 
-        public RegionController(IRegionService RegionService, IConfiguration configuration
-            ,ICacheService cacheService)
+        public ZoneController(IZoneService ZoneService, IConfiguration configuration, ICacheService cacheService)
         {
-            _RegionService = RegionService;
+            _ZoneService = ZoneService;
             _configuration = configuration;
             _cacheService = cacheService;
         }
 
         /// <summary>
-        ///     Get All Region List
+        ///     Get All Zone List
         /// </summary>
         /// <returns>
-        ///     ENTRegion  Model
+        ///     ENTZoneResponse Model
         /// </returns>
-        // GET api/values
-        [HttpGet("GetAllRegions")]
-        public BaseResponse<List<ENTRegionResponse>> GetAllRegions()
+        [HttpGet("GetAllZones")]
+        public BaseResponse<List<ENTZoneResponse>> GetAllZones()
         {
-            var response = new BaseResponse<List<ENTRegionResponse>>(true);
-            response.Data = _RegionService.GetRegionList();
+            var response = new BaseResponse<List<ENTZoneResponse>>(true);
+            response.Data = _ZoneService.GetZoneList();
             return response;
         }
 
         /// <summary>
-        ///     Get Region details by RegionId
+        ///     Get Zone details by ZoneId
         /// </summary>
         /// <returns>
-        ///     ENTRegion  Model
+        ///     ENTZone Model
         /// </returns>
-        // GET api/values
-        [HttpGet("GetRegion/{RegionId}")]
-        public BaseResponse<ENTRegion> GetRegion(long RegionId)
+        [HttpGet("GetZone/{ZoneId}")]
+        public BaseResponse<ENTZone> GetZone(int ZoneId)
         {
-            var response = new BaseResponse<ENTRegion>(true);
-            response.Data = _RegionService.GetRegion(RegionId);
+            var response = new BaseResponse<ENTZone>(true);
+            response.Data = _ZoneService.GetZone(ZoneId);
             return response;
         }
 
         /// <summary>
-        ///     Add/Update Region Details
+        ///     Add/Update Zone Details
         /// </summary>
         /// <returns>
-        ///     ENTRegion Model
+        ///     ENTZone Model
         /// </returns>
-        [HttpPost("ManageRegion")]
-        public BaseResponse<ENTRegion> ManageRegion([FromBody] ENTRegion Region)
+        [HttpPost("ManageZone")]
+        public BaseResponse<ENTZone> ManageZone([FromBody] ENTZone Zone)
         {
-            BaseResponse<ENTRegion> response = new BaseResponse<ENTRegion>();
+            BaseResponse<ENTZone> response = new BaseResponse<ENTZone>();
             var serviceResponse = new ActionStatus();
-            Region.ImportedFrom = 0;
-            serviceResponse = _RegionService.CheckRegionNameExists(Region.Regioname, Region.RegionId ?? 0);
+            Zone.ImportedFrom = 0;
+            serviceResponse = _ZoneService.CheckZoneNameExists(Zone.ZoneName, Zone.ZoneId);
             if (!serviceResponse.Success)
             {
-                if (Region.RegionId <= 0 || Region.RegionId == null)
+                if (Zone.ZoneId <= 0 || Zone.ZoneId == null)
                 {
-                    Region.CreatedBy = CurrentUserId;
-                    serviceResponse = _RegionService.Insert(Region);
+                    Zone.CreatedBy = CurrentUserId;
+                    serviceResponse = _ZoneService.Insert(Zone);
                     if (serviceResponse.Success)
                     {
                         response.IsSuccess = true;
-                        response.Message = "Region added successfully";
-                        response.Data = serviceResponse.Result as ENTRegion;
-                        ClearRegionCaches();
+                        response.Message = "Zone added successfully";
+                        response.Data = serviceResponse.Result as ENTZone;
+                        ClearZoneCaches();
                     }
                     else
                     {
-                        // Handle insert failure with proper error message
                         response.IsSuccess = false;
-                        response.Message = serviceResponse.Message ?? "Failed to add region. Please ensure all required fields are filled correctly, including Zone selection.";
+                        response.Message = serviceResponse.Message ?? "Failed to add zone. Please ensure all required fields are filled correctly.";
                         response.Data = null;
                     }
                 }
                 else
                 {
-                    Region.UpdatedBy = CurrentUserId;
-                    serviceResponse = _RegionService.Update(Region);
+                    Zone.UpdatedBy = CurrentUserId;
+                    serviceResponse = _ZoneService.Update(Zone);
                     if (serviceResponse.Success)
                     {
                         response.IsSuccess = true;
-                        response.Message = "Region updated successfully";
-                        response.Data = serviceResponse.Result as ENTRegion;
-                        ClearRegionCaches();
+                        response.Message = "Zone updated successfully";
+                        response.Data = serviceResponse.Result as ENTZone;
+                        ClearZoneCaches();
                     }
                     else
                     {
-                        // Handle update failure with proper error message
                         response.IsSuccess = false;
-                        response.Message = serviceResponse.Message ?? "Failed to update region. Please ensure all required fields are filled correctly, including Zone selection.";
+                        response.Message = serviceResponse.Message ?? "Failed to update zone. Please ensure all required fields are filled correctly.";
                         response.Data = null;
                     }
                 }
@@ -123,32 +118,30 @@ namespace DRL.API.Controllers
             else
             {
                 response.IsSuccess = false;
-                response.Message = "Region already exists with same region name.";
+                response.Message = "Zone already exists with same zone name.";
                 response.Data = null;
             }
             return response;
         }
 
-
         /// <summary>
-        ///     Delete region by region id
+        ///     Delete zone by zone id
         /// </summary>
         /// <returns>
         /// </returns>
-        // PATCH api/Region/DeleteRegionbyRegionId
-        [HttpPatch("DeleteRegionbyRegionId")]
-        public BaseResponse<ActionStatus> DeleteRegionbyRegionId([FromBody] ENTPatchRequest activeStatus)
+        [HttpPatch("DeleteZonebyZoneId")]
+        public BaseResponse<ActionStatus> DeleteZonebyZoneId([FromBody] ENTPatchRequest activeStatus)
         {
             BaseResponse<ActionStatus> response = new BaseResponse<ActionStatus>();
             try
             {
                 activeStatus.UpdatedBy = CurrentUserId;
-                var serviceResponse = _RegionService.DeleteRegion(activeStatus);
+                var serviceResponse = _ZoneService.DeleteZone(activeStatus);
                 if (serviceResponse.Success)
                 {
                     response.IsSuccess = true;
-                    response.Message = "Region deleted successfully";
-                    ClearRegionCaches();
+                    response.Message = "Zone deleted successfully";
+                    ClearZoneCaches();
                 }
                 else
                 {
@@ -165,15 +158,13 @@ namespace DRL.API.Controllers
             return response;
         }
 
-
         /// <summary>
-        ///     Active/InActive Region
+        ///     Active/InActive Zone
         /// </summary>
         /// <returns>
         /// </returns>
-        // PATCH api/Region/ManageRegionStatus
-        [HttpPatch("ManageRegionStatus")]
-        public BaseResponse<ActionStatus> ManageRegionStatus([FromBody] ENTPatchRequest activeStatus)
+        [HttpPatch("ManageZoneStatus")]
+        public BaseResponse<ActionStatus> ManageZoneStatus([FromBody] ENTPatchRequest activeStatus)
         {
             BaseResponse<ActionStatus> response = new BaseResponse<ActionStatus>();
             try
@@ -184,14 +175,13 @@ namespace DRL.API.Controllers
                 else
                     msg = "inactivated";
 
-
                 activeStatus.UpdatedBy = CurrentUserId;
-                var serviceResponse = _RegionService.ManageRegionStatus(activeStatus);
+                var serviceResponse = _ZoneService.ManageZoneStatus(activeStatus);
                 if (serviceResponse.Success)
                 {
                     response.IsSuccess = true;
-                    response.Message = "Region updated successfully";
-                    ClearRegionCaches();
+                    response.Message = "Zone updated successfully";
+                    ClearZoneCaches();
                 }
                 else
                 {
@@ -208,7 +198,7 @@ namespace DRL.API.Controllers
             return response;
         }
 
-        private void ClearRegionCaches()
+        private void ClearZoneCaches()
         {
             // 🔑 MUST MATCH EXACT KEYS USED IN LookupController
             _cacheService.Remove(LookupCacheKeys.ROLES_KEY);

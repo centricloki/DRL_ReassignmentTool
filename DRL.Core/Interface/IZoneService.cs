@@ -1,7 +1,7 @@
-﻿using DRL.Entity;
-using System;
+using DRL.Entity;
+using DRL.Entity.Response;
+using DRL.Library;
 using System.Collections.Generic;
-using System.Text;
 
 namespace DRL.Core.Interface
 {
@@ -14,5 +14,15 @@ namespace DRL.Core.Interface
         bool SyncAVPZones(int AVPId, List<int> zoneIds);
         bool AssignAVPToZones(int AVPId, List<int> zoneIds);
         bool RemoveAVPFromZones(List<int> zoneIds);
+        
+        // CRUD methods similar to RegionService
+        ENTZone GetZone(int zoneId);
+        List<ENTZoneResponse> GetZoneList();
+        ActionStatus CheckZoneNameExists(string zoneName, int zoneId);
+        ActionStatus Insert(ENTZone zone);
+        ActionStatus Update(ENTZone zone);
+        ActionStatus DeleteZone(ENTPatchRequest activeStatus);
+        ActionStatus ManageZoneStatus(ENTPatchRequest activeStatus);
+        ActionStatus UpdateZoneAndMappingTables(ENTZone zone);
     }
 }

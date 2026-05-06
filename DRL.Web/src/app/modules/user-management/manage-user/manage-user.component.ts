@@ -56,6 +56,8 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this._appConstant.userId = undefined;
     this.unsubscribe$.next();
     this.unsubscribe$.complete();
+    if (this.pinValidationSub)
+      this.pinValidationSub.unsubscribe();
   }
   ngOnInit() {
     this.titleText = "Create User";
@@ -88,7 +90,8 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   }
 
   triggerEditValidation(): void {
-    this.pinValidationSub?.unsubscribe();
+    if (this.pinValidationSub)
+      this.pinValidationSub.unsubscribe();
 
     Promise.resolve().then(() => {
       // Safe access without optional chaining
@@ -110,6 +113,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         // Angular auto-runs validation on value change. Just mark as touched to show UI.
         if (pinControl.invalid) {
           pinControl.markAsTouched(); // Triggers red border + error display
+          pinControl.markAsDirty();
         }
       });
     });
