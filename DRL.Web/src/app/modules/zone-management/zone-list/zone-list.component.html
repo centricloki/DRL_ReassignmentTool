@@ -1,60 +1,101 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h4 class="card-title">Zone Management</h4>
-          <button type="button" class="btn btn-primary float-right" (click)="addNewZone()">
-            <i class="fa fa-plus"></i> Add New Zone
-          </button>
-        </div>
-        <div class="card-body">
-          <div class="table-responsive">
-            <table class="table table-striped table-bordered" *ngIf="!isLoading">
-              <thead>
-                <tr>
-                  <th>Zone Name</th>
-                  <th>AVP</th>
-                  <th>Created By</th>
-                  <th>Created Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let zone of zones">
-                  <td>{{ zone.zoneName }}</td>
-                  <td>{{ zone.avpName || '-' }}</td>
-                  <td>{{ zone.createdBy || '-' }}</td>
-                  <td>{{ zone.createdDate | date:'dd/MM/yyyy' }}</td>
-                  <td>
-                    <span [class]="'badge ' + (zone.isActive ? 'badge-success' : 'badge-danger')">
-                      {{ zone.isActive ? 'Active' : 'Inactive' }}
-                    </span>
-                  </td>
-                  <td>
-                    <button type="button" class="btn btn-sm btn-primary mr-1" (click)="editZone(zone.zoneId)">
-                      <i class="fa fa-edit"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-{{ zone.isActive ? 'warning' : 'success' }} mr-1" 
-                            (click)="toggleZoneStatus(zone)">
-                      <i class="fa fa-{{ zone.isActive ? 'ban' : 'check' }}"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-danger" (click)="deleteZone(zone)">
-                      <i class="fa fa-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-                <tr *ngIf="zones.length === 0">
-                  <td colspan="6" class="text-center">No zones found</td>
-                </tr>
-              </tbody>
-            </table>
-            <div class="text-center" *ngIf="isLoading">
-              <i class="fa fa-spinner fa-spin fa-2x"></i>
-            </div>
-          </div>
-        </div>
+<div>
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Zones</li>
+    </ol>
+  </nav>
+
+  <!-- Title Bar with Add Button -->
+  <div class="top-title-bar">
+    <h2 class="page-title">Zones</h2>
+    <div class="filter-role">
+      <a href="#" [routerLink]='["/zones/create"]' class="btn btn-defult site-btn">
+        <i class="fa fa-plus"></i> Zone
+      </a>
+    </div>
+  </div>
+
+  <!-- White Box Container with Kendo Grid -->
+  <div class="white-box">
+    <div class="table-responsive" style="width:100%">
+      <div class="mat-elevation-z8">
+        <kendo-grid [kendoGridBinding]="zones"
+                    [filterable]="true"
+                    [pageSize]="state.take"
+                    [skip]="state.skip"
+                    [sortable]="true"
+                    [columnMenu]="false"
+                    [sort]="state.sort"
+                    (dataStateChange)="dataStateChange($event)"
+                    [pageable]="true">
+
+          <kendo-grid-messages noRecords="{{_appConstant.noRecordsMessage}}"></kendo-grid-messages>
+
+          <!-- Zone Name Column -->
+          <kendo-grid-column field="zoneName" title="Zone Name" width="25%">
+          </kendo-grid-column>
+
+          <!-- AVP Column -->
+          <kendo-grid-column field="avpName" title="AVP" width="20%">
+            <ng-template kendoGridCellTemplate let-dataItem>
+              {{ dataItem.avpName || '-' }}
+            </ng-template>
+          </kendo-grid-column>
+
+          <!-- Created By Column -->
+          <kendo-grid-column field="createdBy" title="Created By" width="15%">
+            <ng-template kendoGridCellTemplate let-dataItem>
+              {{ dataItem.createdBy || '-' }}
+            </ng-template>
+          </kendo-grid-column>
+
+          <!-- Created Date Column -->
+          <kendo-grid-column field="createdDate" title="Created Date" width="15%">
+            <ng-template kendoGridCellTemplate let-dataItem>
+              {{ dataItem.createdDate | date:'dd/MM/yyyy' }}
+            </ng-template>
+          </kendo-grid-column>
+
+          <!-- Status Column with Toggle -->
+          <kendo-grid-column field="isActive" title="Status" width="15%" filter="boolean">
+            <ng-template kendoGridFilterCellTemplate let-filter>
+              <div>
+                <kendo-dropdownlist [data]="_appConstant.listItems"
+                                    textField="text"
+                                    valueField="value"
+                                    class="custom-dropdown"
+                                    [(ngModel)]="_appConstant.selectedValue"
+                                    [valuePrimitive]="true"
+                                    (selectionChange)="activeInactiveFilterChange($event)">
+                </kendo-dropdownlist>
+              </div>
+            </ng-template>
+            <ng-template kendoGridCellTemplate let-dataItem>
+              <div class="btn-style">
+                <input type="button"
+                       class="{{dataItem.isActive == true ? 'btn btn-default btnStatus btn-active' : 'btn btn-default btnStatus btn-inactive'}}"
+                       value="{{dataItem.isActive == true ? 'Active' : 'Inactive'}}"
+                       (click)="toggleZoneStatus(dataItem)">
+              </div>
+            </ng-template>
+          </kendo-grid-column>
+
+          <!-- Actions Column -->
+          <kendo-grid-command-column title="Actions" width="10%">
+            <ng-template kendoGridCellTemplate kendoTooltip let-dataItem>
+              <li kendoGridEditCommand title="Edit Zone" (click)="editZone(dataItem.zoneId)" class="pencil">
+                <i class="fa fa-pencil" aria-hidden="true"></i>
+              </li>
+              <!-- Optional: Uncomment if delete is needed -->
+              <!-- <li kendoGridEditCommand title="Delete Zone" (click)="deleteZone(dataItem.zoneId)" class="trash">
+                <i class="fa fa-trash" aria-hidden="true"></i>
+              </li> -->
+            </ng-template>
+          </kendo-grid-command-column>
+
+        </kendo-grid>
       </div>
     </div>
   </div>
