@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ZoneService } from '../zone.service';
 import { ZoneModel } from 'src/app/Models/ZoneModel';
-
+import { ToastHelper } from 'src/app/helpers/toast.helper'; 
 
 @Component({
   selector: 'app-manage-zone',
@@ -56,12 +56,12 @@ export class ManageZoneComponent implements OnInit {
             isActive: zoneData.isActive
           });
         } else {
-          this.toastr.error('Failed to load zone details');
+          this.toastr.error('Error','Failed to load zone details');
           this.goBack();
         }
       },
       error => {
-        this.toastr.error('Failed to load zone details');
+        this.toastr.error('Error', 'Failed to load zone details');
         this.goBack();
       }
     );
@@ -81,18 +81,18 @@ export class ManageZoneComponent implements OnInit {
         (response: any) => {
           if (response.isSuccess) {
             const message = this.isEditMode ? 'Zone updated successfully' : 'Zone added successfully';
-            this.toastr.success(message);
+            this.toastr.success('Success', message);
             this.goBack();
           } else {
-            this.toastr.error(response.message || 'Failed to save zone');
+            this.toastr.error('Error', response.message || 'Failed to save zone');
           }
         },
         error => {
-          this.toastr.error('Failed to save zone');
+          this.toastr.error('Error', 'Failed to save zone');
         }
       );
     } else {
-      this.toastr.error('Please fill in all required fields');
+      this.toastr.error('Error', 'Please fill in all required fields');
     }
   }
 

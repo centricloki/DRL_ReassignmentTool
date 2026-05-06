@@ -26,7 +26,8 @@ import { AngularFontAwesomeModule } from 'angular-font-awesome';
 import { LoginComponent } from './login/login.component';
 import { HttpClientModule } from '@angular/common/http';
 import { SessionTimeoutService } from './services/SessionTimeoutService';
-import { ToastHelper } from './services/ToastHelper';
+import { ToastHelper } from './helpers/toast.helper';
+import { ResponseParser } from './helpers/response-parser.helper';
 
 const routes: Routes = [
   {
@@ -87,7 +88,8 @@ const routes: Routes = [
     ConfirmDialogComponent,
     ErrorComponent,
     DashboardComponent,
-    WarningDialogComponent
+    WarningDialogComponent,
+    ResponseParser
   ],
   imports: [
     BrowserModule,

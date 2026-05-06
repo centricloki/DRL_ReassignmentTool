@@ -14,8 +14,8 @@
                   <input type="text" class="form-control" id="zoneName" formControlName="zoneName"
                     [class.is-invalid]="f.zoneName.invalid && f.zoneName.touched">
                   <div *ngIf="f.zoneName.invalid && f.zoneName.touched" class="invalid-feedback">
-                    <div *ngIf="f.zoneName.errors?.['required']">Zone name is required</div>
-                    <div *ngIf="f.zoneName.errors?.['maxlength']">Zone name must be less than 100 characters</div>
+                    <div *ngIf="f.zoneName.errors && f.zoneName.errors['required']">Zone name is required</div>
+                    <div *ngIf="f.zoneName.errors && f.zoneName.errors['maxlength']">Zone name must be less than 100 characters</div>
                   </div>
                 </div>
               </div>

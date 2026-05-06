@@ -11,6 +11,7 @@ export class AppConstant {
   public roleId = '';
   public teamId = '';
   public regionId = '';
+  public zoneId = '';
   public pageSize = 100;
   public skip = 0;
   public noRecordsMessage = "There are no items to display.";
