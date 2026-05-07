@@ -207,7 +207,6 @@ namespace DRL.Core.Service
                         ZoneId = zone.ZoneId,
                         ZoneName = zone.ZoneName,
                         IsActive = zone.IsActive,
-                        CreatedDate = zone.CreatedDate,
                         UpdatedDate = zone.UpdateDate
                     };
 
@@ -221,27 +220,6 @@ namespace DRL.Core.Service
                             zoneResponse.AVPName = $"{avpUser.FirstName ?? ""} {avpUser.LastName ?? ""}";
                         }
                     }
-
-                    // Get created by user details
-                    if (zone.CreatedBy > 0)
-                    {
-                        var createdByUser = _userRepository.GetUser(zone.CreatedBy);
-                        if (createdByUser != null)
-                        {
-                            zoneResponse.CreatedBy = createdByUser.UserId.ToString();
-                        }
-                    }
-
-                    // Get updated by user details
-                    if (zone.UpdatedBy.HasValue && zone.UpdatedBy > 0)
-                    {
-                        var updatedByUser = _userRepository.GetUser(zone.UpdatedBy.Value);
-                        if (updatedByUser != null)
-                        {
-                            zoneResponse.UpdatedBy = updatedByUser.UserId.ToString();
-                        }
-                    }
-
                     result.Add(zoneResponse);
                 }
             }
@@ -295,10 +273,7 @@ namespace DRL.Core.Service
                     AVPID = zone.AVPID,
                     IsActive = zone.IsActive,
                     IsDeleted = zone.IsDeleted,
-                    CreatedDate = DateTime.UtcNow,
-                    CreatedBy = 0,
                     UpdateDate = DateTime.UtcNow,
-                    UpdatedBy = 0
                 };
 
                 _zoneRepository.Insert(zoneMaster);
@@ -414,7 +389,6 @@ namespace DRL.Core.Service
                 if (zone != null)
                 {
                     zone.IsDeleted = true;
-                    zone.UpdatedBy = activeStatus.UpdatedBy;
                     zone.UpdateDate = DateTime.UtcNow;
 
                     _zoneRepository.Update(zone);
@@ -446,7 +420,6 @@ namespace DRL.Core.Service
                 if (zone != null)
                 {
                     zone.IsActive = activeStatus.status;
-                    zone.UpdatedBy = activeStatus.UpdatedBy;
                     zone.UpdateDate = DateTime.UtcNow;
 
                     _zoneRepository.Update(zone);

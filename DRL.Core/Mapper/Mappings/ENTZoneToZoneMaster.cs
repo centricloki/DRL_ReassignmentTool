@@ -20,10 +20,6 @@ namespace DRL.Core.Mapper.Mappings
             destination.AVPID = source.AVPID;
             destination.IsActive = source.IsActive;
             destination.IsDeleted = source.IsDeleted;
-            destination.CreatedDate = source.CreatedDate;
-            destination.CreatedBy = source.CreatedBy;
-            destination.UpdatedBy = source.UpdatedBy;
-
             return destination;
         }
     }

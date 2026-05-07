@@ -80,7 +80,6 @@ namespace DRL.API.Controllers
             {
                 if (Zone.ZoneId <= 0 || Zone.ZoneId == null)
                 {
-                    Zone.CreatedBy = CurrentUserId;
                     serviceResponse = _ZoneService.Insert(Zone);
                     if (serviceResponse.Success)
                     {
@@ -98,7 +97,6 @@ namespace DRL.API.Controllers
                 }
                 else
                 {
-                    Zone.UpdatedBy = CurrentUserId;
                     serviceResponse = _ZoneService.Update(Zone);
                     if (serviceResponse.Success)
                     {
