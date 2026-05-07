@@ -43,7 +43,7 @@
             <div class="input-field">
               <mat-select placeholder="AVP" formControlName="avpid">
                 <mat-option value="">Select AVP</mat-option>
-                <mat-option *ngFor="let item of avpList" [value]="item.recordId">
+                <mat-option *ngFor="let item of avpList" [value]="+item.recordId">
                   {{item.value}}
                 </mat-option>
               </mat-select>

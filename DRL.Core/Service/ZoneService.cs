@@ -266,12 +266,12 @@ namespace DRL.Core.Service
 
                 if (existingZone != null)
                 {
-                    actionStatus.Success = false;
+                    actionStatus.Success = true;
                     actionStatus.Message = "Zone already exists with same zone name.";
                 }
                 else
                 {
-                    actionStatus.Success = true;
+                    actionStatus.Success = false;
                 }
             }
             catch (Exception ex)
@@ -319,7 +319,7 @@ namespace DRL.Core.Service
             var actionStatus = new ActionStatus();
             try
             {
-                var existingZone = _zoneRepository.GetById(zone.ZoneId);
+                var existingZone = _zoneRepository.GetZoneFindById(zone.ZoneId);
                 if (existingZone == null)
                 {
                     actionStatus.Success = false;
@@ -370,8 +370,7 @@ namespace DRL.Core.Service
                     new SqlParameter("@UpdateZoneId", zone.ZoneId),
                     new SqlParameter("@UpdateName", zone.ZoneName),
                     new SqlParameter("@UpdateAVPID", (object)zone.AVPID ?? DBNull.Value),
-                    new SqlParameter("@UpdateIsActive", zone.IsActive),
-                    new SqlParameter("@UpdatedBy", 0)
+                    new SqlParameter("@UpdateIsActive", zone.IsActive)
                 };
 
                 string errorMsg;
@@ -439,7 +438,7 @@ namespace DRL.Core.Service
             var actionStatus = new ActionStatus();
             try
             {
-                var zone = _zoneRepository.GetById(activeStatus.Id);
+                var zone = _zoneRepository.GetZoneFindById(activeStatus.Id);
                 if (zone != null)
                 {
                     zone.IsActive = activeStatus.status;
