@@ -6,5 +6,6 @@ namespace DRL.Model.Repository.Interface
     public interface IZoneRepository : IGenericRepository<EF.ZoneMaster>
     {
         List<EF.ZoneMaster> GetAllZone();
+        EF.ZoneMaster GetZoneFindById(int ZoneId);
     }
 }

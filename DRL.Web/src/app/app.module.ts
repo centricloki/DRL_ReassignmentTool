@@ -27,7 +27,6 @@ import { LoginComponent } from './login/login.component';
 import { HttpClientModule } from '@angular/common/http';
 import { SessionTimeoutService } from './services/SessionTimeoutService';
 import { ToastHelper } from './helpers/toast.helper';
-import { ResponseParser } from './helpers/response-parser.helper';
 
 const routes: Routes = [
   {
@@ -89,7 +88,6 @@ const routes: Routes = [
     ErrorComponent,
     DashboardComponent,
     WarningDialogComponent,
-    ResponseParser
   ],
   imports: [
     BrowserModule,

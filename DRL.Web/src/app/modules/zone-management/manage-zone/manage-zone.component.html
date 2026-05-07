@@ -1,55 +1,76 @@
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-12">
-      <div class="card">
-        <div class="card-header">
-          <h4 class="card-title">{{ pageTitle }}</h4>
-        </div>
-        <div class="card-body">
-          <form [formGroup]="zoneForm" (ngSubmit)="onSubmit()">
-            <div class="row">
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="zoneName">Zone Name *</label>
-                  <input type="text" class="form-control" id="zoneName" formControlName="zoneName"
-                    [class.is-invalid]="f.zoneName.invalid && f.zoneName.touched">
-                  <div *ngIf="f.zoneName.invalid && f.zoneName.touched" class="invalid-feedback">
-                    <div *ngIf="f.zoneName.errors && f.zoneName.errors['required']">Zone name is required</div>
-                    <div *ngIf="f.zoneName.errors && f.zoneName.errors['maxlength']">Zone name must be less than 100 characters</div>
-                  </div>
-                </div>
-              </div>
-              
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="isActive">Status</label>
-                  <select class="form-control" id="isActive" formControlName="isActive">
-                    <option [value]="true">Active</option>
-                    <option [value]="false">Inactive</option>
-                  </select>
-                </div>
-              </div>
-            </div>
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Home</a></li>
+    <li class="breadcrumb-item"><a [routerLink]='["/zone-management"]'>Zones</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{pageTitle}}</li>
+  </ol>
+</nav>
 
-            <div class="row">
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label for="avpid">AVP ID</label>
-                  <input type="number" class="form-control" id="avpid" formControlName="avpid"
-                    placeholder="Enter AVP ID (optional)">
-                </div>
-              </div>
-            </div>
+<div class="top-title-bar">
+  <h2 class="page-title">{{pageTitle}}</h2>
+</div>
 
-            <div class="form-group text-right">
-              <button type="button" class="btn btn-secondary mr-2" (click)="goBack()">Cancel</button>
-              <button type="submit" class="btn btn-primary" [disabled]="zoneForm.invalid">
-                <i class="fa fa-save"></i> Save Zone
-              </button>
+<div class="white-box">
+  <div class="box-head">
+    <h3>{{ isEditMode ? 'Edit Zone Details' : 'Create New Zone' }}</h3>
+  </div>
+
+  <form [formGroup]="zoneForm" (ngSubmit)="onSubmit()" name="zoneForm" novalidate>
+    <div class="container-fluid">
+      <div class="row">
+        <!-- Zone Name Field -->
+        <div class="col-lg-4 col-md-6 col-sm-12">
+          <div class="form-field-row">
+            <label class="form-label">Zone Name:
+              <span>*</span>
+            </label>
+            <div class="input-field">
+              <input type="text" class="form-control" id="zoneName" formControlName="zoneName"
+                [class.is-invalid]="f.zoneName.invalid && f.zoneName.touched" placeholder="Enter zone name">
             </div>
-          </form>
+            <div class="text-danger" *ngIf="f.zoneName.invalid && f.zoneName.touched">
+              <div *ngIf="f.zoneName.errors && f.zoneName.errors['required']">Zone name is required</div>
+              <div *ngIf="f.zoneName.errors && f.zoneName.errors['maxlength']">Zone name must be less than 100
+                characters</div>
+            </div>
+          </div>
         </div>
+
+        <!-- AVP Name Field -->
+        <div class="col-lg-4 col-md-6 col-sm-12">
+          <div class="form-field-row">
+            <label class="form-label">AVP:</label>
+            <div class="input-field">
+              <mat-select placeholder="AVP" formControlName="avpid">
+                <mat-option value="">Select AVP</mat-option>
+                <mat-option *ngFor="let item of avpList" [value]="item.recordId">
+                  {{item.value}}
+                </mat-option>
+              </mat-select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Field -->
+        <div class="col-lg-4 col-md-6 col-sm-12">
+          <div class="form-field-row">
+            <label class="form-label">Status:</label>
+            <div class="input-field">
+              <select class="form-control" id="isActive" formControlName="isActive">
+                <option [value]="true">Active</option>
+                <option [value]="false">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
-  </div>
+
+    <!-- Action Buttons -->
+    <div class="btn-groups">
+      <input class="btn btn-gray" type="button" value="Cancel" (click)="goBack()">
+      <input class="btn btn-blue" type="submit" [value]="isEditMode ? 'Update' : 'Save'" [disabled]="zoneForm.invalid">
+    </div>
+  </form>
 </div>

@@ -34,5 +34,21 @@ namespace DRL.Model.Repository.Implementation
             }
             return result;
         }
+
+        public EF.ZoneMaster GetZoneFindById(int ZoneId)
+        {
+            var result = new EF.ZoneMaster();
+            try
+            {
+                logger.Info(Constants.ACTION_ENTRY, "ZoneRepository.GetZone");
+                result = base.FindByNoTracking(f => f.ZoneId == ZoneId).SingleOrDefault();
+                logger.Info(Constants.ACTION_EXIT, "ZoneRepository.GetZone");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, ex);
+            }
+            return result;
+        }
     }
 }

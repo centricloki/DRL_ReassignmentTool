@@ -31,7 +31,7 @@
                     (dataStateChange)="dataStateChange($event)"
                     [pageable]="true">
 
-          <kendo-grid-messages noRecords="{{_appConstant.noRecordsMessage}}"></kendo-grid-messages>
+          <kendo-grid-messages noRecords="{{_appConstantService.noRecordsMessage}}"></kendo-grid-messages>
 
           <!-- ✅ Zone Name Column -->
           <kendo-grid-column field="zoneName" title="Zone Name" width="35%">
@@ -48,11 +48,11 @@
           <kendo-grid-column field="isActive" title="Status" width="20%" filter="boolean">
             <ng-template kendoGridFilterCellTemplate let-filter>
               <div>
-                <kendo-dropdownlist [data]="_appConstant.listItems"
+                <kendo-dropdownlist [data]="_appConstantService.listItems"
                                     textField="text"
                                     valueField="value"
                                     class="custom-dropdown"
-                                    [(ngModel)]="_appConstant.selectedValue"
+                                    [(ngModel)]=" _appConstantService.selectedValue"
                                     [valuePrimitive]="true"
                                     (selectionChange)="activeInactiveFilterChange($event)">
                 </kendo-dropdownlist>
@@ -74,9 +74,9 @@
               <li kendoGridEditCommand title="Edit Zone" (click)="editZone(dataItem.zoneId)" class="pencil">
                 <i class="fa fa-pencil" aria-hidden="true"></i>
               </li>
-              <li kendoGridEditCommand title="Delete Zone" (click)="deleteZone(dataItem)" class="trash">
+              <!-- <li kendoGridEditCommand title="Delete Zone" (click)="deleteZone(dataItem)" class="trash">
                 <i class="fa fa-trash" aria-hidden="true"></i>
-              </li>
+              </li> -->
             </ng-template>
           </kendo-grid-command-column>
 

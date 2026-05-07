@@ -56,10 +56,10 @@ namespace DRL.API.Controllers
         ///     ENTZone Model
         /// </returns>
         [HttpGet("GetZone/{ZoneId}")]
-        public BaseResponse<ENTZone> GetZone(int ZoneId)
+        public BaseResponse<ENTZone> GetZone(long ZoneId)
         {
             var response = new BaseResponse<ENTZone>(true);
-            response.Data = _ZoneService.GetZone(ZoneId);
+            response.Data = _ZoneService.GetZone((int)ZoneId);
             return response;
         }
 
