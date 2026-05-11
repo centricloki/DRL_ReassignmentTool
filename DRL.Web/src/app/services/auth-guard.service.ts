@@ -25,7 +25,7 @@ export class AuthGuardService implements CanActivate {
       // Try to restore from localStorage if available
       const savedUserName = localStorage.getItem('userName');
       const savedPermissions = localStorage.getItem('userPermissions');
-      
+
       if (savedUserName && savedPermissions) {
         try {
           this._appConstant.userDisplayName = savedUserName;
@@ -64,15 +64,15 @@ export class AuthGuardService implements CanActivate {
       }
     }
 
-    if (!requiredLinkCode) {
-      // No permission check required
-      if (this._appConstant.groupValue.toLowerCase() == "drl it") {
-        return true;
-      }
-      else if (this._appConstant.groupValue.toLowerCase() == "rpb sales admin") {
-        return false;
-      }
-    }
+    // if (!requiredLinkCode) {
+    //   // No permission check required
+    //   if (this._appConstant.groupValue.toLowerCase() == "drl it") {
+    //     return true;
+    //   }
+    //   else if (this._appConstant.groupValue.toLowerCase() == "rpb sales admin") {
+    //     return false;
+    //   }
+    // }
 
     const hasAccess = this._appConstant.hasLinkAccess(requiredLinkCode);
 
@@ -89,7 +89,7 @@ export class AuthGuardService implements CanActivate {
   private handleAuthentication(): Observable<boolean> {
     // Clear any existing session data
     this.clearSessionData();
-    
+
     // Attempt to authenticate silently
     return this.authenticationService.Authentication({} as any).pipe(
       timeout(5000), // 5 second timeout to prevent hanging
@@ -104,7 +104,7 @@ export class AuthGuardService implements CanActivate {
             this.router.navigate(['/login']);
             return false;
           }
-          
+
           if (body.isSuccess && body.data != null) {
             var userData = JSON.parse(JSON.stringify(body.data));
             if (userData.userName != null) {
@@ -114,7 +114,7 @@ export class AuthGuardService implements CanActivate {
               this._appConstant.userDisplayName = userData.userName;
               this._appConstant.userPermissions = userData.linkPermissions || [];
               localStorage["userPermissions"] = JSON.stringify(userData.linkPermissions || []);
-              
+
               // Restore last URL and navigate
               const lastUrl = sessionStorage.getItem('lastUrl');
               if (lastUrl) {

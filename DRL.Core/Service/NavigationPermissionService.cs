@@ -45,8 +45,7 @@ namespace DRL.Core.Service
                 INNER JOIN RT_UserGroups ug ON lgp.GroupId = ug.GroupId
                 WHERE ug.GroupName = @GroupName 
                   AND nl.IsActive = 1 
-                  AND ug.IsActive = 1
-                ORDER BY nl.DisplayOrder";
+                  AND ug.IsActive = 1";
 
                 using (var cmd = new SqlCommand(sql, conn))
                 {
@@ -68,16 +67,16 @@ namespace DRL.Core.Service
             return permissions;
         }
 
-        public async Task<Dictionary<int, string>> GetActiveUserGroupsAsync()
+        public async Task<List<ENTUserGroup>> GetActiveUserGroupsAsync()
         {
-            const string cacheKey = "ActiveUserGroups";
-            if (_cacheService.TryGetValue(cacheKey, out Dictionary<int, string> cachedGroups))
-            {
-                return cachedGroups;
-            }
+            //const string cacheKey = "ActiveUserGroups";
+            //if (_cacheService.TryGetValue(cacheKey, out Dictionary<int, string> cachedGroups))
+            //{
+            //    return cachedGroups;
+            //}
 
-            var groups = new Dictionary<int, string>();
-
+            //var groups = new Dictionary<int, string>();
+            var groups = new List<ENTUserGroup>();
             using (var conn = new SqlConnection(_connectionString))
             {
                 await conn.OpenAsync();
@@ -89,15 +88,20 @@ namespace DRL.Core.Service
                     {
                         while (await reader.ReadAsync())
                         {
-                            int id = Convert.ToInt32(reader["GroupId"]);
-                            string name = reader["GroupName"].ToString();
-                            groups[id] = name;
+                            groups.Add(new ENTUserGroup
+                            {
+                                GroupId = Convert.ToInt32(reader["GroupId"]),
+                                GroupName = reader["GroupName"].ToString()
+                            });
+                            //int id = Convert.ToInt32(reader["GroupId"]);
+                            //string name = reader["GroupName"].ToString();
+                            //groups[id] = name;
                         }
                     }
                 }
             }
 
-            _cacheService.Set(cacheKey, groups, TimeSpan.FromHours(1));
+            //_cacheService.Set(cacheKey, groups, TimeSpan.FromHours(1));
             return groups;
         }
 

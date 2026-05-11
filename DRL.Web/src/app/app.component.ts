@@ -34,7 +34,7 @@ export class AppComponent {
     // Restore permissions from localStorage if available
     const savedUserName = localStorage.getItem('userName');
     const savedPermissions = localStorage.getItem('userPermissions');
-    
+
     if (savedUserName && savedPermissions) {
       try {
         this._appConstant.userDisplayName = savedUserName;
@@ -48,6 +48,10 @@ export class AppComponent {
       }
     }
 
+    console.log('this._appConstant.groupValue', this._appConstant.groupValue);
+    console.log('this._appConstant.isAuthenticate', this._appConstant.isAuthenticate);
+    console.log('this._appConstant.userDisplayName', this._appConstant.userDisplayName);
+    console.log('this._appConstant.userPermissions', this._appConstant.userPermissions);
     if (this._appConstant.groupValue == '') {
       this.authenticationService.Authentication(this.SugarCRMUser).subscribe(data => {
         if (data != null) {
@@ -62,6 +66,11 @@ export class AppComponent {
               this._appConstant.userPermissions = userData.linkPermissions || [];
               // Persist permissions in localStorage
               localStorage["userPermissions"] = JSON.stringify(userData.linkPermissions || []);
+              console.log('this._appConstant.groupValue', this._appConstant.groupValue);
+              console.log('this._appConstant.isAuthenticate', this._appConstant.isAuthenticate);
+              console.log('this._appConstant.userDisplayName', this._appConstant.userDisplayName);
+              console.log('this._appConstant.userPermissions', this._appConstant.userPermissions);
+
               this.checkUserGroup();
             }
           }
@@ -90,37 +99,20 @@ export class AppComponent {
   }
   checkUserGroup() {
     const lastUrl = sessionStorage.getItem('lastUrl');
-
-    if (this._appConstant.groupValue.toLowerCase() == 'rpb sales admin') {
-      this._appConstant.isDRLIT = false;
-
-      if (lastUrl) {
-        sessionStorage.removeItem('lastUrl');
-        this._router.navigate([lastUrl]);
-      } else {
-        this._router.navigate(['/customers']);
-      }
+    console.log('lastUrl', lastUrl);
+    if (lastUrl) {
+      sessionStorage.removeItem('lastUrl');
+      this._router.navigate([lastUrl]);
     }
-    else if (this._appConstant.groupValue.toLowerCase() == 'drl it') {
-      this._appConstant.isDRLIT = true;
-      console.log('lastUrl', lastUrl)
-      if (lastUrl) {
-        sessionStorage.removeItem('lastUrl');
-        this._router.navigate([lastUrl]);
-      } else {
-        console.log('no lastUrl')
-        this._router.navigate(['/users']);
-      }
-    }
-    else {
-      this._appConstant.isDRLIT = false;
-
-      if (lastUrl) {
-        sessionStorage.removeItem('lastUrl');
-        this._router.navigate([lastUrl]);
-      } else {
-        this._router.navigate(['/dashboard']);
-      }
-    }
+    //   else {
+    //     if (this._appConstant.groupValue.toLowerCase() == 'rpb sales admin') {
+    //       this._router.navigate(['/customers']);
+    //     }
+    //     else if (this._appConstant.groupValue.toLowerCase() == 'drl it') {
+    //       this._router.navigate(['/users']);
+    //     }
+    //     else { this._router.navigate(['/users']); }
+    //   }
   }
+
 }

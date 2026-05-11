@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../environments/environment';
+import { BehaviorSubject, Observable } from 'rxjs';
 
 @Injectable()
 export class AppConstant {
@@ -29,7 +30,17 @@ export class AppConstant {
   public groupValue = '';
   public currentPage = 0;
   public geoCodeURLEnabled = true;
-  userPermissions: LinkPermission[] = [];
+
+  private _userPermissions = new BehaviorSubject<LinkPermission[]>([]);
+  public userPermissions$ = this._userPermissions.asObservable();
+
+  get userPermissions(): LinkPermission[] {
+    return this._userPermissions.getValue();
+  }
+
+  set userPermissions(val: LinkPermission[]) {
+    this._userPermissions.next(val || []);
+  }
 
   // Fallback helper during transition
   hasLinkAccess(linkCode: string, legacyFlag?: boolean): boolean {

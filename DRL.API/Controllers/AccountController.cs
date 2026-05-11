@@ -51,13 +51,15 @@ namespace DRL.API.Controllers
         [HttpGet]
         public async Task<BaseResponse<ENTAppUser>> Authenticate()
         {
-            BaseResponse<ENTAppUser> response = new BaseResponse<ENTAppUser>();
+            BaseResponse<ENTAppUser> response = new BaseResponse<ENTAppUser>()
+            {
+                IsSuccess = false,
+                Message = "Please try again! Something went wrong."
+            };
             try
             {
                 ENTLoginRequest request = new ENTLoginRequest();
                 var activeGroups = await _navigationPermissionService.GetActiveUserGroupsAsync();
-                string salesGroup = activeGroups.ContainsKey(1) ? activeGroups[1] : "rpb sales admin";
-                string drlITGroup = activeGroups.ContainsKey(2) ? activeGroups[2] : "drl it";
                 string activeUserGroup = string.Empty;
                 if (_env != null && (_env.IsProduction() || _env.IsStaging()))
                 {
@@ -68,59 +70,44 @@ namespace DRL.API.Controllers
                         if (windowsIdentity != null)
                         {
                             List<string> groups = windowsIdentity.Groups.Select(y => y.Value).ToList();
-                            foreach (var item in groups)
+                            foreach (var winGroupitem in groups)
                             {
-                                var name = new System.Security.Principal.SecurityIdentifier(item)
+                                var name = new System.Security.Principal.SecurityIdentifier(winGroupitem)
                                     .Translate(typeof(NTAccount))
                                     .ToString().ToLower();
-
-                                if (name == salesGroup || name.EndsWith("\\" + salesGroup.ToLower()))
+                                foreach (var item in activeGroups)
                                 {
-                                    response.IsSuccess = true;
-                                    response.Data = new ENTAppUser()
+                                    if (name == item.GroupName.ToLower() || name.EndsWith("\\" + item.GroupName.ToLower()))
                                     {
-                                        Name = windowsIdentity.Name,
-                                        UserName = request.Username,
-                                        WindowGroupName = name,
-                                        UserGroup = salesGroup,
-                                    };
-                                    activeUserGroup = salesGroup;
-                                    break;
-                                }
-                                else if (name == drlITGroup || name.EndsWith("\\" + drlITGroup.ToLower()))
-                                {
-                                    response.IsSuccess = true;
-                                    response.Data = new ENTAppUser()
-                                    {
-                                        Name = windowsIdentity.Name,
-                                        UserName = request.Username,
-                                        WindowGroupName = name,
-                                        UserGroup = drlITGroup,
-                                        IsAdmin = true
-                                    };
-                                    activeUserGroup = drlITGroup;
-                                    break;
+                                        response.Message = null;
+                                        response.IsSuccess = true;
+                                        response.Data = new ENTAppUser()
+                                        {
+                                            Name = windowsIdentity.Name,
+                                            UserName = request.Username,
+                                            WindowGroupName = name,
+                                            UserGroup = item.GroupName,
+                                        };
+                                        activeUserGroup = item.GroupName;
+                                        break;
+                                    }
                                 }
                             }
                         }
                     }
-                    else
-                    {
-                        response.IsSuccess = false;
-                        response.Message = "Please try again! Something went wrong.";
-                    }
                 }
                 else //UAT & Developement
                 {
+                    response.Message = null;
                     response.IsSuccess = true;
                     response.Data = new ENTAppUser()
                     {
                         DisplayName = "TestUser",
                         UserName = "drladmin",
-                        UserGroup = drlITGroup,
+                        UserGroup = "drl it",
                         IsAdmin = true
                     };
-                    activeUserGroup = drlITGroup;
+                    activeUserGroup = "drl it";
                 }
 
 

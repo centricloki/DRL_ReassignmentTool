@@ -10,7 +10,7 @@ namespace DRL.Core.Interface
     public interface INavigationPermissionService
     {
         Task<List<ENTLinkPermission>> GetPermissionsForGroupAsync(string groupName);
-        Task<Dictionary<int, string>> GetActiveUserGroupsAsync();
+        Task<List<ENTUserGroup>> GetActiveUserGroupsAsync();
         void ClearUserGroupCache();
     }
 }

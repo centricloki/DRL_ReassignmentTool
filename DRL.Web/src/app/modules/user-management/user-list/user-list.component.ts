@@ -48,6 +48,7 @@ export class UserListComponent implements OnInit, OnDestroy {
     this.unsubscribe$.complete();
   }
   ngOnInit() {
+    console.log('User List')
     this.GetUserList();
     $('a.btnLi').removeClass('active');
     $('#lnkUser').addClass('active');
