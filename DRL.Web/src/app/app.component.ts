@@ -70,6 +70,9 @@ export class AppComponent {
       sessionStorage.removeItem('lastUrl');
       this._router.navigate([lastUrl]);
     }
+    else {
+      this._router.navigate(['/dashboard']);
+    }
   }
 
 }
