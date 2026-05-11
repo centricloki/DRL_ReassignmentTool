@@ -13,6 +13,7 @@ namespace DRL.Entity
         public bool IsAdmin { get; set; }
         public string Token { get; set; }
         public string WindowGroupName { get; set; }
+        public string LandingPage { get; set; }
         public List<ENTLinkPermission> LinkPermissions { get; set; }
     }
     public class ENTLinkPermission

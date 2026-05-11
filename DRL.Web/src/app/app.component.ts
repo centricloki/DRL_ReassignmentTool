@@ -49,6 +49,7 @@ export class AppComponent {
         this._appConstant.isAuthenticate = true;
         this._appConstant.userDisplayName = u.userName;
         this._appConstant.groupValue = u.userGroup;
+        this._appConstant.landingPage = u.landingPage;
         if (u.linkPermissions) {
           this._appConstant.userPermissions = u.linkPermissions;
         }
@@ -56,22 +57,19 @@ export class AppComponent {
           this._appConstant.userPermissions = [];
         }
         localStorage.setItem('userName', u.userName);
+        this.lastVisitedRoute();
         localStorage.setItem('userPermissions', JSON.stringify(this._appConstant.userPermissions));
-        this.checkUserGroup(); // navigate once, after data
+        this._router.navigate([this._appConstant.landingPage]);
       }
     });
-
   }
-  checkUserGroup() {
+
+  lastVisitedRoute() {
     const lastUrl = sessionStorage.getItem('lastUrl');
-    console.log('checkUserGroup>>lastUrl', lastUrl);
+    console.log('lastVisitedRoute>>lastUrl', lastUrl);
     if (lastUrl) {
+      this._appConstant.landingPage = lastUrl;
       sessionStorage.removeItem('lastUrl');
-      this._router.navigate([lastUrl]);
-    }
-    else {
-      this._router.navigate(['/dashboard']);
     }
   }
-
 }

@@ -30,7 +30,7 @@ export class AppConstant {
   public groupValue = '';
   public currentPage = 0;
   public geoCodeURLEnabled = true;
-
+  public landingPage = '';
   private _userPermissions = new BehaviorSubject<LinkPermission[]>([]);
   public userPermissions$ = this._userPermissions.asObservable();
 

@@ -1,12 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AppConstant } from 'src/app/app.constants';
 @Component({
   selector: 'app-sitelayout',
   templateUrl: './sitelayout.component.html',
   styleUrls: ['./sitelayout.component.css'],
 })
-export class SitelayoutComponent implements OnInit {
+export class SitelayoutComponent implements OnInit, OnDestroy {
   navItems = [
     { label: 'Tool', code: 'DASHBOARD', route: '/dashboard', icon: 'icon-01', id: 'dashboardLink', action: 'default' },
     { label: 'Users', code: 'USERS', route: '/users', icon: 'icon-08', id: 'lnkUser', action: 'user' },
@@ -22,12 +24,14 @@ export class SitelayoutComponent implements OnInit {
     { label: 'User Report', code: 'USER_REPORT', route: '/customers/user-report', icon: 'icon-07', id: 'lnkUserReport', action: 'userreport' },
   ];
   navLinks: any[] = [];
-
-  constructor(public _appConstant: AppConstant, private route: Router) { }
+  private unsubscribe$ = new Subject<void>();
+  constructor(public _appConstant: AppConstant, private _router: Router) { }
   ngOnInit() {
-    this._appConstant.userPermissions$.subscribe(permissions => {
-      this.visibleNavItems();
-    });
+    this._appConstant.userPermissions$
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(permissions => {
+        this.visibleNavItems();
+      });
   }
 
   // Getter to filter visible items and mark the 2nd one
@@ -35,26 +39,15 @@ export class SitelayoutComponent implements OnInit {
     const visible = this.navItems.filter(item =>
       this._appConstant.hasLinkAccess(item.code)
     );
-    this.navLinks = visible.map((item, index) => {
-      let activeURL = false;
-      if (this._appConstant.groupValue.toLowerCase() == 'rpb sales admin') {
-        if (item.code == 'CUSTOMERS') {
-          activeURL = true;
+    this.navLinks = visible.map((item, index) => ({
+      ...item,
+      isActive: (() => {
+        if (this._appConstant.landingPage == '' || this._appConstant.landingPage == '/') {
+          return item.route == '/dashboard'
         }
-      }
-      else if (this._appConstant.groupValue.toLowerCase() == 'drl it') {
-        if (item.code == 'USERS') {
-          activeURL = true;
-        }
-      }
-      else if (item.code == 'DASHBOARD') {
-        activeURL = true;
-      }
-      return ({
-        ...item,
-        isActive: activeURL //this.route.url.replace('/', '').includes(item.route.replace('/', ''))
-      });
-    });
+        return item.route == this._appConstant.landingPage
+      })()
+    }));
     console.log("navLinks", this.navLinks);
   }
 
@@ -72,5 +65,10 @@ export class SitelayoutComponent implements OnInit {
     this._appConstant.regionId = '';
     this._appConstant.zoneId = '';
     this._appConstant.teamName = '';
+  }
+
+  ngOnDestroy() {
+    this.unsubscribe$.next();
+    this.unsubscribe$.complete();
   }
 }

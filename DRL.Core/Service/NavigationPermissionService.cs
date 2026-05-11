@@ -69,18 +69,11 @@ namespace DRL.Core.Service
 
         public async Task<List<ENTUserGroup>> GetActiveUserGroupsAsync()
         {
-            //const string cacheKey = "ActiveUserGroups";
-            //if (_cacheService.TryGetValue(cacheKey, out Dictionary<int, string> cachedGroups))
-            //{
-            //    return cachedGroups;
-            //}
-
-            //var groups = new Dictionary<int, string>();
             var groups = new List<ENTUserGroup>();
             using (var conn = new SqlConnection(_connectionString))
             {
                 await conn.OpenAsync();
-                var sql = "SELECT GroupId, GroupName FROM RT_UserGroups WHERE IsActive = 1";
+                var sql = "SELECT GroupId, GroupName,LandingPage,IsAdmin FROM RT_UserGroups WHERE IsActive = 1";
 
                 using (var cmd = new SqlCommand(sql, conn))
                 {
@@ -91,17 +84,14 @@ namespace DRL.Core.Service
                             groups.Add(new ENTUserGroup
                             {
                                 GroupId = Convert.ToInt32(reader["GroupId"]),
-                                GroupName = reader["GroupName"].ToString()
+                                GroupName = reader["GroupName"].ToString(),
+                                LandingPage= reader["LandingPage"].ToString(),
+                                IsAdmin = Convert.ToBoolean(reader["IsAdmin"]),
                             });
-                            //int id = Convert.ToInt32(reader["GroupId"]);
-                            //string name = reader["GroupName"].ToString();
-                            //groups[id] = name;
                         }
                     }
                 }
             }
-
-            //_cacheService.Set(cacheKey, groups, TimeSpan.FromHours(1));
             return groups;
         }
 
