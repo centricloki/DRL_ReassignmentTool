@@ -1,4 +1,4 @@
-import { Component, HostListener, } from '@angular/core';
+import { ChangeDetectionStrategy, Component, HostListener, } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToasterService } from 'angular2-toaster';
 import { AuthenticationService } from './services/authentication.service';
@@ -6,12 +6,14 @@ import { UserModel } from './Models/UserModel';
 import { CommonService } from './services/common.service';
 import { AppConstant } from './app.constants';
 import { SessionTimeoutService } from './services/SessionTimeoutService';
-declare var $: any;
+import { take } from 'rxjs/operators';
+import { ResponseParser } from './helpers/response-parser.helper';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AppComponent {
   isLoggedIn: boolean = false;
@@ -25,94 +27,49 @@ export class AppComponent {
   ) {
   }
 
-  @HostListener("window:onbeforeunload", ["$event"])
-  clearLocalStorage(event) {
-    localStorage.clear();
-  }
+  // @HostListener("window:onbeforeunload", ["$event"])
+  // clearLocalStorage(event) {
+  //   localStorage.clear();
+  // }
 
   ngOnInit() {
-    // Restore permissions from localStorage if available
-    const savedUserName = localStorage.getItem('userName');
-    const savedPermissions = localStorage.getItem('userPermissions');
+    const name = localStorage.getItem('userName');
+    const perms = localStorage.getItem('userPermissions');
+    if (name && perms) {
+      this._appConstant.userDisplayName = name;
+      this._appConstant.userPermissions = JSON.parse(perms);
+      this._appConstant.isAuthenticate = true;
+    }
 
-    if (savedUserName && savedPermissions) {
-      try {
-        this._appConstant.userDisplayName = savedUserName;
-        this._appConstant.userPermissions = JSON.parse(savedPermissions);
+    // fetch Windows identity once
+    this.authenticationService.Authentication(this.SugarCRMUser).pipe(take(1)).subscribe({
+      next: body => {
+        const parsedData = ResponseParser.parseLegacyResponse(body);
+        if (parsedData && !parsedData.isSuccess) return;
+        const u = parsedData.data; // no JSON.parse(JSON.stringify())
         this._appConstant.isAuthenticate = true;
-        // Group value might be empty, so we still need to check or authenticate
-      } catch (e) {
-        // Clear invalid data
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userPermissions');
+        this._appConstant.userDisplayName = u.userName;
+        this._appConstant.groupValue = u.userGroup;
+        if (u.linkPermissions) {
+          this._appConstant.userPermissions = u.linkPermissions;
+        }
+        else {
+          this._appConstant.userPermissions = [];
+        }
+        localStorage.setItem('userName', u.userName);
+        localStorage.setItem('userPermissions', JSON.stringify(this._appConstant.userPermissions));
+        this.checkUserGroup(); // navigate once, after data
       }
-    }
+    });
 
-    console.log('this._appConstant.groupValue', this._appConstant.groupValue);
-    console.log('this._appConstant.isAuthenticate', this._appConstant.isAuthenticate);
-    console.log('this._appConstant.userDisplayName', this._appConstant.userDisplayName);
-    console.log('this._appConstant.userPermissions', this._appConstant.userPermissions);
-    if (this._appConstant.groupValue == '') {
-      this.authenticationService.Authentication(this.SugarCRMUser).subscribe(data => {
-        if (data != null) {
-          let body = this._commonLookupData.parseData(data);
-          if (body.isSuccess && body.data != null) {
-            var userData = JSON.parse(JSON.stringify(body.data));
-            if (userData.userName != null) {
-              this._appConstant.isAuthenticate = true;
-              localStorage["userName"] = userData.userName;
-              this._appConstant.groupValue = userData.userGroup;
-              this._appConstant.userDisplayName = userData.userName;
-              this._appConstant.userPermissions = userData.linkPermissions || [];
-              // Persist permissions in localStorage
-              localStorage["userPermissions"] = JSON.stringify(userData.linkPermissions || []);
-              console.log('this._appConstant.groupValue', this._appConstant.groupValue);
-              console.log('this._appConstant.isAuthenticate', this._appConstant.isAuthenticate);
-              console.log('this._appConstant.userDisplayName', this._appConstant.userDisplayName);
-              console.log('this._appConstant.userPermissions', this._appConstant.userPermissions);
-
-              this.checkUserGroup();
-            }
-          }
-        }
-      },
-        (err: any) => {
-          if (err.status == 401) {
-            //this._router.navigate(['/error']);
-          }
-          else {
-            if (err._body != undefined && err._body != "" && typeof err._body === 'string') {
-              var errMsg = JSON.parse(err._body)
-              this._toasterService.pop('error', 'Error', errMsg.message);
-              // this._router.navigate(['/error']);
-            }
-            else {
-              // this._router.navigate(['/error']);
-            }
-          }
-        }
-      );
-    }
-    else {
-      this.checkUserGroup();
-    }
   }
   checkUserGroup() {
     const lastUrl = sessionStorage.getItem('lastUrl');
-    console.log('lastUrl', lastUrl);
+    console.log('checkUserGroup>>lastUrl', lastUrl);
     if (lastUrl) {
       sessionStorage.removeItem('lastUrl');
       this._router.navigate([lastUrl]);
     }
-    //   else {
-    //     if (this._appConstant.groupValue.toLowerCase() == 'rpb sales admin') {
-    //       this._router.navigate(['/customers']);
-    //     }
-    //     else if (this._appConstant.groupValue.toLowerCase() == 'drl it') {
-    //       this._router.navigate(['/users']);
-    //     }
-    //     else { this._router.navigate(['/users']); }
-    //   }
   }
 
 }

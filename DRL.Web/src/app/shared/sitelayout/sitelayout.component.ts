@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AppConstant } from 'src/app/app.constants';
 declare var $: any;
@@ -6,9 +6,11 @@ declare var $: any;
 @Component({
   selector: 'app-sitelayout',
   templateUrl: './sitelayout.component.html',
-  styleUrls: ['./sitelayout.component.css']
+  styleUrls: ['./sitelayout.component.css'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SitelayoutComponent implements OnInit {
+  activeItemCode = 'USERS';
   navItems = [
     { label: 'Tool', code: 'DASHBOARD', route: '/dashboard', icon: 'icon-01', id: 'dashboardLink', action: 'default' },
     { label: 'Users', code: 'USERS', route: '/users', icon: 'icon-08', id: 'lnkUser', action: 'user' },
@@ -38,21 +40,22 @@ export class SitelayoutComponent implements OnInit {
       this._appConstant.hasLinkAccess(item.code)
     );
     this.navLinks = visible.map((item, index) => {
-      // debugger
-
       let activeURL = false;
       if (this._appConstant.groupValue.toLowerCase() == 'rpb sales admin') {
         if (item.code == 'CUSTOMERS') {
+          this.activeItemCode = 'CUSTOMERS';
           activeURL = true;
         }
       }
       else if (this._appConstant.groupValue.toLowerCase() == 'drl it') {
         if (item.code == 'USERS') {
+          this.activeItemCode = 'USERS';
           activeURL = true;
         }
       }
       else {
         if (item.code == 'DASHBOARD') {
+          this.activeItemCode = 'DASHBOARD';
           activeURL = true;
         }
       }
@@ -64,48 +67,22 @@ export class SitelayoutComponent implements OnInit {
     console.log("navLinks", this.navLinks);
   }
 
-  clear(type) {
-    console.log('type', type);
-    $('a.btnLi').removeClass('active');
-
+  clear(type: string) {
+    this.activeItemCode = type;
     switch (type) {
-      case 'role':
+      case 'ROLES': this._appConstant.roleId = ''; break;
+      case 'USERS': this._appConstant.userId = ''; break;
+      case 'TEAMS': this._appConstant.teamId = ''; break;
+      case 'REGIONS': this._appConstant.regionId = ''; break;
+      case 'ZONES': this._appConstant.zoneId = ''; break;
+      case 'DASHBOARD': {
         this._appConstant.roleId = '';
-        $('#lnkRole').addClass('active');
-        break;
-      case 'user':
         this._appConstant.userId = '';
-        $('#lnkUser').addClass('active');
-        break;
-      case 'team':
         this._appConstant.teamId = '';
-        $('#lnkTeam').addClass('active');
-        break;
-      case 'region':
         this._appConstant.regionId = '';
-        $('#lnkRegion').addClass('active');
+        this._appConstant.zoneId = '';
         break;
-      case 'userreassignment':
-        $('#lnkuserreassignment').addClass('active');
-        break;
-      case 'customerreassignment':
-        $('#lnkCustomer').addClass('active');
-        break;
-      case 'actionhistory':
-        $('#lnkactionhistory').addClass('active');
-        break;
-      case 'customerimport':
-        $('#lnkCustomerImport').addClass('active');
-        break;
-      case 'brandstyle':
-        $('#lnkBrandStyle').addClass('active');
-        break;
-      case 'userreport':
-        $('#lnkUserReport').addClass('active');
-        break;
-      case 'default':
-        $('#dashboardLink').addClass('active');
-        break;
+      }
     }
   }
 }
