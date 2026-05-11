@@ -12,8 +12,7 @@ import { ResponseParser } from './helpers/response-parser.helper';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  styleUrls: ['./app.component.css']
 })
 export class AppComponent {
   isLoggedIn: boolean = false;

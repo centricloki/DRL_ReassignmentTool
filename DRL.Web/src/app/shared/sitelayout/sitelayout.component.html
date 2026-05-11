@@ -2,7 +2,7 @@
   <nav class="asidebar-nav" id='menu'>
     <ul class="nav-list" *ngIf="_appConstant.isAuthenticate">
       <li *ngFor="let item of navLinks" [routerLinkActive]="['link-active']">
-        <a [id]="item.id" class="btnLi" [class.active]="activeItemCode === item.code" [routerLink]="[item.route]"
+        <a [id]="item.id" class="btnLi" [class.active]="item.isActive" [routerLink]="[item.route]"
           (click)="clear(item.code)">
           <i [class]="item.icon"></i>
           <span>{{ item.label }}</span>

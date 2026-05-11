@@ -54,7 +54,6 @@ export class UserListComponent implements OnInit, OnDestroy {
     $('#lnkUser').addClass('active');
   }
   GetUserList() {
-
     this._usersService.GetUserList().pipe(takeUntil(this.unsubscribe$)).subscribe((response: any) => {
       var data = this._commonLookupData.parseData(response);
       this.UserList = data.data;

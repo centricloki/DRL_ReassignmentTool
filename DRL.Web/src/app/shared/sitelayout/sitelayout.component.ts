@@ -66,5 +66,11 @@ export class SitelayoutComponent implements OnInit {
         item.isActive = false;
       }
     });
+    this._appConstant.userId = '';
+    this._appConstant.roleId = '';
+    this._appConstant.teamId = '';
+    this._appConstant.regionId = '';
+    this._appConstant.zoneId = '';
+    this._appConstant.teamName = '';
   }
 }
