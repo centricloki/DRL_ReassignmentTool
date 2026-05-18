@@ -45,11 +45,12 @@ export class AppComponent {
       next: body => {
         const parsedData = ResponseParser.parseLegacyResponse(body);
         if (parsedData && !parsedData.isSuccess) return;
-        const u = parsedData.data; // no JSON.parse(JSON.stringify())
+        const u = parsedData.data;
         this._appConstant.isAuthenticate = true;
         this._appConstant.userDisplayName = u.userName;
         this._appConstant.groupValue = u.userGroup;
         this._appConstant.landingPage = u.landingPage;
+        this.lastVisitedRoute();
         if (u.linkPermissions) {
           this._appConstant.userPermissions = u.linkPermissions;
         }
@@ -57,7 +58,6 @@ export class AppComponent {
           this._appConstant.userPermissions = [];
         }
         localStorage.setItem('userName', u.userName);
-        this.lastVisitedRoute();
         localStorage.setItem('userPermissions', JSON.stringify(this._appConstant.userPermissions));
         this._router.navigate([this._appConstant.landingPage]);
       }

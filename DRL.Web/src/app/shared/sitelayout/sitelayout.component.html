@@ -2,8 +2,17 @@
   <nav class="asidebar-nav" id='menu'>
     <ul class="nav-list" *ngIf="_appConstant.isAuthenticate">
       <li *ngFor="let item of navLinks" [routerLinkActive]="['link-active']">
-        <a [id]="item.id" class="btnLi" [class.active]="item.isActive" [routerLink]="[item.route]"
-          (click)="clear(item.code)">
+        <!--<a [id]="item.id" class="btnLi" [class.active]="item.isActive" [routerLink]="[item.route]" [disable]="item.action=='default'"
+           (click)="clear(item.code)">
+          <i [class]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </a>-->
+        <a [id]="item.id"
+           class="btnLi"
+           [class.active]="item.isActive"
+           [class.disabled-link]="item.action === 'default'"
+           [routerLink]="item.action !== 'default' ? [item.route] : null"
+           (click)="item.action !== 'default' ? clear(item.code) : $event.preventDefault()">
           <i [class]="item.icon"></i>
           <span>{{ item.label }}</span>
         </a>

@@ -39,17 +39,53 @@ export class SitelayoutComponent implements OnInit, OnDestroy {
     const visible = this.navItems.filter(item =>
       this._appConstant.hasLinkAccess(item.code)
     );
+
+    const isSameLastSegment = function (a: string, b: string): boolean {
+      const getLast = function (path: string): string {
+        const parts = path.replace(/\/+$/, '').split('/').filter(Boolean);
+        return parts.length > 0 ? parts[parts.length - 1] : '';
+      };
+
+      return getLast(a) === getLast(b);
+    };
+
+    //   let isActiveURL = false;
+    //   this.navLinks = visible.map((item, index) => ({
+    //     ...item,
+    //     isActive: (() => {
+    //       if (this._appConstant.landingPage == '' || this._appConstant.landingPage == '/') {
+    //         isActiveURL = item.route == '/dashboard';
+    //         return isActiveURL;
+    //       }
+    //       else if (isSameLastSegment(item.route, this._appConstant.landingPage) && !isActiveURL) {
+    //         this._appConstant.landingPage = item.route;
+    //         isActiveURL = true;
+    //         return isActiveURL;
+    //       }
+    //       return false;
+    //     })()
+    //   }));
+    //   console.log("navLinks", this.navLinks);
+    // }
+
     this.navLinks = visible.map((item, index) => ({
       ...item,
       isActive: (() => {
         if (this._appConstant.landingPage == '' || this._appConstant.landingPage == '/') {
-          return item.route == '/dashboard'
+          return item.route == '/dashboard';
         }
-        return item.route == this._appConstant.landingPage
+        else if (isSameLastSegment(item.route, this._appConstant.landingPage)) {
+          this._appConstant.landingPage = item.route;
+          return true;
+        }
+        return false;
       })()
     }));
     console.log("navLinks", this.navLinks);
   }
+
+
+
 
   clear(type: string) {
     this.navLinks.forEach(item => {
@@ -63,7 +99,6 @@ export class SitelayoutComponent implements OnInit, OnDestroy {
     this._appConstant.roleId = '';
     this._appConstant.teamId = '';
     this._appConstant.regionId = '';
-    this._appConstant.zoneId = '';
     this._appConstant.teamName = '';
   }
 

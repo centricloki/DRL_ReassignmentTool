@@ -88,7 +88,6 @@ namespace DRL.API.Controllers
                                             WindowGroupName = name,
                                             UserGroup = item.GroupName,
                                             LandingPage = item.LandingPage,
-                                            IsAdmin = item.IsAdmin
                                         };
                                         activeUserGroup = item.GroupName;
                                         break;
@@ -107,8 +106,7 @@ namespace DRL.API.Controllers
                         DisplayName = "TestUser",
                         UserName = "drladmin",
                         UserGroup = "drl it",
-                        LandingPage = "/users",
-                        IsAdmin = true
+                        LandingPage = "/customers",
                     };
                     activeUserGroup = "drl it";
                 }

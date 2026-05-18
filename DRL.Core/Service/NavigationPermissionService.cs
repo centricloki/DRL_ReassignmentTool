@@ -73,7 +73,7 @@ namespace DRL.Core.Service
             using (var conn = new SqlConnection(_connectionString))
             {
                 await conn.OpenAsync();
-                var sql = "SELECT GroupId, GroupName,LandingPage,IsAdmin FROM RT_UserGroups WHERE IsActive = 1";
+                var sql = "SELECT GroupId, GroupName,LandingPage FROM RT_UserGroups WHERE IsActive = 1";
 
                 using (var cmd = new SqlCommand(sql, conn))
                 {
@@ -85,8 +85,7 @@ namespace DRL.Core.Service
                             {
                                 GroupId = Convert.ToInt32(reader["GroupId"]),
                                 GroupName = reader["GroupName"].ToString(),
-                                LandingPage= reader["LandingPage"].ToString(),
-                                IsAdmin = Convert.ToBoolean(reader["IsAdmin"]),
+                                LandingPage = reader["LandingPage"].ToString(),
                             });
                         }
                     }
