@@ -3,9 +3,9 @@ using EF = DRL.Model.Models;
 
 namespace DRL.Model.Repository.Interface
 {
-    public interface IBDMasterRepository : IGenericRepository<EF.BDMaster>
+    public interface IBDRepository : IGenericRepository<EF.BDMaster>
     {
-        List<EF.BDMaster> GetAllBDs();
+        List<EF.BDMaster> GetAllBD();
         EF.BDMaster GetBDFindById(int BDId);
     }
 }

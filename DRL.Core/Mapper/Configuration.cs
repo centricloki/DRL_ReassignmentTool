@@ -32,6 +32,8 @@ namespace DRL.Core.Mapper
                 mc.CreateMap<EF.BDMaster, ENTLookUpItem>().ConvertUsing(new BDMasterToENTLookUpItem());
                 mc.CreateMap<EF.ZoneMaster, ENTZone>().ConvertUsing(new ZoneMasterToENTZone());
                 mc.CreateMap<ENTZone, EF.ZoneMaster>().ConvertUsing(new ENTZoneToZoneMaster());
+                mc.CreateMap<EF.BDMaster, ENTBD>().ConvertUsing(new BDMasterToENTBD());
+                mc.CreateMap<ENTBD, EF.BDMaster>().ConvertUsing(new ENTBDToBDMaster());
                 
             });
 

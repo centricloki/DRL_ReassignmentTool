@@ -16,6 +16,7 @@ export class SitelayoutComponent implements OnInit, OnDestroy {
     { label: 'Teams', code: 'TEAMS', route: '/teams', icon: 'icon-09', id: 'lnkTeam', action: 'team' },
     { label: 'Regions', code: 'REGIONS', route: '/regions', icon: 'icon-05', id: 'lnkRegion', action: 'region' },
     { label: 'Zones', code: 'ZONES', route: '/zones', icon: 'icon-05', id: 'lnkZone', action: 'zone' },
+    { label: 'BDS', code: 'BDS', route: '/bd', icon: 'icon-05', id: 'lnkBD', action: 'bd' },
     { label: 'User Mapping', code: 'USER_REASSIGNMENT', route: '/customers/user-reassignment', icon: 'icon-06', id: 'lnkuserreassignment', action: 'userreassignment' },
     { label: 'Customers', code: 'CUSTOMERS', route: '/customers', icon: 'icon-09', id: 'lnkCustomer', action: 'customerreassignment' },
     { label: 'Action History', code: 'ACTION_HISTORY', route: '/customers/action-history', icon: 'icon-12 icon-custom', id: 'lnkactionhistory', action: 'actionhistory' },

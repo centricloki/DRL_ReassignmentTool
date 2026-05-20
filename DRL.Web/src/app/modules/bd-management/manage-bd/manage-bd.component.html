@@ -1,0 +1,73 @@
+<nav aria-label="breadcrumb">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Home</a></li>
+    <li class="breadcrumb-item"><a [routerLink]='["/bd"]'>Business Divisions</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{pageTitle}}</li>
+  </ol>
+</nav>
+
+<div class="top-title-bar">
+  <h2 class="page-title">{{pageTitle}}</h2>
+</div>
+
+<div class="white-box">
+  <div class="box-head">
+    <h3>{{ isEditMode ? 'Edit Business Division Details' : 'Create New Business Division' }}</h3>
+  </div>
+
+  <form [formGroup]="bdForm" (ngSubmit)="onSubmit()" name="bdForm" novalidate>
+    <div class="container-fluid">
+      <div class="row">
+        <!-- BD Name Field -->
+        <div class="col-lg-4 col-md-6 col-sm-12">
+          <div class="form-field-row">
+            <label class="form-label">BD Name:
+              <span>*</span>
+            </label>
+            <div class="input-field">
+              <input type="text" class="form-control" id="bdName" formControlName="bdName"
+                [class.is-invalid]="f.bdName.invalid && f.bdName.touched" placeholder="Enter BD name">
+            </div>
+            <div class="text-danger" *ngIf="f.bdName.invalid && f.bdName.touched">
+              <div *ngIf="f.bdName.errors && f.bdName.errors['required']">BD name is required</div>
+              <div *ngIf="f.bdName.errors && f.bdName.errors['maxlength']">BD name must be less than 250 characters</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Approver Field -->
+        <div class="col-lg-4 col-md-6 col-sm-12">
+          <div class="form-field-row">
+            <label class="form-label">Approver:</label>
+            <div class="input-field">
+              <select class="form-control" id="approver" formControlName="approver">
+                <option [value]="true">Yes</option>
+                <option [value]="false">No</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status Field -->
+        <div class="col-lg-4 col-md-6 col-sm-12">
+          <div class="form-field-row">
+            <label class="form-label">Status:</label>
+            <div class="input-field">
+              <select class="form-control" id="isActive" formControlName="isActive">
+                <option [value]="true">Active</option>
+                <option [value]="false">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="btn-groups">
+      <input class="btn btn-gray" type="button" value="Cancel" (click)="goBack()">
+      <input class="btn btn-blue" type="submit" [value]="isEditMode ? 'Update' : 'Save'" [disabled]="bdForm.invalid">
+    </div>
+  </form>
+</div>

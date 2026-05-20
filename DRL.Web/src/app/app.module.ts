@@ -65,6 +65,12 @@ const routes: Routes = [
     , canActivate: [AuthGuardService]
   },
   {
+    path: 'bd',
+    loadChildren: 'src/app/modules/bd-management/bd-management.module#BdManagementModule',
+    data: { pageTitle: 'Business Division Management' }
+    , canActivate: [AuthGuardService]
+  },
+  {
     path: 'customers',
     loadChildren: 'src/app/modules/customer-reassignment-management/customers.module#CustomersModule',
     data: { pageTitle: 'Customer Reassignment Management' }

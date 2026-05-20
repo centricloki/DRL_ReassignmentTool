@@ -1,33 +1,32 @@
-using System.Collections.Generic;
-using System.Linq;
-using System;
+using DRL.Framework.Log;
 using DRL.Framework.Log.Interface;
 using DRL.Model.Repository.Interface;
 using DRL.Model.UnitOfWork.Interface;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using EF = DRL.Model.Models;
-using DRL.Framework.Log;
-
 
 namespace DRL.Model.Repository.Implementation
 {
-    public class BDMasterRepository : GenericRepository<EF.BDMaster>, IBDMasterRepository
+    public class BDRepository : GenericRepository<EF.BDMaster>, IBDRepository
     {
         private readonly ILogger logger;
 
-        public BDMasterRepository(IUnitOfWork unitOfWork, ILogManager logManager) : base(unitOfWork, logManager)
+        public BDRepository(IUnitOfWork unitOfWork, ILogManager logManager) : base(unitOfWork, logManager)
         {
             _uow = unitOfWork;
-            logger = logManager.GetLogger(typeof(IBDMasterRepository));
+            logger = logManager.GetLogger(typeof(IBDRepository));
         }
 
-        public List<EF.BDMaster> GetAllBDs()
+        public List<EF.BDMaster> GetAllBD()
         {
             var result = new List<EF.BDMaster>();
             try
             {
-                logger.Info(Constants.ACTION_ENTRY, "BDMasterRepository.GetAllBDs");
-                result = base.GetAllNoTracking().Where(x => !x.IsDeleted && x.IsActive).ToList();
-                logger.Info(Constants.ACTION_EXIT, "BDMasterRepository.GetAllBDs");
+                logger.Info(Constants.ACTION_ENTRY, "BDRepository.GetAllBD");
+                result = base.GetAllNoTracking().OrderBy(x=>x.BDName).ToList();
+                logger.Info(Constants.ACTION_EXIT, "BDRepository.GetAllBD");
             }
             catch (Exception ex)
             {
@@ -41,9 +40,9 @@ namespace DRL.Model.Repository.Implementation
             var result = new EF.BDMaster();
             try
             {
-                logger.Info(Constants.ACTION_ENTRY, "BDMasterRepository.GetBD");
+                logger.Info(Constants.ACTION_ENTRY, "BDRepository.GetBD");
                 result = base.FindByNoTracking(f => f.BDID == BDId).SingleOrDefault();
-                logger.Info(Constants.ACTION_EXIT, "BDMasterRepository.GetBD");
+                logger.Info(Constants.ACTION_EXIT, "BDRepository.GetBD");
             }
             catch (Exception ex)
             {
@@ -51,6 +50,5 @@ namespace DRL.Model.Repository.Implementation
             }
             return result;
         }
-
     }
 }

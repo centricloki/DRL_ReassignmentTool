@@ -13,6 +13,7 @@ export class AppConstant {
   public teamId = '';
   public regionId = '';
   public zoneId = '';
+  public bdId = '';
   public pageSize = 100;
   public skip = 0;
   public noRecordsMessage = "There are no items to display.";
