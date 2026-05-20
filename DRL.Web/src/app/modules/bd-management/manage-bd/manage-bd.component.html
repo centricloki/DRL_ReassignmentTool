@@ -1,7 +1,7 @@
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
     <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Home</a></li>
-    <li class="breadcrumb-item"><a [routerLink]='["/bd"]'>Business Divisions</a></li>
+    <li class="breadcrumb-item"><a [routerLink]='["/bd"]'>BDMs</a></li>
     <li class="breadcrumb-item active" aria-current="page">{{pageTitle}}</li>
   </ol>
 </nav>
@@ -12,7 +12,7 @@
 
 <div class="white-box">
   <div class="box-head">
-    <h3>{{ isEditMode ? 'Edit Business Division Details' : 'Create New Business Division' }}</h3>
+    <h3>{{ isEditMode ? 'Edit BDM Details' : 'Create New BDM' }}</h3>
   </div>
 
   <form [formGroup]="bdForm" (ngSubmit)="onSubmit()" name="bdForm" novalidate>
@@ -30,7 +30,8 @@
             </div>
             <div class="text-danger" *ngIf="f.bdName.invalid && f.bdName.touched">
               <div *ngIf="f.bdName.errors && f.bdName.errors['required']">BD name is required</div>
-              <div *ngIf="f.bdName.errors && f.bdName.errors['maxlength']">BD name must be less than 250 characters</div>
+              <div *ngIf="f.bdName.errors && f.bdName.errors['maxlength']">BD name must be less than 250 characters
+              </div>
             </div>
           </div>
         </div>
@@ -63,6 +64,64 @@
 
       </div>
     </div>
+
+    <mat-expansion-panel [expanded]="true">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Assign Territory
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <div class="container-fluid">
+
+        <div class="row">
+          <div class="col-lg-4 col-md-6 col-sm-12">
+            <div class="form-field-row">
+              <label class="form-label">Territory:</label>
+              <div class="select-field">
+                <mat-select placeholder="Select Territory" name="team" [(ngModel)]="teamModel.teamId"
+                  [ngModelOptions]="{standalone: true}" class="custom-dropdown">
+                  <mat-option>
+                    <ngx-mat-select-search [formControl]="teamSearchControl" placeholderLabel="Search territories..."
+                      noEntriesFoundLabel="No territories found">
+                    </ngx-mat-select-search>
+                  </mat-option>
+                  <mat-option value="">Select Territory</mat-option>
+                  <mat-option *ngFor="let item of filteredTeamList | async" [value]="item.teamId">
+                    {{item.name}}
+                  </mat-option>
+                </mat-select>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4 col-md-6 col-sm-12">
+            <div class="form-field-row">
+              <label class="form-label"></label>
+              <div class="select-field">
+                <input class="btn btn-default site-btn" type="button" value="Add" (click)="addUserToTeam()">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="readony-row" *ngFor="let team of myItems;let idx = index">
+          <div class="row">
+            <div class="col-md-6 col-lg-4">
+              <div class="readony form-field">
+                <label>Territory Name:</label>
+                <span>{{team.name}}</span>
+              </div>
+            </div>
+
+            <div class="col align-self-end text-right">
+              <a class="link-icon" matTooltip="Delete Territory" style="cursor: pointer;"
+                (click)="deleteTeamDetail(idx)">
+                <i class="fa fa-trash-o"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-expansion-panel>
 
     <!-- Action Buttons -->
     <div class="btn-groups">

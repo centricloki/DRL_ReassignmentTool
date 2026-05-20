@@ -113,7 +113,7 @@ export class BdListComponent implements OnInit, OnDestroy {
   toggleBDStatus(bd: any) {
     const status = bd.isActive ? 'deactivate' : 'activate';
 
-    this._commonLookupData.confirmDialog(`Are you sure you want to ${status} Business Division "${bd.bdName}"?`, (result: any) => {
+    this._commonLookupData.confirmDialog(`Are you sure you want to ${status} BD "${bd.bdName}"?`, (result: any) => {
       if (result) {
         const statusRequest = new ENTRequestModel();
         statusRequest.id = bd.bdid; // note: casing matches BDModel

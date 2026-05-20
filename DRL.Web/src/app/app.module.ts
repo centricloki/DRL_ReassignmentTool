@@ -67,7 +67,7 @@ const routes: Routes = [
   {
     path: 'bd',
     loadChildren: 'src/app/modules/bd-management/bd-management.module#BdManagementModule',
-    data: { pageTitle: 'Business Division Management' }
+    data: { pageTitle: 'BD Management' }
     , canActivate: [AuthGuardService]
   },
   {

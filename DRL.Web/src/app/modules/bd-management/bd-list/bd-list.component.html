@@ -2,15 +2,15 @@
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a [routerLink]='["/users"]'>Home</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Business Divisions</li>
+      <li class="breadcrumb-item active" aria-current="page">BDs</li>
     </ol>
   </nav>
 
   <div class="top-title-bar">
-    <h2 class="page-title">Business Divisions</h2>
+    <h2 class="page-title">BDs</h2>
     <div class="filter-role">
       <a href="#" [routerLink]='["/bd/create"]' class="btn btn-defult site-btn" (click)="addNewBD()">
-        <i class="fa fa-plus"></i> Business Division
+        <i class="fa fa-plus"></i> BD
       </a>
     </div>
   </div>
@@ -18,15 +18,9 @@
   <div class="white-box">
     <div class="table-responsive" style="width:100%">
       <div class="mat-elevation-z8">
-        <kendo-grid [kendoGridBinding]="gridView.data"
-                    [filterable]="true"
-                    [pageSize]="state.take"
-                    [skip]="state.skip"
-                    [sortable]="true"
-                    [columnMenu]="false"
-                    [sort]="state.sort"
-                    (dataStateChange)="dataStateChange($event)"
-                    [pageable]="true">
+        <kendo-grid [kendoGridBinding]="gridView.data" [filterable]="true" [pageSize]="state.take" [skip]="state.skip"
+          [sortable]="true" [columnMenu]="false" [sort]="state.sort" (dataStateChange)="dataStateChange($event)"
+          [pageable]="true">
 
           <kendo-grid-messages noRecords="{{_appConstantService.noRecordsMessage}}"></kendo-grid-messages>
 
@@ -42,22 +36,18 @@
           <kendo-grid-column field="isActive" title="Status" width="20%" filter="boolean">
             <ng-template kendoGridFilterCellTemplate let-filter>
               <div>
-                <kendo-dropdownlist [data]="_appConstantService.listItems"
-                                    textField="text"
-                                    valueField="value"
-                                    class="custom-dropdown"
-                                    [(ngModel)]="_appConstantService.selectedValue"
-                                    [valuePrimitive]="true"
-                                    (selectionChange)="activeInactiveFilterChange($event)">
+                <kendo-dropdownlist [data]="_appConstantService.listItems" textField="text" valueField="value"
+                  class="custom-dropdown" [(ngModel)]="_appConstantService.selectedValue" [valuePrimitive]="true"
+                  (selectionChange)="activeInactiveFilterChange($event)">
                 </kendo-dropdownlist>
               </div>
             </ng-template>
             <ng-template kendoGridCellTemplate let-dataItem>
               <div class="btn-style">
                 <input type="button"
-                       class="{{(dataItem.isActive == true || dataItem.isActive == 1) ? 'btn btn-default btnStatus btn-active' : 'btn btn-default btnStatus btn-inactive'}}"
-                       value="{{(dataItem.isActive == true || dataItem.isActive == 1) ? 'Active' : 'Inactive'}}"
-                       (click)="toggleBDStatus(dataItem)">
+                  class="{{(dataItem.isActive == true || dataItem.isActive == 1) ? 'btn btn-default btnStatus btn-active' : 'btn btn-default btnStatus btn-inactive'}}"
+                  value="{{(dataItem.isActive == true || dataItem.isActive == 1) ? 'Active' : 'Inactive'}}"
+                  (click)="toggleBDStatus(dataItem)">
               </div>
             </ng-template>
           </kendo-grid-column>

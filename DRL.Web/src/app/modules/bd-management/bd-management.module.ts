@@ -6,10 +6,12 @@ import { BdRoutingModule } from './bd-routing.module';
 import { BdListComponent } from './bd-list/bd-list.component';
 import { ManageBdComponent } from './manage-bd/manage-bd.component';
 import { GridModule } from '@progress/kendo-angular-grid';
-import { MatRippleModule, MatTableModule, MatPaginatorModule, MatSortModule, MatSelectModule } from '@angular/material';
+import { MatRippleModule, MatTableModule, MatPaginatorModule, MatSortModule, MatSelectModule, MatExpansionModule, MatInputModule, MatTooltipModule } from '@angular/material';
 import { DropDownsModule } from '@progress/kendo-angular-dropdowns';
 import { TooltipModule } from '@progress/kendo-angular-tooltip';
 import { InputsModule } from '@progress/kendo-angular-inputs';
+import { NgxMatSelectSearchModule } from 'ngx-mat-select-search';
+import { UsersService } from '../user-management/users.service';
 
 @NgModule({
   declarations: [BdListComponent, ManageBdComponent],
@@ -24,10 +26,15 @@ import { InputsModule } from '@progress/kendo-angular-inputs';
     MatPaginatorModule,
     MatSortModule,
     MatSelectModule,
+    MatExpansionModule,
+    MatInputModule,
+    MatTooltipModule,
     GridModule,
     DropDownsModule,
     TooltipModule,
-    InputsModule
-  ]
+    InputsModule,
+    NgxMatSelectSearchModule
+  ],
+  providers: [UsersService]
 })
 export class BdManagementModule { }

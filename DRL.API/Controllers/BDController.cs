@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DRL.API.Controllers
 {
@@ -19,15 +20,17 @@ namespace DRL.API.Controllers
     public class BDController : BaseController
     {
         private readonly IBDService _bdService;
+        private readonly ITerritoryService _territoryService;
         private readonly CommonHelper _commonHelper = new CommonHelper();
         private IConfiguration _configuration;
         private readonly ICacheService _cacheService;
 
-        public BDController(IBDService bdService, IConfiguration configuration, ICacheService cacheService)
+        public BDController(IBDService bdService, IConfiguration configuration, ICacheService cacheService, ITerritoryService territoryService)
         {
             _bdService = bdService;
             _configuration = configuration;
             _cacheService = cacheService;
+            _territoryService = territoryService;
         }
 
         [HttpGet("GetAllBDs")]
@@ -42,7 +45,12 @@ namespace DRL.API.Controllers
         public BaseResponse<ENTBD> GetBD(long bdId)
         {
             var response = new BaseResponse<ENTBD>(true);
-            response.Data = _bdService.GetBD((int)bdId);
+            var bd = _bdService.GetBD((int)bdId);
+            if (bd != null)
+            {
+                bd.Teams = _territoryService.GetAllBDTerritories((int)bdId);
+            }
+            response.Data = bd;
             return response;
         }
 
@@ -61,9 +69,16 @@ namespace DRL.API.Controllers
                     serviceResponse = _bdService.Insert(bd);
                     if (serviceResponse.Success)
                     {
+                        var createdBD = serviceResponse.Result as ENTBD;
+                        if (bd.Teams != null && createdBD != null)
+                        {
+                            var territoryIds = bd.Teams.Where(x => x.TeamId.HasValue).Select(x => x.TeamId.Value).ToList();
+                            _territoryService.SyncBDTerritories(createdBD.BDID, territoryIds, CurrentUserId);
+                            createdBD.Teams = _territoryService.GetAllBDTerritories(createdBD.BDID);
+                        }
                         response.IsSuccess = true;
                         response.Message = "BD added successfully";
-                        response.Data = serviceResponse.Result as ENTBD;
+                        response.Data = createdBD;
                         ClearBDCaches();
                     }
                     else
@@ -79,9 +94,19 @@ namespace DRL.API.Controllers
                     serviceResponse = _bdService.Update(bd);
                     if (serviceResponse.Success)
                     {
+                        if (bd.Teams != null)
+                        {
+                            var territoryIds = bd.Teams.Where(x => x.TeamId.HasValue).Select(x => x.TeamId.Value).ToList();
+                            _territoryService.SyncBDTerritories(bd.BDID, territoryIds, CurrentUserId);
+                        }
+                        var updatedBD = serviceResponse.Result as ENTBD;
+                        if (updatedBD != null)
+                        {
+                            updatedBD.Teams = _territoryService.GetAllBDTerritories(updatedBD.BDID);
+                        }
                         response.IsSuccess = true;
                         response.Message = "BD updated successfully";
-                        response.Data = serviceResponse.Result as ENTBD;
+                        response.Data = updatedBD;
                         ClearBDCaches();
                     }
                     else

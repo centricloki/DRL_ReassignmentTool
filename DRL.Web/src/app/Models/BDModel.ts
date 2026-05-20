@@ -4,4 +4,5 @@ export class BDModel {
   isActive: boolean;
   approver: boolean;
   updatedDate: Date;
+  teams?: any[];
 }

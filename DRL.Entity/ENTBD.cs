@@ -15,5 +15,6 @@ namespace DRL.Entity
         public bool IsActive { get; set; } = true;
         public bool IsDeleted { get; set; }
         public bool Approver { get; set; }
+        public List<ENTTeam> Teams { get; set; }
     }
 }

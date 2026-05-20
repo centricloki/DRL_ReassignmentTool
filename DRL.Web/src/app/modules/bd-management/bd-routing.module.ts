@@ -11,7 +11,7 @@ export const BdRoutes: Routes = [
     path: '',
     component: BdListComponent,
     data: {
-      pageTitle: 'Business Division Management',
+      pageTitle: 'BDM',
       linkCode: 'BDS'
     },
     canActivate: [AuthGuardService]
@@ -20,7 +20,7 @@ export const BdRoutes: Routes = [
     path: 'create',
     component: ManageBdComponent,
     data: {
-      pageTitle: 'Create Business Division',
+      pageTitle: 'Create BDM',
       linkCode: 'BDS',
       mode: 'create'
     },
@@ -30,7 +30,7 @@ export const BdRoutes: Routes = [
     path: 'edit',
     component: ManageBdComponent,
     data: {
-      pageTitle: 'Edit Business Division',
+      pageTitle: 'Edit BDM',
       linkCode: 'BDS',
       mode: 'edit'
     },

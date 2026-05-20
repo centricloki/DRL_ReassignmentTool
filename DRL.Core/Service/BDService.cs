@@ -94,11 +94,11 @@ namespace DRL.Core.Service
             var actionStatus = new ActionStatus();
             try
             {
-                var existingBD = _bdRepository.GetAllBDs()
-                    .FirstOrDefault(x => x.BDName.Equals(bdName, StringComparison.OrdinalIgnoreCase) &&
-                                       x.BDID != bdId &&
-                                       x.IsActive &&
-                                       !x.IsDeleted);
+                var existingBD = _bdRepository.FindBy(x => 
+                    x.BDName.Equals(bdName, StringComparison.CurrentCultureIgnoreCase) &&
+                    x.BDID != bdId &&
+                    !x.IsDeleted)
+                    .FirstOrDefault();
 
                 if (existingBD != null)
                 {

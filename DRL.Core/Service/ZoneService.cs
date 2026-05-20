@@ -261,7 +261,6 @@ namespace DRL.Core.Service
                 var existingZone = _zoneRepository.GetAllZone()
                     .FirstOrDefault(x => x.ZoneName.Equals(zoneName, StringComparison.OrdinalIgnoreCase) &&
                                        x.ZoneId != zoneId &&
-                                       x.IsActive &&
                                        !x.IsDeleted);
 
                 if (existingZone != null)
