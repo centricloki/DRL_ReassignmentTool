@@ -1,9 +1,0 @@
-<div class="ur-dp-field" *ngIf="regionDetailFormatted(selectedNode).length">
-    <label>Region</label>
-    <div class="ur-dp-terr">
-        <span class="ur-rb" *ngFor="let r of regionDetailFormatted(selectedNode)" 
-            [ngStyle]="{'background': getRoleStyle('Region Manager').bg, 'color': getRoleStyle('Region Manager').color}">
-            {{ r }}
-        </span>
-    </div>
-</div>

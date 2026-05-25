@@ -93,7 +93,8 @@ namespace DRL.Core.Manager
                     AVPName = Convert.ToString(x[10]),
                     ZoneName = Convert.ToString(x[11]),
                     RegionName = Convert.ToString(x[12]),
-                    BDName = Convert.ToString(x[13])
+                    BDName = Convert.ToString(x[13]),
+                    UserFileName = Convert.ToString(x[14])
                 }, connString).OrderByDescending(x => x.CreatedDate).ToList();
             }
             catch (Exception ex)
@@ -273,6 +274,34 @@ namespace DRL.Core.Manager
             catch (Exception ex)
             {
                 logger.Error(Constants.ACTION_EXCEPTION, "UserService.ManageUserStatus" + ex);
+            }
+            return result;
+        }
+
+        public ActionStatus ClearUserFileName(long userId, long updatedBy)
+        {
+            ActionStatus result = new ActionStatus();
+            try
+            {
+                var dbUser = _userRepository.FindByNoTracking(x => x.UserId == userId).FirstOrDefault();
+                if (dbUser != null)
+                {
+                    dbUser.UserFileName = null;
+                    dbUser.UpdatedDate = GetDateTime.getDate();
+                    dbUser.UpdatedBy = updatedBy;
+                    var response = _userRepository.Update(dbUser);
+                    return response;
+                }
+
+                return new ActionStatus
+                {
+                    Success = false,
+                    Message = "Record Not Found"
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, "UserService.ClearUserFileName" + ex);
             }
             return result;
         }

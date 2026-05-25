@@ -16,6 +16,7 @@ namespace DRL.Model.Repository.Interface
         IQueryable<T> GetAll();
 
         IQueryable<T> FindBy(Expression<Func<T, bool>> predicate);
+        IQueryable<T> FindByNoTracking(Expression<Func<T, bool>> predicate);
         ActionStatus RemoveRange(Expression<Func<T, bool>> predicate);
         void SetModified<K>(K entity) where K : class;
 

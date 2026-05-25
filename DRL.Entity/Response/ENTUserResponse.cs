@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -20,5 +20,6 @@ namespace DRL.Entity.Response
         public DateTime CreatedDate { get; set; }
         public string AVPName { get; set; }
         public string BDName { get; set; }
+        public string UserFileName { get; set; }
     }
 }

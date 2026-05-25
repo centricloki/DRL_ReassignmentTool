@@ -56,6 +56,14 @@ export class UsersService {
       });
   }
 
+  ClearUserFileName(user: ENTRequestModel) {
+    const apiURL = this._appConstant.APIUrl + 'User/ClearUserFileName';
+    return this.http.patch(apiURL, user)
+      .map(response => {
+        return response;
+      });
+  }
+
   DeleteUser(role: ENTRequestModel) {
     let headers = new Headers();
     headers.append('Access-Control-Allow-Origin', '*');

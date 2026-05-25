@@ -1,4 +1,4 @@
-﻿using DRL.Entity;
+using DRL.Entity;
 using DRL.Entity.Response;
 using DRL.Library;
 using System;
@@ -18,6 +18,7 @@ namespace DRL.Core.Interface
         ActionStatus CheckUserNameExists(string userName, long userId);
         Int32 GetDefTerritoryIdByUserId(long UserId);
         ActionStatus ManageUserStatus(ENTPatchRequest activeStatus);
+        ActionStatus ClearUserFileName(long userId, long updatedBy);
         ActionStatus DeleteUser(ENTPatchRequest activeStatus);
         List<ENTTerriotyUsers> GetAllUserByTerritoryId(Int32 TerritoryId);
         ActionStatus UpdateUserTerritory(Int32 UserId, Int32 TerritoryId, long UpdatedBy);

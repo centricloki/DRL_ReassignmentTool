@@ -59,6 +59,26 @@
               </div>
             </ng-template>
           </kendo-grid-column>
+          <kendo-grid-column field="userFileName" title="User File Removed" width="130px" filter="boolean"
+            trueText="yes">
+            <ng-template kendoGridFilterCellTemplate let-filter>
+              <div>
+                <kendo-dropdownlist [data]="fileAttachedListItems" textField="text" valueField="value"
+                  class="custom-dropdown" [(ngModel)]="selectedFileAttachedValue" [valuePrimitive]="true"
+                  (selectionChange)="fileAttachedFilterChange($event)" style="width:95% !important">
+                </kendo-dropdownlist>
+              </div>
+            </ng-template>
+            <ng-template kendoGridCellTemplate let-dataItem>
+              <div class="btn-style">
+                <input type="button"
+                  class="{{dataItem.userFileName != null && dataItem.userFileName != '' ? 'btn btn-default btnStatus btn-active' : 'btn btn-default btnStatus btn-inactive'}}"
+                  value="{{dataItem.userFileName != null && dataItem.userFileName != '' ? 'No' : 'Yes'}}"
+                  [disabled]="dataItem.userFileName == null || dataItem.userFileName == ''"
+                  (click)="clearUserFileName(dataItem.userId)">
+              </div>
+            </ng-template>
+          </kendo-grid-column>
           <kendo-grid-command-column title="Actions" width="80px">
             <ng-template kendoGridCellTemplate kendoTooltip let-dataItem>
               <li kendoGridEditCommand title="Edit User" (click)="editUser(dataItem.userId)" class="pencil"

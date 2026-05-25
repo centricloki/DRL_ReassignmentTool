@@ -32,6 +32,12 @@ export class UserListComponent implements OnInit, OnDestroy {
   teamModel = new TeamModel();
   entRequestModel = new ENTRequestModel();
   CopyUserList: any[] = [];
+  fileAttachedListItems: any[] = [
+    { text: "(All)", value: 2 },
+    { text: "Yes", value: 1 },
+    { text: "No", value: 0 }
+  ];
+  selectedFileAttachedValue: number = 2;
 
   gridView: GridDataResult = {
     data: this.UserList.slice(0, this._appConstant.pageSize),
@@ -167,6 +173,28 @@ export class UserListComponent implements OnInit, OnDestroy {
     });
   };
 
+  clearUserFileName(id) {
+    this._commonLookupData.confirmDialog('Are you sure you want to remove the user file?', (result: any) => {
+      if (result) {
+        this.entRequestModel.id = id;
+        this.entRequestModel.status = false;
+        this._usersService.ClearUserFileName(this.entRequestModel).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
+          var data = this._commonLookupData.parseData(res);
+          if (data != null && data != "" && data.isSuccess) {
+            this._appConstant.userId = '';
+            this._toasterService.pop('success', 'Success', data.message);
+            this.GetUserList();
+          }
+          else {
+            this._toasterService.pop('error', 'Error', data.message);
+          }
+        }, (error: any) => {
+          this._toasterService.pop('error', 'Error', error.message);
+        });
+      }
+    });
+  }
+
   addUpdateUser(user) {
     //user.createdBy = localStorage["userName"];
     user.createdBy = "0";
@@ -199,6 +227,23 @@ export class UserListComponent implements OnInit, OnDestroy {
     else if (e.value == 0)//inactive
     {
       this.UserList = this.UserList.filter(x => x.isActive == 0);
+      return this.UserList;
+    }
+    else {
+      return this.UserList;
+    }
+  }
+
+  fileAttachedFilterChange(e) {
+    this.UserList = this.CopyUserList;
+    if (e.value == 1) // Yes (De-Attached, meaning empty/null)
+    {
+      this.UserList = this.UserList.filter(x => x.userFileName == null || x.userFileName == '');
+      return this.UserList;
+    }
+    else if (e.value == 0) // No (Not De-Attached, meaning has value)
+    {
+      this.UserList = this.UserList.filter(x => x.userFileName != null && x.userFileName != '');
       return this.UserList;
     }
     else {

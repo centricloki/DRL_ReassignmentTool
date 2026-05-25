@@ -290,6 +290,41 @@ namespace DRL.API.Controllers
         }
 
         /// <summary>
+        ///     Clear User File Name
+        /// </summary>
+        /// <returns>
+        /// </returns>
+        // PATCH api/User/ClearUserFileName
+        [HttpPatch("ClearUserFileName")]
+        public BaseResponse<ActionStatus> ClearUserFileName([FromBody] ENTPatchRequest request)
+        {
+            BaseResponse<ActionStatus> response = new BaseResponse<ActionStatus>();
+            try
+            {
+                request.UpdatedBy = CurrentUserId > 0 ? CurrentUserId : 1;
+                var serviceResponse = _userService.ClearUserFileName(request.Id, request.UpdatedBy);
+                if (serviceResponse.Success)
+                {
+                    response.IsSuccess = true;
+                    response.Message = "User file name cleared successfully";
+                    ClearRoleCaches();
+                }
+                else
+                {
+                    response.IsSuccess = false;
+                    response.Message = "Some error occurred clearing user file name";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return response;
+            }
+            return response;
+        }
+
+        /// <summary>
         ///     Delete user by user id
         /// </summary>
         /// <returns>
