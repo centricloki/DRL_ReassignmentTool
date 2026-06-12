@@ -68,7 +68,7 @@
               <div class="input-field">
                 <input type="text" placeholder="Honey PIN" matInput #pin="ngModel" name="pin"
                   [(ngModel)]="SugarCRMUser.pin" [disabled]="isPinDisabled" [required]="isPinRequired" pattern="^\d{4}$"
-                  maxlength="4" (input)="onPinInput($event)" (keypress)="onPinKeypress($event)">
+                  maxlength="4" (input)="onPinInput($event)">
               </div>
               <!-- Validation Errors -->
               <div class="text-danger" *ngIf="pin.invalid && (pin.dirty || pin.touched)">
