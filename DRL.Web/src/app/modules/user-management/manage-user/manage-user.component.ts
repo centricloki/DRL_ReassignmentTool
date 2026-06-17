@@ -47,6 +47,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   private unsubscribe$ = new Subject<void>();
 
   teamSearchControl = new FormControl('');
+  userDefaultTeamId: string = "0";
   defTeamSearchControl = new FormControl('');
   filteredTeamList: Observable<any[]>;
   filteredDefTeamList: Observable<any[]>;
@@ -241,6 +242,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       this.SugarCRMUser.bdid = (this.SugarCRMUser.bdid != null && this.SugarCRMUser.bdid != '') ? this.SugarCRMUser.bdid.toString() : '';
       this.SugarCRMUser.avpid = (this.SugarCRMUser.avpid != null && this.SugarCRMUser.avpid != '') ? this.SugarCRMUser.avpid.toString() : '';
       this.SugarCRMUser.defaultTeamId = !this.SugarCRMUser.defaultTeamId ? '' : this.SugarCRMUser.defaultTeamId;
+      this.userDefaultTeamId = this.SugarCRMUser.defaultTeamId;
       this.myItems = this.SugarCRMUser.teams;
       if (this.SugarCRMUser.roleId == this.avpRole.roleId) {
         this.onAVPChange(undefined);
@@ -486,6 +488,22 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       if (!isNaN(userId)) {
         this.loadUserTerritories(userId);
       }
+    }
+  }
+
+  onDefaultTeamChange(event: any): void {
+    const defaultTeamId = this.SugarCRMUser.defaultTeamId;
+    if ((this.userDefaultTeamId != "") && (this.userDefaultTeamId != defaultTeamId)) {
+      const previousItem = this.myItems.find(x => x.teamId == this.userDefaultTeamId);
+      if (previousItem) {
+        const itemIndex = this.myItems.indexOf(previousItem);
+        this.myItems.splice(itemIndex, 1);
+      }
+    }
+    if (!this.myItems.find(x => x.teamId == defaultTeamId)) {
+      this.teamModel.teamId = defaultTeamId;
+      this.userDefaultTeamId = defaultTeamId;
+      this.addUserToTeam();
     }
   }
 

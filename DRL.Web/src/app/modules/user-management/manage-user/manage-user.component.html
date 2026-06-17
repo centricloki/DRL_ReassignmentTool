@@ -110,7 +110,7 @@
               <label class="form-label">Default Team:</label>
               <div class="input-field">
                 <mat-select placeholder="Default Team" #defaultTeamId="ngModel" name="defaultTeamId"
-                  [(ngModel)]="SugarCRMUser.defaultTeamId">
+                  (selectionChange)="onDefaultTeamChange($event)" [(ngModel)]="SugarCRMUser.defaultTeamId">
                   <mat-option>
                     <ngx-mat-select-search [formControl]="defTeamSearchControl" placeholderLabel="Search teams..."
                       noEntriesFoundLabel="No teams found">
