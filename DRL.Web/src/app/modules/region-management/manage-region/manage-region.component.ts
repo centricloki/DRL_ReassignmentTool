@@ -29,9 +29,9 @@ export class ManageRegionComponent implements OnInit, OnDestroy {
   TeamList: TeamModel[] = [];
   private unsubscribe$ = new Subject<void>();
   @ViewChild('formRegion') regionInfoForm: NgForm;
-  
+
   ngOnDestroy() {
-    this._appConstant.regionId = null;
+    this._appConstant.regionId = '';
     this.unsubscribe$.next();
     this.unsubscribe$.complete();
   }
@@ -76,11 +76,8 @@ export class ManageRegionComponent implements OnInit, OnDestroy {
   }
 
   addUpdateRegion(sugarRegionData) {
-
-    //sugarRegionData.createdBy = localStorage["userName"];
-    sugarRegionData.createdBy ="0"
+    sugarRegionData.createdBy = "0"
     sugarRegionData.createdDate = new Date();
-    //sugarRegionData.updatedBy = localStorage["userName"];
     sugarRegionData.updatedBy = "0";
     sugarRegionData.updatedDate = new Date();
 
@@ -101,6 +98,9 @@ export class ManageRegionComponent implements OnInit, OnDestroy {
       });
   }
   saveRegion() {
+    if (this.regionInfoForm.invalid) {
+      return;
+    }
     this.addUpdateRegion(this.SugarRegion);
   }
   getRegionDetails(id) {

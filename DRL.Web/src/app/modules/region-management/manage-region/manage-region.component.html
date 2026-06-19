@@ -32,29 +32,35 @@
         </div>
         <div class="col-lg-3 col-md-3 col-sm-6">
           <div class="form-field-row">
-            <label class="form-label">Zone:</label>
+            <label class="form-label">Zone:
+              <span>*</span>
+            </label>
             <div class="input-field">
-              <mat-select placeholder="Zone" #zoneId="ngModel" name="zoneId" [(ngModel)]="SugarRegion.zoneId">
+              <mat-select placeholder="Zone" #zoneId="ngModel" name="zoneId" [(ngModel)]="SugarRegion.zoneId" required>
                 <mat-option value="">Select Zone</mat-option>
                 <mat-option *ngFor="let item of ZoneList" [value]="item.recordId">
                   {{item.value}}
                 </mat-option>
               </mat-select>
             </div>
+            <div class="text-danger" *ngIf="zoneId.invalid && (zoneId.dirty || zoneId.touched)">
+              <p *ngIf="zoneId.errors.required">Zone is required</p>
+            </div>
           </div>
         </div>
       </div>
-     
     </div>
+
     <div class="btn-groups">
       <input class="btn btn-gray" type="button" value="Cancel" (click)="cancelRegionClick()">
-      <input class="btn btn-blue" type="submit" value="{{_appConstant.regionId == '' ?  'Save' : 'Update'}}" [disabled]="formRegion.invalid">
+      <input class="btn btn-blue" type="submit" value="{{_appConstant.regionId == '' ?  'Save' : 'Update'}}"
+        [disabled]="formRegion.invalid">
     </div>
   </form>
 
   <div class="container-fluid">
-      <div class="">
-          <h6><b>Teams</b></h6>
+    <div class="">
+      <h6><b>Teams</b></h6>
     </div>
     <div class="readony-row" *ngFor="let team of TeamList;let idx = index">
       <div class="row">
