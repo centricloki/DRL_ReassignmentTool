@@ -78,7 +78,9 @@ export class CustomerImportComponent implements OnDestroy {
     '44': 'Smoke Shop - Chain HQ',
     '45': 'Smoke Shop - Chain Location',
     '46': 'DM Location',
-    '47': 'MSAi List A'
+    '47': 'MSAi List A',
+    '48': 'Manufacturer',
+    '49': 'Cultivator'
   };
 
   isNumber(value: any): value is number {
