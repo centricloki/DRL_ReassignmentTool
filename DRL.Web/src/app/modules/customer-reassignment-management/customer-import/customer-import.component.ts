@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { GeolocationService } from 'src/app/services/geolocation.service';
-import { CustomerimportService, CustomerMaster } from '../customerimport.service';
+import { CustomerimportService, CustomerMaster, AccountClassificationType } from '../customerimport.service';
 import { ToasterService, ToasterConfig } from 'angular2-toaster';
 import { GridDataResult } from '@progress/kendo-angular-grid';
 import { State, process } from '@progress/kendo-data-query';
@@ -18,14 +18,20 @@ declare var $: any;
   templateUrl: './customer-import.component.html',
   styleUrls: ['./customer-import.component.css']
 })
-export class CustomerImportComponent implements OnDestroy {
+export class CustomerImportComponent implements OnInit, OnDestroy {
   private unsubscribe$ = new Subject<void>();
+  /** Tracks whether account classifications have been loaded from the server */
+  private classificationsLoaded = false;
 
   constructor(private _geolocationService: GeolocationService
     , private _customerimportService: CustomerimportService
     , private _toasterService: ToasterService
     , public _appConstant: AppConstant
   ) { }
+
+  ngOnInit(): void {
+    this.loadAccountClassifications();
+  }
 
   // public toasterconfig: ToasterConfig =
   //   new ToasterConfig({
@@ -39,6 +45,33 @@ export class CustomerImportComponent implements OnDestroy {
     this.unsubscribe$.complete();
   }
 
+  /**
+   * Fetches Account Classification types from the API and builds the
+   * accountClassificationMap used for Excel import validation.
+   * The map is keyed by both ID (string) and Name (lowercase) for
+   * flexible matching — consistent with the previous hardcoded map.
+   */
+  private loadAccountClassifications(): void {
+    this._customerimportService.getAccountClassifications()
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe(
+        (res) => {
+          if (res.isSuccess && res.data && res.data.length > 0) {
+            this.accountClassificationMap = {};
+            res.data.forEach((item: AccountClassificationType) => {
+              this.accountClassificationMap[String(item.accountClassificationID)] = item.accountClassificationName;
+            });
+            this.classificationsLoaded = true;
+          } else {
+            console.warn('Account classifications could not be loaded:', res.message);
+          }
+        },
+        (err) => {
+          console.error('Error loading account classifications:', err);
+        }
+      );
+  }
+
   @ViewChild(TooltipDirective) public tooltipDir: TooltipDirective;
   public gridData: any[] = [];
   public gridViewData: any[] = [];
@@ -47,39 +80,11 @@ export class CustomerImportComponent implements OnDestroy {
   isUploadDisabled = true;
   //Template verification
   requiredColumns: string[] = ['Store Number', 'Store Manager', 'Store Phone', 'Store Email Address', 'Store Name', 'Address', 'City', 'ST', 'Zip', 'Territory Number', 'Is Parent', 'Parent Number', 'County', 'Account Type', 'Account Classification'];
-  public accountClassificationMap = {
-    '1': 'Full Service Distributor',
-    '2': 'Cash & Carry',
-    '3': 'C-Store',
-    '7': 'Tobacco Outlet',
-    '8': 'Other',
-    '22': 'C-Store – Chain HQ',
-    '23': 'C-Store – Chain Location',
-    '24': 'C-Store – Independent',
-    '25': 'Tobacco Outlet – Chain HQ',
-    '26': 'Tobacco Outlet – Chain Location',
-    '27': 'Tobacco Outlet – Independent',
-    '28': 'Smoke Shop',
-    '29': 'Dispensary Store',
-    '30': 'S-D-M – Chain HQ',
-    '31': 'S-D-M – Chain Location',
-    '32': 'S-D-M – Independent',
-    '33': 'Liquor Store – Chain HQ',
-    '34': 'Liquor Store – Chain Location',
-    '35': 'Liquor Store – Independent',
-    '36': 'Sub jobber Wholesale',
-    '37': 'Tribal Accounts',
-    '38': 'Out of business',
-    '39': 'Grocery Warehouse',
-    '40': 'Retail Oper. w/ own Distribution Center',
-    '41': 'Truck Jobber',
-    '42': 'Master Distributor',
-    '43': 'Prisons',
-    '44': 'Smoke Shop - Chain HQ',
-    '45': 'Smoke Shop - Chain Location',
-    '46': 'DM Location',
-    '47': 'MSAi List A'
-  };
+  /**
+   * Dynamically populated on ngOnInit from the AccountClassificationTypeMaster SQL table.
+   * Key: AccountClassificationID (as string), Value: AccountClassificationName.
+   */
+  public accountClassificationMap: { [key: string]: string } = {};
 
   isNumber(value: any): value is number {
     return typeof value === 'number' && !isNaN(value);
@@ -130,6 +135,18 @@ export class CustomerImportComponent implements OnDestroy {
   }
 
   onFileChange(event: any) {
+    // Guard: ensure classifications are loaded before allowing validation
+    if (!this.classificationsLoaded) {
+      this._toasterService.pop({
+        type: 'warning',
+        title: 'Please Wait',
+        body: 'Account Classification data is still loading. Please try again in a moment.',
+        timeout: 4000,
+        showCloseButton: true
+      });
+      return;
+    }
+
     const target: DataTransfer = <DataTransfer>(event.target);
 
     if (target.files.length !== 1) throw new Error('Cannot use multiple files');

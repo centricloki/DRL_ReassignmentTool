@@ -9,6 +9,11 @@ export interface BaseResponse<T> {
   message: string;
 }
 
+export interface AccountClassificationType {
+  accountClassificationID: number;
+  accountClassificationName: string;
+}
+
 export interface UserReportHierarchyNode {
   nodeId: string;
   parentNodeId: string | null;
@@ -84,6 +89,11 @@ export class CustomerimportService {
   addCustomerMaster(customers: CustomerMaster[]): Observable<BaseResponse<any>> {
     const apiURL = this.appConstant.APIUrl + 'CustomerReassignment/AddCustomers';
     return this.http.post<BaseResponse<any>>(apiURL, customers, { withCredentials: true });
+  }
+
+  getAccountClassifications(): Observable<BaseResponse<AccountClassificationType[]>> {
+    const apiURL = this.appConstant.APIUrl + 'CustomerReassignment/AccountClassifications';
+    return this.http.get<BaseResponse<AccountClassificationType[]>>(apiURL, { withCredentials: true });
   }
 
   // Brand style api calls

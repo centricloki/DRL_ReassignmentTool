@@ -1,4 +1,4 @@
-﻿using DRL.Core.Interface;
+using DRL.Core.Interface;
 using DRL.Entity;
 using DRL.Library;
 using Microsoft.AspNetCore.Mvc;
@@ -290,12 +290,15 @@ namespace DRL.API.Controllers
                     int rowCount = 1;
                     foreach (var request in requests)
                     {
+                        //RequestSanitizer.SanitizeAllStrings(request);
                         rowCount += 1;
                         if (!string.IsNullOrWhiteSpace(request.CustomerName))
                         {
                             // Check if the customer already exists based on CustomerName, Latitude, and Longitude
                             var existingCustomer = await _customerService.GetCustomerAsync(SanitizeForSql(request.CustomerName), SanitizeForSql(request.Address)
                                 , SanitizeForSql(request.AddressCity), SanitizeForSql(request.AddressState), SanitizeForSql(request.AddressZipCode));
+                            //var existingCustomer = await _customerService.GetCustomerAsync(request.CustomerName, request.Address
+                            //    , request.AddressCity, request.AddressState, request.AddressZipCode);
                             if (existingCustomer != null && existingCustomer.Count > 0)
                             {
                                 // Add to existing records list to avoid insertion
@@ -373,6 +376,26 @@ namespace DRL.API.Controllers
             trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"\s+", " ");
 
             return trimmed;
+        }
+
+        /// <summary>
+        ///     Get Account Classification Types from AccountClassificationTypeMaster table
+        /// </summary>
+        /// <returns>List of AccountClassificationID and AccountClassificationName</returns>
+        [HttpGet("AccountClassifications")]
+        public BaseResponse<List<ENTAccountClassificationType>> GetAccountClassifications()
+        {
+            var response = new BaseResponse<List<ENTAccountClassificationType>>(true);
+            try
+            {
+                response.Data = _customerService.GetAccountClassifications();
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+            }
+            return response;
         }
     }
 }
