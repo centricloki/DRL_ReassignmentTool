@@ -1,4 +1,4 @@
-﻿using DRL.Core.Interface;
+using DRL.Core.Interface;
 using DRL.Entity;
 using DRL.Framework.Log;
 using DRL.Framework.Log.Interface;
@@ -451,6 +451,29 @@ namespace DRL.Core.Service
                 throw new Exception(ex.Message);
             }
 
+            return result;
+        }
+
+        public List<ENTAccountClassificationType> GetAccountClassifications()
+        {
+            List<ENTAccountClassificationType> result = new List<ENTAccountClassificationType>();
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+            try
+            {
+                string strQuery = @"SELECT [AccountClassificationID], [AccountClassificationName]
+                                    FROM [dbo].[AccountClassificationTypeMaster]
+                                    ORDER BY [AccountClassificationName]";
+
+                result = SqlDBHelper.RawSqlQuery(strQuery, x => new ENTAccountClassificationType
+                {
+                    AccountClassificationID = Convert.ToInt32(x["AccountClassificationID"]),
+                    AccountClassificationName = x["AccountClassificationName"].ToString()
+                }, connString).ToList();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, "CustomerService.GetAccountClassifications", ex);
+            }
             return result;
         }
 

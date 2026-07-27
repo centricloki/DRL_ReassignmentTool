@@ -1,4 +1,4 @@
-﻿using DRL.Core.Interface;
+using DRL.Core.Interface;
 using DRL.Entity;
 using DRL.Library;
 using Microsoft.AspNetCore.Mvc;
@@ -373,6 +373,27 @@ namespace DRL.API.Controllers
             trimmed = System.Text.RegularExpressions.Regex.Replace(trimmed, @"\s+", " ");
 
             return trimmed;
+        }
+
+        /// <summary>
+        ///     Get Account Classification Types from the AccountClassificationTypeMaster table.
+        ///     Used by the Angular customer-import component for dynamic Excel validation.
+        /// </summary>
+        /// <returns>List of AccountClassificationID and AccountClassificationName</returns>
+        [HttpGet("AccountClassifications")]
+        public BaseResponse<List<ENTAccountClassificationType>> GetAccountClassifications()
+        {
+            var response = new BaseResponse<List<ENTAccountClassificationType>>(true);
+            try
+            {
+                response.Data = _customerService.GetAccountClassifications();
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+            }
+            return response;
         }
     }
 }

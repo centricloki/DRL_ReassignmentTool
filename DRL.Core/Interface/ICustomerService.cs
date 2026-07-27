@@ -1,4 +1,4 @@
-﻿using DRL.Entity;
+using DRL.Entity;
 using DRL.Entity.Response;
 using DRL.Library;
 using System;
@@ -24,5 +24,6 @@ namespace DRL.Core.Interface
            string addressState,
            string addressZipCode);
         Task<KendoGridDataResult<ENTActionHistoryResponse>> GetActionHistoriesWithPaginationAsync(KendoGridRequest request);
+        List<ENTAccountClassificationType> GetAccountClassifications();
     }
 }
