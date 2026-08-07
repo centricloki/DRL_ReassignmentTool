@@ -200,7 +200,7 @@ namespace DRL.API.Controllers
                             if (DRL.Library.PinValidator.IsWeakPin(user.Pin))
                             {
                                 response.IsSuccess = false;
-                                response.Message = "PIN does not meet security policy. PIN cannot be all same digits (0000, 1111) or sequential (1234, 4321, 2345).";
+                                response.Message = "PIN does not meet security policy.PIN cannot be all same digits (1111,2222), sequential (1234, 4321, 2345) or PIN cannot start with 0.";
                                 response.Data = null;
                                 return response; // stop update
                             }

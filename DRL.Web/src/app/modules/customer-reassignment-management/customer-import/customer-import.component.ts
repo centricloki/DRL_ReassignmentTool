@@ -121,6 +121,19 @@ export class CustomerImportComponent implements OnInit, OnDestroy {
     this.loadItems();
   }
 
+  // Check if a row is empty (ghost row)
+  isEmptyRow(row: any[]): boolean {
+    if (!row || row.length === 0) return true;
+
+    // Check if all cells in the row are empty, null, undefined, or whitespace
+    return row.every((cell) => {
+      if (cell === null || cell === undefined) return true;
+      if (typeof cell === 'string' && cell.trim() === '') return true;
+      if (typeof cell === 'number' && isNaN(cell)) return true;
+      return false;
+    });
+  }
+
   onFileChange(event: any) {
     // Guard: ensure classifications are loaded from the API before validating the file
     if (!this.classificationsLoaded) {
@@ -171,6 +184,11 @@ export class CustomerImportComponent implements OnInit, OnDestroy {
           this.isGetLatLongDisabled = false;
         }
       }
+
+      // Filter out empty/ghost rows before processing
+      this.data = this.data.filter((row: any[]) => {
+        return !this.isEmptyRow(row);
+      });
 
       // Map Excel data to grid format
       this.gridData = this.data.map((row: any[]) => ({

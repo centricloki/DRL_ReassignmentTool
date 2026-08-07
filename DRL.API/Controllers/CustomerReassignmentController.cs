@@ -290,12 +290,15 @@ namespace DRL.API.Controllers
                     int rowCount = 1;
                     foreach (var request in requests)
                     {
+                        //RequestSanitizer.SanitizeAllStrings(request);
                         rowCount += 1;
                         if (!string.IsNullOrWhiteSpace(request.CustomerName))
                         {
                             // Check if the customer already exists based on CustomerName, Latitude, and Longitude
                             var existingCustomer = await _customerService.GetCustomerAsync(SanitizeForSql(request.CustomerName), SanitizeForSql(request.Address)
                                 , SanitizeForSql(request.AddressCity), SanitizeForSql(request.AddressState), SanitizeForSql(request.AddressZipCode));
+                            //var existingCustomer = await _customerService.GetCustomerAsync(request.CustomerName, request.Address
+                            //    , request.AddressCity, request.AddressState, request.AddressZipCode);
                             if (existingCustomer != null && existingCustomer.Count > 0)
                             {
                                 // Add to existing records list to avoid insertion

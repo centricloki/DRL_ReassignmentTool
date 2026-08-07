@@ -42,6 +42,10 @@ namespace DRL.Library
             if (IsSequential(pin))
                 return true;
 
+            // 3. PIN doesn't start with 0 or 00
+            if (pin.StartsWith("0"))
+                return true;
+
             return false;
         }
 

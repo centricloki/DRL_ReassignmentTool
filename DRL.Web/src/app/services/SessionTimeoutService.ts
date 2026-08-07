@@ -9,8 +9,8 @@ import { environment } from 'src/environments/environment';
     providedIn: 'root'
 })
 export class SessionTimeoutService implements OnDestroy {
-    private idleTimeOut = 15 * 60 * 1000; // 15 minutes of inactivity
-    //private idleTimeOut = 1 * 20 * 1000; // 20 minutes of inactivity
+    private idleTimeOut = 20 * 60 * 1000; // 15 minutes of inactivity
+    //private idleTimeOut = 3 * 60 * 1000; // 3 minutes of inactivity
     private userActivity$ = new Subject<void>();
     private destroy$ = new Subject<void>();
 
