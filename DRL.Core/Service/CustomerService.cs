@@ -76,6 +76,7 @@ namespace DRL.Core.Service
                     ShippingAddressState = x["ShippingAddressState"].ToString(),
                     ShippingAddressCity = x["ShippingAddressCity"].ToString(),
                     ShippingAddressZipCode = x["ShippingAddressZipCode"].ToString(),
+                    AccountClassificationName = x["AccountClassificationName"].ToString(),
                 }, connString).ToList();
                 #endregion
             }

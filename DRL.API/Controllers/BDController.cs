@@ -59,7 +59,7 @@ namespace DRL.API.Controllers
         {
             BaseResponse<ENTBD> response = new BaseResponse<ENTBD>();
             var serviceResponse = new ActionStatus();
-            
+
             serviceResponse = _bdService.CheckBDNameExists(bd.BDName, bd.BDID);
             if (!serviceResponse.Success)
             {
@@ -186,7 +186,18 @@ namespace DRL.API.Controllers
 
         private void ClearBDCaches()
         {
+            // 🔑 MUST MATCH EXACT KEYS USED IN LookupController
+            _cacheService.Remove(LookupCacheKeys.ROLES_KEY);
+            _cacheService.Remove(LookupCacheKeys.REGIONS_KEY);
+            _cacheService.Remove(LookupCacheKeys.ZONES_KEY);
+            _cacheService.Remove(LookupCacheKeys.TERRITORIES_KEY);
+            _cacheService.Remove(LookupCacheKeys.STATES_KEY);
+            _cacheService.Remove(LookupCacheKeys.CUST_REASSIGN_ROLES_KEY);
+            _cacheService.Remove(LookupCacheKeys.AVPS_KEY);
             _cacheService.Remove(LookupCacheKeys.BDS_KEY);
+            _cacheService.Remove(LookupCacheKeys.CITIES_KEY_PREFIX);
+            _cacheService.RemoveByPrefix(LookupCacheKeys.USER_REPORT_CACHE_PREFIX);
+            _cacheService.RemoveByPrefix(LookupCacheKeys.USER_REPORT_HIERARCHY_CACHE_PREFIX);
         }
     }
 }

@@ -25,5 +25,6 @@ namespace DRL.Entity
         public string ShippingAddressCity { get; set; }
         public string ShippingAddressState { get; set; }
         public string ShippingAddressZipCode { get; set; }
+        public string AccountClassificationName { get; set; }
     }
 }

@@ -248,6 +248,8 @@
           </kendo-excelexport-column>
           <kendo-excelexport-column field="keyAccount" title="Key Account" width="200">
           </kendo-excelexport-column>
+          <kendo-excelexport-column field="accountClassificationName" title="Account Classification" width="100">
+          </kendo-excelexport-column>
         </kendo-excelexport>
 
         <kendo-excelexport [data]="gridView.data" fileName="Customers.xlsx" #excelexport>
@@ -284,6 +286,8 @@
           <kendo-excelexport-column field="isDeleted" title="Is InActive" width="200">
           </kendo-excelexport-column>
           <kendo-excelexport-column field="keyAccount" title="Key Account" width="200">
+          </kendo-excelexport-column>
+          <kendo-excelexport-column field="accountClassificationName" title="Account Classification" width="100">
           </kendo-excelexport-column>
         </kendo-excelexport>
 
@@ -378,6 +382,9 @@
                         {{ item }}
                       </div>
                     </ng-template>
+                  </kendo-grid-column>
+                  <kendo-grid-column field="accountClassificationName" title="Account Classification" width="15"
+                    [minResizableWidth]="100">
                   </kendo-grid-column>
                 </kendo-grid>
               </div>
