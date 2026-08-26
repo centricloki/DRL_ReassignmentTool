@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
 import { MatDialogConfig, MatDialog } from '@angular/material';
-import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { AppConstant } from '../app.constants';
 import { HttpService } from './Httpservice';
 import { Http, Response, RequestOptions, Headers } from '@angular/http';
 import { WarningDialogComponent } from '../warning-dialog/warning-dialog.component';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 @Injectable({
     providedIn: 'root'
 })
@@ -133,6 +133,18 @@ export class CommonService {
     }
     GetAllBDs() {
         const apiURL = this._appConstant.APIUrl + 'Lookup/BDs';
+        return this.http.get(apiURL);
+    }
+
+    // New method to get BDs by region ID
+    GetBDsByRegionId(regionId: string) {
+        const apiURL = this._appConstant.APIUrl + 'Lookup/GetBDs/' + regionId;
+        return this.http.get(apiURL);
+    }
+
+    // New method to get territories by region ID
+    GetTerritoriesByRegionId(regionId: string) {
+        const apiURL = this._appConstant.APIUrl + 'Territory/GetTeamListFromRegionId/' + regionId;
         return this.http.get(apiURL);
     }
 }

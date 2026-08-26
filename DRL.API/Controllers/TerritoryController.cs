@@ -55,6 +55,22 @@ namespace DRL.API.Controllers
         }
 
         /// <summary>
+        ///     Get All Territory List
+        /// </summary>
+        /// <returns>
+        ///     ENTTeam  Model
+        /// </returns>
+        // GET api/values
+        [HttpGet("GetAllUnDeletedTerritories")]
+        public BaseResponse<List<ENTTeam>> GetAllUnDeletedTerritories()
+        {
+            var response = new BaseResponse<List<ENTTeam>>(true);
+            response.Data = _territoryService.GetAllUnDeletedTerritories();
+            return response;
+        }
+
+
+        /// <summary>
         ///     Get Territory details by TerritoryId
         /// </summary>
         /// <returns>
@@ -76,7 +92,7 @@ namespace DRL.API.Controllers
         ///     ENTTeam Model
         /// </returns>
         [HttpPost("ManageTerritory")]
-        public BaseResponse<ENTTeam> ManageTerritory([FromBody]ENTTeam Territory)
+        public BaseResponse<ENTTeam> ManageTerritory([FromBody] ENTTeam Territory)
         {
             BaseResponse<ENTTeam> response = new BaseResponse<ENTTeam>();
             var serviceResponse = new ActionStatus();
@@ -137,7 +153,7 @@ namespace DRL.API.Controllers
         /// </returns>
         // PATCH api/User/DeleteTerritorybyterritoryId
         [HttpPatch("DeleteTerritorybyTerritoryId")]
-        public BaseResponse<ActionStatus> DeleteTerritorybyTerritoryId([FromBody]ENTPatchRequest activeStatus)
+        public BaseResponse<ActionStatus> DeleteTerritorybyTerritoryId([FromBody] ENTPatchRequest activeStatus)
         {
             BaseResponse<ActionStatus> response = new BaseResponse<ActionStatus>();
             try
@@ -181,6 +197,24 @@ namespace DRL.API.Controllers
             }
             return response;
         }
+
+        [HttpGet("GetBDListByRegionId/{RegionId}")]
+        public BaseResponse<List<ENTTeam>> GetBDListByRegionId(long regionId)
+        {
+            var response = new BaseResponse<List<ENTTeam>>(true);
+            try
+            {
+                response.Data = _territoryService.GetTeamListFromRegionId(regionId);
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                return response;
+            }
+            return response;
+        }
+
         private void ClearTerritoryCaches()
         {
             // 🔑 MUST MATCH EXACT KEYS USED IN LookupController

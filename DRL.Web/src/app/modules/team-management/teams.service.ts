@@ -13,7 +13,7 @@ export class TeamsService {
   constructor(private http: HttpService, private _appConstant: AppConstant) { }
 
   GetAllTerritories() {
-    const apiURL = this._appConstant.APIUrl + 'Territory/GetAllTerritories';
+    const apiURL = this._appConstant.APIUrl + 'Territory/GetAllUnDeletedTerritories';
     return this.http.get(apiURL);
   }
 
@@ -24,9 +24,9 @@ export class TeamsService {
     return this.http.get(apiURL, { params: params });
   }
 
-  ManageTeam(TeamModel:TeamModel) {
+  ManageTeam(TeamModel: TeamModel) {
     const apiURL = this._appConstant.APIUrl + 'Territory/ManageTerritory';
-    return this.http.post(apiURL,TeamModel)
+    return this.http.post(apiURL, TeamModel)
       .map(response => {
         return response;
       });
@@ -43,5 +43,4 @@ export class TeamsService {
     const apiURL = this._appConstant.APIUrl + 'Territory/GetTeamListFromRegionId/';
     return this.http.get(apiURL + id);
   }
-
 }

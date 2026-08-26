@@ -9,8 +9,8 @@ export class TeamModel {
     updateDate: Date;
     updatedBy: string;
     regionId: string;
+    bdid: string; // Reverted back to bdid to maintain compatibility
     teamStatusId: string;
-    bdid: number;
 
     constructor() {
         this.teamId = '';
@@ -22,6 +22,7 @@ export class TeamModel {
         this.updatedBy = '';
         this.updateDate = new Date();
         this.regionId = '';
+        this.bdid = ''; // Initialize the bdid property
         this.teamStatusId = '';
     }
-}    
+}

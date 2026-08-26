@@ -2,9 +2,11 @@ using DRL.Framework.Log;
 using DRL.Framework.Log.Interface;
 using DRL.Model.Repository.Interface;
 using DRL.Model.UnitOfWork.Interface;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using EF = DRL.Model.Models;
 
 namespace DRL.Model.Repository.Implementation
@@ -12,11 +14,12 @@ namespace DRL.Model.Repository.Implementation
     public class BDRepository : GenericRepository<EF.BDMaster>, IBDRepository
     {
         private readonly ILogger logger;
-
+      
         public BDRepository(IUnitOfWork unitOfWork, ILogManager logManager) : base(unitOfWork, logManager)
         {
             _uow = unitOfWork;
             logger = logManager.GetLogger(typeof(IBDRepository));
+            
         }
 
         public List<EF.BDMaster> GetAllBD()
@@ -25,7 +28,7 @@ namespace DRL.Model.Repository.Implementation
             try
             {
                 logger.Info(Constants.ACTION_ENTRY, "BDRepository.GetAllBD");
-                result = base.GetAllNoTracking().OrderBy(x=>x.BDName).ToList();
+                result = base.GetAllNoTracking().OrderBy(x => x.BDName).ToList();
                 logger.Info(Constants.ACTION_EXIT, "BDRepository.GetAllBD");
             }
             catch (Exception ex)
@@ -50,5 +53,7 @@ namespace DRL.Model.Repository.Implementation
             }
             return result;
         }
+
+       
     }
 }

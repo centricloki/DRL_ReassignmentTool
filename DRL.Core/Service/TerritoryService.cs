@@ -81,6 +81,21 @@ namespace DRL.Core.Service
             return result;
         }
 
+        public List<ENTTeam> GetAllUnDeletedTerritories()
+        {
+            List<ENTTeam> result = new List<ENTTeam>();
+            try
+            {
+                result = _territoryRepository.GetAllUnDeletedTerritories().Select(p => Configuration.Mapper.Map<ENTTeam>(p)).ToList();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.GetAllUnDeletedTerritories" + ex);
+            }
+            return result;
+        }
+
+
         public List<ENTTeam> GetAllUserTerritories(long userId)
         {
             List<ENTTeam> result = new List<ENTTeam>();
@@ -156,6 +171,7 @@ namespace DRL.Core.Service
                             new SqlParameter("@UpdateTerritoryId", Team.TeamId??0),
                             new SqlParameter("@UpdateName", Team.Name),
                             new SqlParameter("@UpdateRegionId", Team.RegionId??0),
+                            new SqlParameter("@UpdateBdId", Team.BDID??0),
                             new SqlParameter("@UpdateDescription", Team.Description),
                             new SqlParameter("@UpdateIsActive", Team.IsActive),
                             new SqlParameter("@UpdatedBy", Team.UpdatedBy)
@@ -199,10 +215,6 @@ namespace DRL.Core.Service
                         Success = false,
                         Message = "Team not exist!"
                     };
-
-                //dbTerritory = Configuration.Mapper.Map(Team, dbTerritory);
-                //dbTerritory.UpdateDate = GetDateTime.getDate();
-                //var result = _territoryRepository.Update(dbTerritory);
                 var result = TerritoryUpdateAndCorrectInCustomerMaster(Team);
                 result.Result = Configuration.Mapper.Map(result.Result, Team);
                 return result;
@@ -213,7 +225,7 @@ namespace DRL.Core.Service
                 return new ActionStatus
                 {
                     Success = false,
-                    Message = ex.Message
+                    Message = "Please try again! Something went wrong."
                 };
             }
         }

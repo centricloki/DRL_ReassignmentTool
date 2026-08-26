@@ -1,4 +1,4 @@
-﻿using DRL.API.Extensions;
+using DRL.API.Extensions;
 using DRL.Core.Interface;
 using DRL.Core.Service;
 using DRL.Entity;
@@ -219,5 +219,15 @@ namespace DRL.API.Controllers
                        );
             return response;
         }
+
+        [HttpGet("GetBDs/{regionId}")]
+        public BaseResponse<List<ENTLookUpItem>> GetBDFindByRegionId(int regionId)
+        {
+            // Not cached: User-specific data
+            var response = new BaseResponse<List<ENTLookUpItem>>(true);
+            response.Data = _bdService.GetBDsByRegionIdLookup(regionId);
+            return response;
+        }
+
     }
 }

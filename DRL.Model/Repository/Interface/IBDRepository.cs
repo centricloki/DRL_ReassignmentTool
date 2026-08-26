@@ -6,6 +6,6 @@ namespace DRL.Model.Repository.Interface
     public interface IBDRepository : IGenericRepository<EF.BDMaster>
     {
         List<EF.BDMaster> GetAllBD();
-        EF.BDMaster GetBDFindById(int BDId);
+        EF.BDMaster GetBDFindById(int BDId);       
     }
 }

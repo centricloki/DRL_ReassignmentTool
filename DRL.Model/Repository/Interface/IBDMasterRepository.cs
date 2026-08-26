@@ -7,5 +7,6 @@ namespace DRL.Model.Repository.Interface
     {
         List<EF.BDMaster> GetAllBDs();
         EF.BDMaster GetBDFindById(int BDId);
+        List<EF.BDMaster> GetBDFindByRegionId(int regionId);
     }
 }

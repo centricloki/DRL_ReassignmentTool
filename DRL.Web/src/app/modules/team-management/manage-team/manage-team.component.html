@@ -62,7 +62,7 @@
             <label class="form-label">Region:</label>
             <div class="input-field">
               <mat-select placeholder="Region" #regionId="ngModel" name="regionId" [(ngModel)]="SugarCRMTeam.regionId"
-                >
+                (selectionChange)="onRegionChange()">
                 <mat-option value="">Select Region</mat-option>
                 <mat-option *ngFor="let item of RegionList" [value]="item.recordId">
                   {{item.value}}
@@ -72,6 +72,20 @@
             <!-- <div class="text-danger" *ngIf="regionId.invalid && (regionId.dirty || regionId.touched)">
               <p *ngIf="regionId.errors.required">Region is required</p>
             </div> -->
+          </div>
+        </div>
+        <!-- Conditionally show BD dropdown only when a region is selected -->
+        <div class="col-lg-3 col-md-3 col-sm-6" *ngIf="SugarCRMTeam.regionId && SugarCRMTeam.regionId !== ''">
+          <div class="form-field-row">
+            <label class="form-label">BD:</label>
+            <div class="input-field">
+              <mat-select placeholder="BD" #bdid="ngModel" name="bdid" [(ngModel)]="SugarCRMTeam.bdid">
+                <mat-option value="">Select BD</mat-option>
+                <mat-option *ngFor="let item of FilteredBDList" [value]="item.recordId">
+                  {{item.value}}
+                </mat-option>
+              </mat-select>
+            </div>
           </div>
         </div>
       </div>

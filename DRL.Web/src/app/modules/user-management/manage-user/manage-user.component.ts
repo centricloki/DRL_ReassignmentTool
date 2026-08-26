@@ -311,7 +311,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.SugarCRMUser.teamID = this.teamModel.teamId;
     this.SugarCRMUser.managerId = this.SugarCRMUser.managerId == '' ? '0' : this.SugarCRMUser.managerId;
     this.SugarCRMUser.roleId = this.SugarCRMUser.roleId == '' ? '0' : this.SugarCRMUser.roleId;
-    this.SugarCRMUser.defaultTeamId = this.SugarCRMUser.defaultTeamId == '' ? undefined : this.SugarCRMUser.defaultTeamId;
+    this.SugarCRMUser.defaultTeamId = this.SugarCRMUser.defaultTeamId == '' ? '' : this.SugarCRMUser.defaultTeamId;
     this.SugarCRMUser.bdid = this.SugarCRMUser.bdid == '' ? '0' : this.SugarCRMUser.bdid;
     this.SugarCRMUser.avpid = this.SugarCRMUser.bdid == '' ? '0' : this.SugarCRMUser.avpid;
     this.SugarCRMUser.territoryId = this.SugarCRMUser.territoryId == '' ? '0' : this.SugarCRMUser.territoryId;
@@ -366,7 +366,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       else {
         const team = this.TeamList.find(x => x.teamId == this.teamModel.teamId);
 
-        if (this.SugarCRMUser.roleId == this.bdRole.roleId && team.bdid && team.bdid != 0 && team.bdid.toString() != this.SugarCRMUser.bdid) {
+        if (team && this.SugarCRMUser.roleId == this.bdRole.roleId && team.bdid && Number(team.bdid) != 0 && String(team.bdid) !== this.SugarCRMUser.bdid) {
           //this._commonLookupData.confirmDialog('This territory is assigned to another BD manager. Do you want to override?', (result: any) => {
           //if (result) {
           this.teamModel.createdBy = "0";
@@ -379,20 +379,25 @@ export class ManageUserComponent implements OnInit, OnDestroy {
           );
           //}
           // });
-        }
-        else {
+        } else if (team) {
           this.teamModel.createdBy = "0";
           this.teamModel.createdDate = new Date();
           this.teamModel.updatedBy = "0";
           this.teamModel.updateDate = new Date();
           this.teamModel.name = team.name;
+          if (this.SugarCRMUser.roleId == this.bdRole.roleId) {
+            this.teamModel.bdid = this.SugarCRMUser.bdid;
+          }
           this.myItems.push(
             this.teamModel
           );
         }
       }
-      this.teamModel = new TeamModel();
     }
+    else {
+      this._toasterService.pop('error', 'Error', "Please select team");
+    }
+
   }
   deleteTeamDetail(i) {
     this._commonLookupData.confirmDialog('Are you sure you want to delete this team?', (result: any) => {
@@ -518,12 +523,32 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   }
 
   onBDChange(event: any): void {
-    let bdId = Number(this.SugarCRMUser.bdid);
-    if (!isNaN(bdId)) {
-      this.getAllBDTerritories(bdId);
+    let bdid = Number(this.SugarCRMUser.bdid);
+    if (!isNaN(bdid)) {
+      this.getAllBDTerritories(bdid);
     }
     else {
       this.myItems = [];
     }
+  }
+
+  // Update territory data
+  UpdateTerritory() {
+    this.SugarCRMUser.regionId = this.SugarCRMUser.regionId == '' ? '0' : this.SugarCRMUser.regionId;
+    this.SugarCRMUser.zoneId = this.SugarCRMUser.zoneId == '' ? '0' : this.SugarCRMUser.zoneId;
+    this.SugarCRMUser.avpid = this.SugarCRMUser.zoneId == '' ? '0' : this.SugarCRMUser.avpid;
+    this.SugarCRMUser.bdid = this.SugarCRMUser.bdid == '' ? '0' : this.SugarCRMUser.bdid;
+    this.SugarCRMUser.avpid = this.SugarCRMUser.bdid == '' ? '0' : this.SugarCRMUser.avpid;
+    this._usersService.UpdateUserTerritory(this.SugarCRMUser.userId, this.SugarCRMUser.territoryId).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
+      var data = this._commonLookupData.parseData(res);
+      if (data != null && data != "" && data.isSuccess) {
+        this._toasterService.pop('success', 'Success', data.message);
+      }
+      else {
+        this._toasterService.pop('error', 'Error', data.message);
+      }
+    }, (error: any) => {
+      this._toasterService.pop('error', 'Error', error.message);
+    });
   }
 }

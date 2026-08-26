@@ -9,7 +9,9 @@ using DRL.Model.DataBase;
 using DRL.Model.Repository.Implementation;
 using DRL.Model.Repository.Interface;
 using DRL.Model.UnitOfWork.Interface;
+
 using Microsoft.EntityFrameworkCore;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,7 +48,6 @@ namespace DRL.Core.Service
             }
             return result;
         }
-
         public ENTBD GetBD(int bdId)
         {
             try
@@ -94,7 +95,7 @@ namespace DRL.Core.Service
             var actionStatus = new ActionStatus();
             try
             {
-                var existingBD = _bdRepository.FindBy(x => 
+                var existingBD = _bdRepository.FindBy(x =>
                     x.BDName.Equals(bdName, StringComparison.CurrentCultureIgnoreCase) &&
                     x.BDID != bdId &&
                     !x.IsDeleted)
@@ -247,6 +248,22 @@ namespace DRL.Core.Service
                 logger.Error(Constants.ACTION_EXCEPTION, "BDService.ManageBDStatus" + ex);
             }
             return actionStatus;
+        }
+
+        public List<ENTLookUpItem> GetBDsByRegionIdLookup(int regionId)
+        {
+            List<ENTLookUpItem> result = new List<ENTLookUpItem>();
+            try
+            {
+                // Get all BDs associated with the given region via territories
+                result = _bdRepository.GetBDFindByRegionId(regionId)
+                    .Select(p => Configuration.Mapper.Map<ENTLookUpItem>(p)).ToList();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, "BDService.GetBDsByRegionIdLookup" + ex);
+            }
+            return result;
         }
     }
 }

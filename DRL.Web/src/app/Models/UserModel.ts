@@ -31,8 +31,8 @@ export class UserModel {
     statusId: string;
     territoryId:string;
     email:string;
-    bdid:string;
-    avpid:string;
+    bdid:string;  // Using original property name
+    avpid:string; // Reverted back to original property name
     zones:ZoneModel[];
 
     constructor() {
@@ -60,6 +60,8 @@ export class UserModel {
         this.teams = [];
         this.territoryId='';
         this.email='';
+        this.bdid=''; // Initialize the bdid property
+        this.avpid=''; // Initialize the avpid property
         this.zones = [];
     }
 }

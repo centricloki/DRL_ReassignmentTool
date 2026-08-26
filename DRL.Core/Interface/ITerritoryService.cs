@@ -1,5 +1,6 @@
 ﻿using DRL.Entity;
 using DRL.Library;
+
 using System;
 using System.Collections.Generic;
 
@@ -14,6 +15,7 @@ namespace DRL.Core.Interface
         ActionStatus Insert(ENTTeam Team);
         ActionStatus Update(ENTTeam Team);
         List<ENTTeam> GetAllTerritories();
+        List<ENTTeam> GetAllUnDeletedTerritories();
         List<ENTTeam> GetAllUserTerritories(long userId);
         List<ENTTeam> GetAllBDTerritories(int bdId);
         ActionStatus DeleteTerritory(ENTPatchRequest activeStatus);

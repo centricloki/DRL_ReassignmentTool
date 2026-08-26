@@ -79,6 +79,22 @@ namespace DRL.Model.Repository.Implementation
             return result;
         }
 
+        public List<EF.TerritoryMaster> GetAllUnDeletedTerritories()
+        {
+            var result = new List<EF.TerritoryMaster>();
+            try
+            {
+                logger.Info(Constants.ACTION_ENTRY, "TerritoryRepository.GetAllUnDeletedTerritories");
+                result = base.GetAll().Where(x => x.IsDeleted == false).OrderByDescending(x => x.UpdateDate).ToList();
+                logger.Info(Constants.ACTION_EXIT, "TerritoryRepository.GetAllUnDeletedTerritories");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, ex);
+            }
+            return result;
+        }
+
         public EF.TerritoryMaster GetTerritory(long TeamId)
         {
             var result = new EF.TerritoryMaster();
@@ -100,7 +116,7 @@ namespace DRL.Model.Repository.Implementation
             var result = new List<EF.TerritoryMaster>();
             try
             {
-                bool isRoleIdEmpty =  (RoleId?.Length == 1 && RoleId[0].ToLower().Contains("null"));
+                bool isRoleIdEmpty = (RoleId?.Length == 1 && RoleId[0].ToLower().Contains("null"));
                 string RoleIds = String.Join(',', RoleId);
                 logger.Info(Constants.ACTION_ENTRY, "TerritoryRepository.GetCustReassignTerritoriesByRoleIds");
                 result = (from t in _uow.DbContext.TerritoryMaster
