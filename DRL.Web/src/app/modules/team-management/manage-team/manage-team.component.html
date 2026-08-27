@@ -45,7 +45,7 @@
             <label class="form-label">Status: <span>*</span></label>
             <div class="input-field">
               <mat-select placeholder="Status" #teamStatusId="ngModel" name="teamStatusId" [(ngModel)]="SugarCRMTeam.teamStatusId"
-                required [disabled]="_appConstant.teamId=='' ">
+                 required>
                 <mat-option value="">Select Status</mat-option>
                 <mat-option *ngFor="let item of TeamStatusList" [value]="item.recordId">
                   {{item.value}}
@@ -69,9 +69,6 @@
                 </mat-option>
               </mat-select>
             </div>
-            <!-- <div class="text-danger" *ngIf="regionId.invalid && (regionId.dirty || regionId.touched)">
-              <p *ngIf="regionId.errors.required">Region is required</p>
-            </div> -->
           </div>
         </div>
         <!-- Conditionally show BD dropdown only when a region is selected -->
