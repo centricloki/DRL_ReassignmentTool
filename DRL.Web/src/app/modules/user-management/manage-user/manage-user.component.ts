@@ -52,6 +52,8 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   filteredTeamList: Observable<any[]>;
   filteredDefTeamList: Observable<any[]>;
   private pinValidationSub: Subscription | null = null;
+  bdRoleId: any = null;
+  tmRoleId: any = null;
 
   ngOnDestroy() {
     this._appConstant.userId = undefined;
@@ -195,6 +197,13 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this._commonLookupData.GetActiveRoles().pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
       var data = this._commonLookupData.parseData(response);
       this.RoleList = data.data;
+
+      // Find IDs by name - no hardcode
+      const bd = this.RoleList.find(r => r.value.toLowerCase().includes('bd manager'));
+      const tm = this.RoleList.find(r => r.value.toLowerCase().includes('territory manager'));
+
+      this.bdRoleId = bd ? bd.recordId : null;
+      this.tmRoleId = tm ? tm.recordId : null;
     });
   }
   GetAllUsers() {
@@ -550,5 +559,17 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     }, (error: any) => {
       this._toasterService.pop('error', 'Error', error.message);
     });
+  }
+
+  // Helper for HTML
+  get showBDDropdown(): boolean {
+    return this.SugarCRMUser.roleId == this.bdRoleId
+      || this.SugarCRMUser.roleId == this.tmRoleId;
+  }
+  get isBDManager(): boolean {
+    return this.SugarCRMUser.roleId == this.bdRoleId;
+  }
+  get isTMManager(): boolean {
+    return this.SugarCRMUser.roleId == this.tmRoleId;
   }
 }

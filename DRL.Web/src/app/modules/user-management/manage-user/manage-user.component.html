@@ -173,22 +173,22 @@
               </div>
             </div>
           </div>
-          <div class="col-lg-3 col-md-3 col-sm-6" *ngIf="SugarCRMUser.roleId == bdRole.roleId" required>
+          <div class="col-lg-3 col-md-3 col-sm-6" *ngIf="showBDDropdown">
             <div class="form-field-row">
               <label class="form-label">BD Manager:
-                <span>*</span>
+                <span *ngIf="isBDManager">*</span>
               </label>
               <div class="input-field">
                 <mat-select placeholder="BD Manager" #bdId="ngModel" name="bdId" [(ngModel)]="SugarCRMUser.bdid"
-                  required (selectionChange)="onBDChange($event)">
+                  (selectionChange)="onBDChange($event)" [required]="isBDManager">
                   <mat-option value="">Select BD Manager</mat-option>
                   <mat-option *ngFor="let item of bdList" [value]="item.recordId">
                     {{item.value}}
                   </mat-option>
                 </mat-select>
               </div>
-              <div class="text-danger" *ngIf="bdId.invalid && (bdId.dirty || bdId.touched)">
-                <p *ngIf="bdId.errors.required">BD is required</p>
+              <div class="text-danger" *ngIf="isBDManager && bdId.invalid && (bdId.dirty || bdId.touched)">
+                <p *ngIf="bdId.errors?.required">BD is required</p>
               </div>
             </div>
           </div>
@@ -202,7 +202,6 @@
         </mat-panel-title>
       </mat-expansion-panel-header>
       <div class="container-fluid">
-
         <div class="row">
           <div class="col-lg-3 col-md-3 col-sm-6">
             <div class="form-field-row">
