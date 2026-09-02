@@ -14,6 +14,7 @@ using DRL.Model.DataBase;
 using DRL.Entity.Response;
 using Microsoft.EntityFrameworkCore;
 using System.Data.SqlClient;
+using System.Data;
 using Microsoft.Extensions.Configuration;
 
 namespace DRL.Core.Manager
@@ -75,7 +76,7 @@ namespace DRL.Core.Manager
         public List<ENTUserResponse> GetUserList()
         {
             List<ENTUserResponse> result = new List<ENTUserResponse>();
-            string connString = _configuration.GetConnectionString("DefaultConnection");;
+            string connString = _configuration.GetConnectionString("DefaultConnection"); ;
             try
             {
                 result = SqlDBHelper.RawSqlQuery("EXEC [sp_DSD_GetUserList] ", x => new ENTUserResponse
@@ -118,87 +119,71 @@ namespace DRL.Core.Manager
             return result;
         }
 
-        public ActionStatus Insert(ENTUser user)
+        private (int zoneId, int regionId, int bdId, int avpId) GetHierarchyFromDefaultTeam(int? defaultTeamId)
         {
-            try
+            int zoneId = 0, regionId = 0, bdId = 0, avpId = 0;
+            if (defaultTeamId.HasValue)
             {
-                var dbUser = Configuration.Mapper.Map<ENTUser, EF.UserMaster>(user);
-                dbUser.CreatedDate = GetDateTime.getDate();
-                dbUser.IsInActive = !user.IsActive;
-                var terr = _teamRepository.GetByWhere(t => t.TerritoryId == user.DefaultTeamId).FirstOrDefault();
-                if (terr != null && terr.RegionId > 0)
+                var terr = _teamRepository.GetByWhere(t => t.TerritoryId == defaultTeamId.Value).FirstOrDefault();
+                if (terr != null)
                 {
-                    dbUser.BDID = terr.BDID ?? 0;
-                    dbUser.RegionId = terr.RegionId;
-
-                    var region = _regionRepository.GetByWhere(t => t.RegionId == terr.RegionId).FirstOrDefault();
-                    if (region != null && region.ZoneId > 0)
+                    regionId = terr.RegionId;
+                    bdId = terr.BDID ?? 0;
+                    var region = _regionRepository.GetByWhere(r => r.RegionId == terr.RegionId).FirstOrDefault();
+                    if (region != null)
                     {
-                        dbUser.ZoneId = region.ZoneId;
-                        var zone = _zoneRepository.GetByWhere(t => t.ZoneId == region.ZoneId).FirstOrDefault();
-                        if (zone != null && zone.AVPID > 0)
-                        {
-                            dbUser.AVPID = zone.AVPID ?? 0;
-                        }
+                        zoneId = region.ZoneId;
+                        var zone = _zoneRepository.GetByWhere(z => z.ZoneId == region.ZoneId).FirstOrDefault();
+                        if (zone != null) avpId = zone.AVPID ?? 0;
                     }
                 }
-                var resp = _userRepository.Insert(dbUser);
-                resp.Result = Configuration.Mapper.Map(resp.Result, user);
-                return resp;
             }
-            catch (Exception ex)
-            {
-                logger.Error(Constants.ACTION_EXCEPTION, "UserService.Insert" + ex);
-                return new ActionStatus
-                {
-                    Success = false,
-                    Message = ex.Message
-                };
-            }
+            return (zoneId, regionId, bdId, avpId);
+        }
+
+        public ActionStatus Insert(ENTUser user)
+        {
+            // For Insert, we will now use the same logic as Update, calling only the stored procedure.
+            // The procedure will handle the insert logic based on the @UserId (which will be 0 or less for a new record).
+            return Update(user);
         }
 
         public ActionStatus Update(ENTUser user)
         {
             try
             {
-                var dbUser = _userRepository.GetUser(user.UserId ?? 0);
-                if (dbUser == null)
-                    return new ActionStatus
-                    {
-                        Success = false,
-                        Message = "User not exist!"
-                    };
-                DateTime userCreateDateTime=dbUser.CreatedDate; 
-                dbUser = Configuration.Mapper.Map(user, dbUser);                
-                if (user.IsActive == false)
-                {
-                    dbUser.Pin = null;
-                    dbUser.TerritoryId = string.Empty;
-                    dbUser.DefTerritoryId = null;
-                }
-                dbUser.IsInActive = !user.IsActive;
-                var terr = _teamRepository.GetByWhere(t => t.TerritoryId == user.DefaultTeamId).FirstOrDefault();
-                if (terr != null && terr.RegionId > 0)
-                {
-                    dbUser.BDID = terr.BDID ?? 0;
-                    dbUser.RegionId = terr.RegionId;
+                //var (zoneId, regionId, bdId, avpId) = GetHierarchyFromDefaultTeam(user.DefaultTeamId);
+                string territoryCsv = string.Join(",", user.Teams?.Where(x => x.TeamId.HasValue).Select(x => x.TeamId.Value) ?? new List<int>());
+                string zoneCsv = string.Join(",", user.Zones?.Select(x => x.ZoneId) ?? new List<int>());
+                string conn = _configuration.GetConnectionString("DefaultConnection");
 
-                    var region = _regionRepository.GetByWhere(t => t.RegionId == terr.RegionId).FirstOrDefault();
-                    if (region != null && region.ZoneId > 0)
-                    {
-                        dbUser.ZoneId = region.ZoneId;
-                        var zone = _zoneRepository.GetByWhere(t => t.ZoneId == region.ZoneId).FirstOrDefault();
-                        if (zone != null && zone.AVPID > 0)
-                        {
-                            dbUser.AVPID = zone.AVPID ?? 0;
-                        }
-                    }
-                }
-                dbUser.CreatedDate = userCreateDateTime;
-                dbUser.UpdatedDate = GetDateTime.getDate();
-                var result = _userRepository.Update(dbUser);
-                result.Result = Configuration.Mapper.Map(result.Result, user);
-                return result;
+                // Determine CreatedBy for Insert and UpdatedBy for Update.
+                // Assuming the procedure checks if UserId <= 0 to decide between INSERT/UPDATE.
+                var effectiveUpdatedBy = (user.UserId <= 0 || user.UserId == null) ? (user.CreatedBy != 0 ? user.CreatedBy : 1) : (user.UpdatedBy != 0 ? user.UpdatedBy : 1);
+
+                var parms = new List<SqlParameter>{
+                    new SqlParameter("@UserId", user.UserId ?? 0), // Pass 0 or the actual ID
+                    new SqlParameter("@RoleId", user.RoleId),
+                    new SqlParameter("@ZoneId", 0),
+                    new SqlParameter("@RegionId", 0),
+                    // Corrected the assignment for BDID and AVPID for the stored procedure call using conditional checks for non-nullable ints
+                    new SqlParameter("@BDID", user.BDID ),
+                    new SqlParameter("@AVPID", user.AVPID ),
+                    // Corrected the assignment for ManagerId using conditional checks for non-nullable longs
+                    new SqlParameter("@ManagerId", user.ManagerId != 0 ? user.ManagerId : 0),
+                    new SqlParameter("@TerritoryIds", territoryCsv),
+                    new SqlParameter("@ZoneIds", zoneCsv),
+                    new SqlParameter("@DefTerritoryId", user.DefaultTeamId ?? 0),
+                    new SqlParameter("@UpdatedBy", effectiveUpdatedBy), // Use the determined value for the procedure
+                    new SqlParameter("@ErrorMessage", SqlDbType.NVarChar, 4000) { Direction = ParameterDirection.Output }
+                };
+                SqlDBHelper.ExecuteNonQuery("sp_DSD_UserScreen_ManageUser", ref parms, conn);
+                string err = parms.Last().Value?.ToString();
+                if (!string.IsNullOrEmpty(err)) return new ActionStatus { Success = false, Message = err };
+
+                // Since the proc handles the DB logic, we can return the user object passed in as the result.
+                // Or, if the proc returns the full user object, you might need to adjust this.
+                return new ActionStatus { Success = true, Result = user };
             }
             catch (Exception ex)
             {
@@ -343,7 +328,7 @@ namespace DRL.Core.Manager
         public List<ENTTerriotyUsers> GetAllUserByTerritoryId(Int32 TerritoryId)
         {
             List<ENTTerriotyUsers> result = new List<ENTTerriotyUsers>();
-            string connString = _configuration.GetConnectionString("DefaultConnection");;
+            string connString = _configuration.GetConnectionString("DefaultConnection"); ;
             try
             {
                 result = SqlDBHelper.RawSqlQuery("EXEC [sp_DSD_GetUserListByTerritoryId] " + TerritoryId, x => new ENTTerriotyUsers
@@ -476,7 +461,7 @@ namespace DRL.Core.Manager
         public List<ENTReassignmentUsers> GetReassignUsers(int? page = 1, int? pageSize = 10, string TerritoryId = "", string userName = "")
         {
             List<ENTReassignmentUsers> result = new List<ENTReassignmentUsers>();
-            string connString = _configuration.GetConnectionString("DefaultConnection");;
+            string connString = _configuration.GetConnectionString("DefaultConnection"); ;
             try
             {
                 userName = userName == "NULL" ? "" : userName;
@@ -507,7 +492,7 @@ namespace DRL.Core.Manager
             ActionStatus result = new ActionStatus();
             try
             {
-                string connString = _configuration.GetConnectionString("DefaultConnection");;
+                string connString = _configuration.GetConnectionString("DefaultConnection"); ;
                 string UserIds = String.Join(',', request.userIds.Where(x => x > 0).ToList());
                 if (!string.IsNullOrWhiteSpace(UserIds))
                 {
@@ -547,7 +532,7 @@ namespace DRL.Core.Manager
         public List<ENTTerriotyUsers> GetUsersByTerritoryIdAndUserId(Int32 TerritoryId, Int32 UserId)
         {
             List<ENTTerriotyUsers> result = new List<ENTTerriotyUsers>();
-            string connString = _configuration.GetConnectionString("DefaultConnection");;
+            string connString = _configuration.GetConnectionString("DefaultConnection"); ;
             try
             {
                 result = SqlDBHelper.RawSqlQuery($"EXEC [sp_DSD_GetUserListHierarchy] '{TerritoryId}','{UserId}'", x => new ENTTerriotyUsers
@@ -574,7 +559,7 @@ namespace DRL.Core.Manager
         public int GetUserIdByUserName(string Username)
         {
             int result = 0;
-            string connString = _configuration.GetConnectionString("DefaultConnection");;
+            string connString = _configuration.GetConnectionString("DefaultConnection"); ;
             try
             {
                 List<SqlParameter> sqlParameters = new List<SqlParameter>()

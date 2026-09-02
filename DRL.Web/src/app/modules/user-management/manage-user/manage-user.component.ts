@@ -368,6 +368,12 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       });
   }
   addUserToTeam() {
+    // Check if the user's role is 'territory manager' and they already have one territory
+    if (this.SugarCRMUser.roleId == this.tmRoleId && this.myItems.length >= 1) {
+      this._toasterService.pop('error', 'Error', "A Territory Manager can only be assigned to one territory.");
+      return; // Exit the function early if the condition is met
+    }
+
     if (this.teamModel.teamId && this.teamModel.teamId != '') {
       if (this.myItems.find(x => x.teamId == this.teamModel.teamId)) {
         this._toasterService.pop('error', 'Error', "Team already exist");
@@ -534,10 +540,21 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   onBDChange(event: any): void {
     let bdid = Number(this.SugarCRMUser.bdid);
     if (!isNaN(bdid)) {
-      this.getAllBDTerritories(bdid);
+      // Check if the user's role is 'territory manager'
+      if (this.SugarCRMUser.roleId == this.tmRoleId) {
+        // Do nothing for Territory Manager
+        return;
+      } else {
+        // For other roles, load BD territories
+        this.getAllBDTerritories(bdid);
+      }
     }
     else {
-      this.myItems = [];
+      // Check if the user's role is 'territory manager'
+      if (this.SugarCRMUser.roleId != this.tmRoleId) {
+        // Clear the list for other roles
+        this.myItems = [];
+      }
     }
   }
 

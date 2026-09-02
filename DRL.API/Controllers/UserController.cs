@@ -119,41 +119,9 @@ namespace DRL.API.Controllers
                 serviceResponse = _userService.CheckUserNameExists(user.UserName, user.UserId ?? 0);
                 if (!serviceResponse.Success)
                 {
-                    string TerriotoryId = "";
-                    ENTRole avpRole = _roleService.GetRole("AVP");
-                    ENTRole bdRole = _roleService.GetRole("BD Manager");
-                    if (user.RoleId == avpRole?.RoleId) // Handle zones for AVP 
-                    {
-                        var zoneIds = user.Zones.Select(x => x.ZoneId)
-                                             .ToList();
-
-                        _zoneService.SyncAVPZones(user.AVPID, zoneIds);
-                    }
-                    else if (user.RoleId == bdRole?.RoleId) // Handle Teams for BD
-                    {
-                        var newTerritoryIds = user.Teams.Where(x => x.TeamId.HasValue)
-                                             .Select(x => x.TeamId.Value)
-                                             .ToList();
-
-                        _territoryService.SyncBDTerritories(user.BDID, newTerritoryIds, CurrentUserId);
-                    }
-
-                    if (user.RoleId != avpRole?.RoleId && user.Teams != null && user.Teams.Count > 0) //Update TerritoryId column
-                    {
-                        for (int i = 0; i < user.Teams.Count; i++)
-                        {
-                            if (i != user.Teams.Count - 1)
-                            {
-                                TerriotoryId = TerriotoryId + user.Teams[i].TeamId + ",";
-                            }
-                            else
-                            {
-                                TerriotoryId = TerriotoryId + user.Teams[i].TeamId;
-                            }
-                        }
-                        user.TerritoryId = TerriotoryId;
-
-                    }
+                    string territoryCsv = user.Teams != null ? string.Join(",", user.Teams.Where(x => x.TeamId.HasValue).Select(x => x.TeamId.Value)) : "";
+                    string zoneCsv = user.Zones != null ? string.Join(",", user.Zones.Select(x => x.ZoneId)) : "";
+                    // territoryCsv and zoneCsv will be used inside UserService, no need to set user.TerritoryId here
 
                     if (user.UserId <= 0 || user.UserId == null)
                     {

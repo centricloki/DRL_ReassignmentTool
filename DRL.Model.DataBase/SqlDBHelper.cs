@@ -1,13 +1,15 @@
 ﻿using DRL.Library;
+
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace DRL.Model.DataBase
 {
@@ -84,6 +86,7 @@ namespace DRL.Model.DataBase
                         command.CommandText = procedureName;
                         command.CommandType = CommandType.StoredProcedure;
                         command.Parameters.AddRange(parameters.ToArray());
+                        DebugSqlStatement(command, procedureName);
                         result = command.ExecuteNonQuery();
                     }
                 }
@@ -377,8 +380,111 @@ namespace DRL.Model.DataBase
             return kendoGridDataResult;
         }
 
+        private static void DebugSqlStatement(SqlCommand command, string procedureName)
+        {
+            // DEBUG: Print a T-SQL script to execute the command in SSMS
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("-- DEBUG SCRIPT FOR SQL SERVER MANAGEMENT STUDIO");
+            sb.AppendLine("-- Copy and paste the following into SSMS to run manually.");
+            sb.AppendLine("-- Ensure you are connected to the correct database.");
+            sb.AppendLine();
+            sb.AppendLine("DECLARE ");
+            var declareLines = new List<string>();
+            var execParams = new List<string>();
+            int pSize = 4000;
 
+            foreach (SqlParameter p in command.Parameters)
+            {
+                string paramName = p.ParameterName;
+                string paramValue = p.Value == null || p.Value == DBNull.Value ? "NULL" : p.Value.ToString();
+                SqlDbType sqlType = p.SqlDbType;
+                if (p.Size > 0)
+                {
+                    pSize = p.Size;
+                }
+                // Determine a suitable declaration type (simplified, can be expanded)
+                string declType;
+                switch (sqlType)
+                {
+                    case SqlDbType.Int:
+                        declType = "INT";
+                        break;
+                    case SqlDbType.BigInt:
+                        declType = "BIGINT";
+                        break;
+                    case SqlDbType.VarChar:
+                    case SqlDbType.NVarChar:
+                        declType = $"NVARCHAR({pSize})";
+                        break;
+                    case SqlDbType.DateTime:
+                        declType = "DATETIME";
+                        break;
+                    case SqlDbType.UniqueIdentifier:
+                        declType = "UNIQUEIDENTIFIER";
+                        break;
+                    // Add more cases as needed for other types
+                    default:
+                        declType = "NVARCHAR(4000)"; // Default fallback
+                        break;
+                }
 
+                if (p.Direction == ParameterDirection.Output)
+                {
+                    // For output params, just add to EXEC, don't initialize in DECLARE
+                    execParams.Add($"{paramName} = {paramName} OUTPUT");
+                }
+                else
+                {
+                    // Format value based on type for safe insertion into SQL
+                    string formattedValue = FormatSqlValue(paramValue, sqlType);
+                    declareLines.Add($"    {paramName} {declType} = {formattedValue}");
+                    execParams.Add(paramName);
+                }
+            }
+            sb.AppendLine(string.Join(",\n", declareLines));
+            sb.AppendLine();
+            sb.AppendLine($"EXEC {procedureName} {string.Join(", ", execParams)};");
+            sb.AppendLine();
+            sb.AppendLine("-- Output Parameters:");
+            foreach (SqlParameter p in command.Parameters)
+            {
+                if (p.Direction == ParameterDirection.Output)
+                {
+                    sb.AppendLine($"-- SELECT {p.ParameterName} AS '{p.ParameterName}'; -- To see output value after execution");
+                }
+            }
+            sb.AppendLine("-- END DEBUG SCRIPT");
+
+            Debug.WriteLine(sb.ToString());
+        }
+
+        private static string FormatSqlValue(string val, SqlDbType sqlType)
+        {
+            if (val == "NULL") return "NULL";
+
+            switch (sqlType)
+            {
+                case SqlDbType.VarChar:
+                case SqlDbType.NVarChar:
+                case SqlDbType.Char:
+                case SqlDbType.NChar:
+                case SqlDbType.Date:
+                case SqlDbType.DateTime:
+                case SqlDbType.DateTime2:
+                    // Wrap string/date types in single quotes, escaping internal quotes
+                    return $"'{val.Replace("'", "''")}'";
+                case SqlDbType.Bit:
+                    // Convert boolean strings to 1 or 0
+                    if (bool.TryParse(val, out bool boolVal))
+                    {
+                        return boolVal ? "1" : "0";
+                    }
+                    goto default; // If parsing fails, treat as default string
+                default:
+                    // Numbers and other types can be passed as-is
+                    return val;
+            }
+        }
         public class DatabaseModel
         {
             public string BasePath { get; set; }
