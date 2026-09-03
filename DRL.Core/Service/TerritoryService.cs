@@ -126,24 +126,76 @@ namespace DRL.Core.Service
 
         public ActionStatus Insert(ENTTeam Team)
         {
+            return TerritoryUpdateAndCorrectInCustomerMaster(Team); // now proc does INSERT
+        }
+
+        public ActionStatus Update(ENTTeam Team)
+        {
+            var dbTerritory = _territoryRepository.GetTerritory(Team.TeamId ?? 0);
+            if (dbTerritory == null) return new ActionStatus { Success = false, Message = "Team not exist!" };
+            return TerritoryUpdateAndCorrectInCustomerMaster(Team);
+        }
+
+        private ActionStatus TerritoryUpdateAndCorrectInCustomerMaster(ENTTeam Team)
+        {
             try
             {
-                var dbTeam = Configuration.Mapper.Map<ENTTeam, EF.TerritoryMaster>(Team);
-                dbTeam.CreatedDate = GetDateTime.getDate();
-                var resp = _territoryRepository.Insert(dbTeam);
-                resp.Result = Configuration.Mapper.Map(resp.Result, Team);
-                return resp;
+                string connString = _configuration.GetConnectionString("DefaultConnection");
+                // 7 params only - helper adds @ErrorMessage internally
+                var sqlParameters = new List<SqlParameter>()
+        {
+            new SqlParameter("@UpdateTerritoryId", System.Data.SqlDbType.Int)
+            { Direction = System.Data.ParameterDirection.InputOutput, Value = Team.TeamId?? 0 },
+            new SqlParameter("@UpdateName", (object)Team.Name?? DBNull.Value),
+            new SqlParameter("@UpdateRegionId", Team.RegionId?? 0),
+            new SqlParameter("@UpdateBdId", Team.BDID?? 0),
+            new SqlParameter("@UpdateDescription", (object)Team.Description?? DBNull.Value),
+            new SqlParameter("@UpdateIsActive", Team.IsActive),
+            new SqlParameter("@UpdatedBy", Team.UpdatedBy?? 1)
+        };
+
+                string errorMsg;
+                bool bSuccess = SqlDBHelper.ExecuteNonQueryWithErrorHandling(
+                    "sp_DSD_TerritoryUpdateAndCorrectInCustomerMaster",
+                    ref sqlParameters, connString, out errorMsg);
+
+                if (bSuccess)
+                {
+                    int newId = Convert.ToInt32(sqlParameters.First(p => p.ParameterName == "@UpdateTerritoryId").Value);
+                    Team.TeamId = newId;
+                    var dbTeam = _territoryRepository.GetTerritory(newId);
+                    return new ActionStatus { Success = true, Result = Configuration.Mapper.Map<ENTTeam>(dbTeam) };
+                }
+                else throw new Exception(errorMsg);
             }
             catch (Exception ex)
             {
-                logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.Insert" + ex);
-                return new ActionStatus
-                {
-                    Success = false,
-                    Message = ex.Message
-                };
+                logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.TerritoryUpdateAndCorrectInCustomerMaster" + ex);
+                return new ActionStatus { Success = false, Message = ex.Message };
             }
         }
+
+
+        //public ActionStatus Insert(ENTTeam Team)
+        //{
+        //    try
+        //    {
+        //        var dbTeam = Configuration.Mapper.Map<ENTTeam, EF.TerritoryMaster>(Team);
+        //        dbTeam.CreatedDate = GetDateTime.getDate();
+        //        var resp = _territoryRepository.Insert(dbTeam);
+        //        resp.Result = Configuration.Mapper.Map(resp.Result, Team);
+        //        return resp;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.Insert" + ex);
+        //        return new ActionStatus
+        //        {
+        //            Success = false,
+        //            Message = ex.Message
+        //        };
+        //    }
+        //}
 
         public ENTTeam GetTerritory(long TeamId)
         {
@@ -159,76 +211,76 @@ namespace DRL.Core.Service
             return result;
         }
 
-        private ActionStatus TerritoryUpdateAndCorrectInCustomerMaster(ENTTeam Team)
-        {
-            ActionStatus result = new ActionStatus();
-            try
-            {
-                string connString = _configuration.GetConnectionString("DefaultConnection");
-                {
-                    List<SqlParameter> sqlParameters = new List<SqlParameter>()
-                        {
-                            new SqlParameter("@UpdateTerritoryId", Team.TeamId??0),
-                            new SqlParameter("@UpdateName", Team.Name),
-                            new SqlParameter("@UpdateRegionId", Team.RegionId??0),
-                            new SqlParameter("@UpdateBdId", Team.BDID??0),
-                            new SqlParameter("@UpdateDescription", Team.Description),
-                            new SqlParameter("@UpdateIsActive", Team.IsActive),
-                            new SqlParameter("@UpdatedBy", Team.UpdatedBy)
-                        };
-                    string errorMsg;
-                    bool bSuccess = SqlDBHelper.ExecuteNonQueryWithErrorHandling("sp_DSD_TerritoryUpdateAndCorrectInCustomerMaster", ref sqlParameters, connString, out errorMsg);
-                    if (bSuccess)
-                    {
-                        return new ActionStatus
-                        {
-                            Success = true,
-                            Message = ""
-                        };
-                    }
-                    else
-                    {
-                        throw new Exception(errorMsg);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.TerritoryUpdateAndCorrectInCustomerMaster" + ex);
-                result = new ActionStatus
-                {
-                    Success = false,
-                    Message = ex.Message
-                };
-            }
-            return result;
-        }
+        //private ActionStatus TerritoryUpdateAndCorrectInCustomerMaster(ENTTeam Team)
+        //{
+        //    ActionStatus result = new ActionStatus();
+        //    try
+        //    {
+        //        string connString = _configuration.GetConnectionString("DefaultConnection");
+        //        {
+        //            List<SqlParameter> sqlParameters = new List<SqlParameter>()
+        //                {
+        //                    new SqlParameter("@UpdateTerritoryId", Team.TeamId??0),
+        //                    new SqlParameter("@UpdateName", Team.Name),
+        //                    new SqlParameter("@UpdateRegionId", Team.RegionId??0),
+        //                    new SqlParameter("@UpdateBdId", Team.BDID??0),
+        //                    new SqlParameter("@UpdateDescription", Team.Description),
+        //                    new SqlParameter("@UpdateIsActive", Team.IsActive),
+        //                    new SqlParameter("@UpdatedBy", Team.UpdatedBy)
+        //                };
+        //            string errorMsg;
+        //            bool bSuccess = SqlDBHelper.ExecuteNonQueryWithErrorHandling("sp_DSD_TerritoryUpdateAndCorrectInCustomerMaster", ref sqlParameters, connString, out errorMsg);
+        //            if (bSuccess)
+        //            {
+        //                return new ActionStatus
+        //                {
+        //                    Success = true,
+        //                    Message = ""
+        //                };
+        //            }
+        //            else
+        //            {
+        //                throw new Exception(errorMsg);
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.TerritoryUpdateAndCorrectInCustomerMaster" + ex);
+        //        result = new ActionStatus
+        //        {
+        //            Success = false,
+        //            Message = ex.Message
+        //        };
+        //    }
+        //    return result;
+        //}
 
-        public ActionStatus Update(ENTTeam Team)
-        {
-            try
-            {
-                var dbTerritory = _territoryRepository.GetTerritory(Team.TeamId ?? 0);
-                if (dbTerritory == null)
-                    return new ActionStatus
-                    {
-                        Success = false,
-                        Message = "Team not exist!"
-                    };
-                var result = TerritoryUpdateAndCorrectInCustomerMaster(Team);
-                result.Result = Configuration.Mapper.Map(result.Result, Team);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.Update" + ex);
-                return new ActionStatus
-                {
-                    Success = false,
-                    Message = "Please try again! Something went wrong."
-                };
-            }
-        }
+        //public ActionStatus Update(ENTTeam Team)
+        //{
+        //    try
+        //    {
+        //        var dbTerritory = _territoryRepository.GetTerritory(Team.TeamId ?? 0);
+        //        if (dbTerritory == null)
+        //            return new ActionStatus
+        //            {
+        //                Success = false,
+        //                Message = "Team not exist!"
+        //            };
+        //        var result = TerritoryUpdateAndCorrectInCustomerMaster(Team);
+        //        result.Result = Configuration.Mapper.Map(result.Result, Team);
+        //        return result;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.Update" + ex);
+        //        return new ActionStatus
+        //        {
+        //            Success = false,
+        //            Message = "Please try again! Something went wrong."
+        //        };
+        //    }
+        //}
 
         public ActionStatus CheckTerritoryNameExists(string territoryName, int territoryID)
         {
