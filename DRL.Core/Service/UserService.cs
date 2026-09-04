@@ -148,54 +148,6 @@ namespace DRL.Core.Manager
             return Update(user);
         }
 
-        //public ActionStatus Update(ENTUser user)
-        //{
-        //    try
-        //    {
-        //        //var (zoneId, regionId, bdId, avpId) = GetHierarchyFromDefaultTeam(user.DefaultTeamId);
-        //        string territoryCsv = string.Join(",", user.Teams?.Where(x => x.TeamId.HasValue).Select(x => x.TeamId.Value) ?? new List<int>());
-        //        string zoneCsv = string.Join(",", user.Zones?.Select(x => x.ZoneId) ?? new List<int>());
-        //        string conn = _configuration.GetConnectionString("DefaultConnection");
-
-        //        // Determine CreatedBy for Insert and UpdatedBy for Update.
-        //        // Assuming the procedure checks if UserId <= 0 to decide between INSERT/UPDATE.
-        //        var effectiveUpdatedBy = (user.UserId <= 0 || user.UserId == null) ? (user.CreatedBy != 0 ? user.CreatedBy : 1) : (user.UpdatedBy != 0 ? user.UpdatedBy : 1);
-
-        //        var parms = new List<SqlParameter>{
-        //            new SqlParameter("@UserId", user.UserId ?? 0), // Pass 0 or the actual ID
-        //            new SqlParameter("@RoleId", user.RoleId),
-        //            new SqlParameter("@ZoneId", 0),
-        //            new SqlParameter("@RegionId", 0),
-        //            // Corrected the assignment for BDID and AVPID for the stored procedure call using conditional checks for non-nullable ints
-        //            new SqlParameter("@BDID", user.BDID ),
-        //            new SqlParameter("@AVPID", user.AVPID ),
-        //            // Corrected the assignment for ManagerId using conditional checks for non-nullable longs
-        //            new SqlParameter("@ManagerId", user.ManagerId != 0 ? user.ManagerId : 0),
-        //            new SqlParameter("@TerritoryIds", territoryCsv),
-        //            new SqlParameter("@ZoneIds", zoneCsv),
-        //            new SqlParameter("@DefTerritoryId", user.DefaultTeamId ?? 0),
-        //            new SqlParameter("@UpdatedBy", effectiveUpdatedBy), // Use the determined value for the procedure
-        //            new SqlParameter("@ErrorMessage", SqlDbType.NVarChar, 4000) { Direction = ParameterDirection.Output }
-        //        };
-        //        SqlDBHelper.ExecuteNonQuery("sp_DSD_UserScreen_ManageUser", ref parms, conn);
-        //        string err = parms.Last().Value?.ToString();
-        //        if (!string.IsNullOrEmpty(err)) return new ActionStatus { Success = false, Message = err };
-
-        //        // Since the proc handles the DB logic, we can return the user object passed in as the result.
-        //        // Or, if the proc returns the full user object, you might need to adjust this.
-        //        return new ActionStatus { Success = true, Result = user };
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        logger.Error(Constants.ACTION_EXCEPTION, "UserService.Update" + ex);
-        //        return new ActionStatus
-        //        {
-        //            Success = false,
-        //            Message = ex.Message
-        //        };
-        //    }
-        //}
-
         public ActionStatus Update(ENTUser user)
         {
             try
@@ -240,27 +192,29 @@ namespace DRL.Core.Manager
                     avpId = user.AVPID;
                 }
 
-                var parms = new List<SqlParameter>{
-            new SqlParameter("@UserId", user.UserId ?? 0),
-            new SqlParameter("@RoleId", user.RoleId),
-            new SqlParameter("@ZoneId", zoneId),
-            new SqlParameter("@RegionId", regionId),
-            new SqlParameter("@BDID", bdId),
-            new SqlParameter("@AVPID", avpId),
-            new SqlParameter("@ManagerId", user.ManagerId != 0 ? user.ManagerId : 0),
-            new SqlParameter("@TerritoryIds", string.IsNullOrEmpty(territoryCsv) ? (object)DBNull.Value : territoryCsv),
-            new SqlParameter("@ZoneIds", string.IsNullOrEmpty(zoneCsv) ? (object)DBNull.Value : zoneCsv),
-            new SqlParameter("@DefTerritoryId", user.DefaultTeamId ?? 0),
-            new SqlParameter("@FirstName", string.IsNullOrWhiteSpace(user.FirstName) ? (object)DBNull.Value : user.FirstName),
-            new SqlParameter("@LastName", string.IsNullOrWhiteSpace(user.LastName) ? (object)DBNull.Value : user.LastName),
-            new SqlParameter("@UserName", string.IsNullOrWhiteSpace(user.UserName) ? (object)DBNull.Value : user.UserName),
-            new SqlParameter("@EmailID", string.IsNullOrWhiteSpace(user.Email) ? (object)DBNull.Value : user.Email),
-            new SqlParameter("@CreatedBy", effectiveCreatedBy),
-            new SqlParameter("@UpdatedBy", effectiveUpdatedBy),
-            new SqlParameter("@ErrorMessage", SqlDbType.NVarChar, 4000) { Direction = ParameterDirection.Output }
-        };
+                var parms = new List<SqlParameter>
+{
+    new SqlParameter("@UserId", user.UserId ?? 0),
+    new SqlParameter("@RoleId", user.RoleId),
+    new SqlParameter("@ZoneId", user.ZoneId), // Now using the property from ENTUser
+    new SqlParameter("@RegionId", user.RegionId), // Now using the property from ENTUser
+    new SqlParameter("@BDID", user.BDID), // Removed ?? 0 since BDID is int not int?
+    new SqlParameter("@AVPID", user.AVPID), // Removed ?? 0 since AVPID is int not int?
+    new SqlParameter("@TerritoryIds", string.IsNullOrWhiteSpace(territoryCsv) ? (object)DBNull.Value : territoryCsv),
+    new SqlParameter("@ZoneIds", string.IsNullOrWhiteSpace(zoneCsv) ? (object)DBNull.Value : zoneCsv),
+    new SqlParameter("@DefTerritoryId", user.DefaultTeamId ?? 0), // Using DefaultTeamId instead of DefTerritoryId
+    
+    // ✅ V33 CRITICAL FIX: Handle empty strings to prevent wiping out existing DB values
+    new SqlParameter("@FirstName", string.IsNullOrWhiteSpace(user.FirstName) ? DBNull.Value : (object)user.FirstName),
+    new SqlParameter("@LastName", string.IsNullOrWhiteSpace(user.LastName) ? DBNull.Value : (object)user.LastName),
+    new SqlParameter("@UserName", string.IsNullOrWhiteSpace(user.UserName) ? DBNull.Value : (object)user.UserName),
+    new SqlParameter("@EmailID", string.IsNullOrWhiteSpace(user.Email) ? DBNull.Value : (object)user.Email), // Using Email instead of EmailID
+    new SqlParameter("@CreatedBy", user.CreatedBy), // Removed ?? 1 since CreatedBy is long not long?
+    new SqlParameter("@UpdatedBy", user.UpdatedBy ?? 1), // Kept ?? 1 since UpdatedBy is long?
+    new SqlParameter("@ErrorMessage", SqlDbType.NVarChar, 4000) { Direction = ParameterDirection.Output }
+};
 
-                // FIXED: Call V2 proc, not old one
+                // Execute the procedure (adjust method name based on your actual SqlDBHelper implementation)
                 SqlDBHelper.ExecuteNonQuery("sp_DSD_UserScreen_ManageUser", ref parms, conn);
 
                 string err = parms.Last().Value?.ToString();

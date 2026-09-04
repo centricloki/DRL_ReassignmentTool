@@ -38,6 +38,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   @ViewChild('formUser') userInfoForm: NgForm;
 
   myItems: TeamModel[] = [];
+  bdTerritoryList: TeamModel[] = [];
   userZones: ZoneModel[] = [];
   selectedZoneId: number;
   allZones: ZoneModel[] = [];
@@ -88,7 +89,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
 
     this.filteredDefTeamList = this.defTeamSearchControl.valueChanges.pipe(
       startWith(''),
-      map(value => this.filterTeams(value || ''))
+      map(value => this.filterDefTeams(value || ''))
     );
   }
 
@@ -136,6 +137,29 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     const filterValue = value.toLowerCase();
     return this.TeamList.filter(team => {
       // Handle undefined/null team or team.name
+      if (!team || !team.name) {
+        return false;
+      }
+      return team.name.toLowerCase().includes(filterValue);
+    });
+  }
+
+  private filterDefTeams(value: string): any[] {
+    let sourceList = this.TeamList;
+    if (this.SugarCRMUser && this.bdRole && this.SugarCRMUser.roleId == this.bdRole.roleId) {
+      sourceList = this.bdTerritoryList;
+    }
+
+    if (!sourceList || !Array.isArray(sourceList)) {
+      return [];
+    }
+
+    if (!value) {
+      return sourceList;
+    }
+
+    const filterValue = value.toLowerCase();
+    return sourceList.filter(team => {
       if (!team || !team.name) {
         return false;
       }
@@ -253,6 +277,12 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       this.SugarCRMUser.defaultTeamId = !this.SugarCRMUser.defaultTeamId ? '' : this.SugarCRMUser.defaultTeamId;
       this.userDefaultTeamId = this.SugarCRMUser.defaultTeamId;
       this.myItems = this.SugarCRMUser.teams;
+      
+      // ✅ NEW: If editing a BD Manager user with an existing BD, trigger onBDChange to correctly filter dropdowns immediately
+      if (this.SugarCRMUser.roleId == this.bdRole.roleId && this.SugarCRMUser.bdid) {
+        this.onBDChange(undefined);
+      }
+      
       if (this.SugarCRMUser.roleId == this.avpRole.roleId) {
         this.onAVPChange(undefined);
       }
@@ -412,12 +442,15 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     else {
       this._toasterService.pop('error', 'Error', "Please select team");
     }
-
+    
+    // Update default team dropdown
+    this.defTeamSearchControl.updateValueAndValidity();
   }
   deleteTeamDetail(i) {
     this._commonLookupData.confirmDialog('Are you sure you want to delete this team?', (result: any) => {
       if (result) {
         this.myItems.splice(i, 1);
+        this.defTeamSearchControl.updateValueAndValidity();
       }
       this.teamModel = new TeamModel();
     });
@@ -476,14 +509,6 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     });
   }
 
-  getAllBDTerritories(bdId: number): void {
-    this._usersService.GetAllTerritoriesForBD(bdId).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
-      var data = this._commonLookupData.parseData(res);
-      this.myItems = (data.data || []) as TeamModel[];
-      this.teamModel.teamId = '';
-    });
-  }
-
   loadUserTerritories(userId: number): void {
     this._usersService.GetAllTerritoriesForUser(userId).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
       var data = this._commonLookupData.parseData(res);
@@ -494,20 +519,37 @@ export class ManageUserComponent implements OnInit, OnDestroy {
 
   onRoleChange(event: any): void {
     const roleId = this.SugarCRMUser.roleId;
-    const userId = Number(this.SugarCRMUser.userId);
 
     // Clear fields based on role
     this.SugarCRMUser.bdid = roleId === this.bdRole.roleId ? this.SugarCRMUser.bdid : '';
     this.SugarCRMUser.avpid = roleId === this.avpRole.roleId ? this.SugarCRMUser.avpid : '';
 
-    this.myItems = [];
-    this.userZones = [];
+    // ALWAYS keep the Default Territory in myItems when switching roles (for any role)
+    let defaultTeam: TeamModel = null;
+    if (this.SugarCRMUser.defaultTeamId) {
+      defaultTeam = this.myItems.find(x => x.teamId === this.SugarCRMUser.defaultTeamId) 
+                 || (this.TeamList ? this.TeamList.find(x => x.teamId === this.SugarCRMUser.defaultTeamId) : null);
+    }
 
-    // Load territories only if role is neither 18 nor 19
-    if (roleId !== this.bdRole.roleId && roleId !== this.avpRole.roleId) {
-      if (!isNaN(userId)) {
-        this.loadUserTerritories(userId);
+    this.myItems = defaultTeam ? [defaultTeam] : [];
+    this.bdTerritoryList = [];
+    this.userZones = [];
+    this.defTeamSearchControl.updateValueAndValidity();
+
+    // Load territories based on role
+    if (roleId === this.bdRole.roleId) {
+      // For BD Manager, if a BD is already selected, apply filtering
+      if (this.SugarCRMUser.bdid && this.SugarCRMUser.bdid !== '0' && this.SugarCRMUser.bdid !== '') {
+        this.onBDChange(undefined); // Apply BD-based filtering
+      } else {
+        // If no BD is selected yet, load all territories so user can select a BD
+        this.getAllTerritories();
       }
+    } else if (roleId === this.avpRole.roleId) {
+      // For AVP role, zones will be handled separately
+    } else {
+      // For all other roles (including TM), just ensure the dropdown has all territories
+      this.getAllTerritories();
     }
   }
 
@@ -538,24 +580,31 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   }
 
   onBDChange(event: any): void {
-    let bdid = Number(this.SugarCRMUser.bdid);
-    if (!isNaN(bdid)) {
-      // Check if the user's role is 'territory manager'
-      if (this.SugarCRMUser.roleId == this.tmRoleId) {
-        // Do nothing for Territory Manager
-        return;
+    const bdid = Number(this.SugarCRMUser.bdid);
+    const roleId = this.SugarCRMUser.roleId;
+    
+    // Only apply BD filtering for BD Managers, not for Territory Managers
+    if (roleId == this.bdRole.roleId) { // Only for BD Manager role
+      if (!isNaN(bdid) && bdid > 0) {
+        // Fetch territories for the selected BD to auto-populate Assign Team and Default Territory dropdowns
+        this._usersService.GetAllTerritoriesForBD(bdid).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
+          const data = this._commonLookupData.parseData(res);
+          
+          // Populate myItems and bdTerritoryList with the territories of the selected BD
+          this.bdTerritoryList = (data.data || []) as TeamModel[];
+          this.myItems = [...this.bdTerritoryList];
+          
+          // Trigger filter updates for the reactive form controls
+          this.defTeamSearchControl.updateValueAndValidity();
+        });
       } else {
-        // For other roles, load BD territories
-        this.getAllBDTerritories(bdid);
-      }
-    }
-    else {
-      // Check if the user's role is 'territory manager'
-      if (this.SugarCRMUser.roleId != this.tmRoleId) {
-        // Clear the list for other roles
+        // If BD is cleared, clear myItems and bdTerritoryList
         this.myItems = [];
+        this.bdTerritoryList = [];
+        this.defTeamSearchControl.updateValueAndValidity();
       }
     }
+    // For Territory Managers, do nothing - they should see all territories regardless of BD selection
   }
 
   // Update territory data

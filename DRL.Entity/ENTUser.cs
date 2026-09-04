@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace DRL.Entity
@@ -23,6 +23,9 @@ namespace DRL.Entity
         public long ManagerId { get; set; }
         public int BDID { get; set; }
         public int AVPID { get; set; }
+        public int ZoneId { get; set; }       // Adding missing property
+        public int RegionId { get; set; }     // Adding missing property
+
         //public string RoleName { get; set; }
         //public string ManagerName { get; set; }
         //public string ZoneName { get; set; }
