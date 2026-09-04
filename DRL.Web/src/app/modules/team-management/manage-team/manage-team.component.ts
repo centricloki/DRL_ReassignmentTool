@@ -22,6 +22,8 @@ export class ManageTeamComponent implements OnInit {
   RegionList: Array<any> = []; // Initialized
   FilteredBDList: Array<any> = []; // BD list filtered by selected region, initialized
   TeamStatusList: Array<any> = []; // Initialized
+  // Added property to track if region has been selected
+  isRegionSelected: boolean = false;
   private unsubscribe$ = new Subject<void>();
   @ViewChild('formTeam') TeamInfoForm!: NgForm; // Using definite assignment assertion
 
@@ -50,7 +52,6 @@ export class ManageTeamComponent implements OnInit {
     }
 
     this.GetAllRegionList();
-    // Don't fetch all BDs initially, only fetch when region is selected
     this.GetAllTeamStatusList();
     if (this._appConstant.teamId != '' && this._appConstant.teamId != null) {
       this.GetTerritory();
@@ -72,6 +73,7 @@ export class ManageTeamComponent implements OnInit {
     this._commonLookupData.GetAllRegionList().pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
       var data = this._commonLookupData.parseData(response);
       this.RegionList = data.data;
+      this.fetchBDsByRegion(this.SugarCRMTeam.regionId);
     });
   }
 
@@ -81,6 +83,7 @@ export class ManageTeamComponent implements OnInit {
     // Reset BD list if regionId is invalid
     if (!regionId || regionId === '' || regionId === '0') {
       this.FilteredBDList = [];
+      this.isRegionSelected = false;
       return;
     }
 
@@ -91,10 +94,12 @@ export class ManageTeamComponent implements OnInit {
         next: response => {
           const data = this._commonLookupData.parseData(response);
           this.FilteredBDList = data.data || [];
+          this.isRegionSelected = true;
         },
         error: error => {
           // Handle error case
           this.FilteredBDList = [];
+          this.isRegionSelected = false;
           this._toasterService.pop('error', 'Error', 'Failed to fetch BD list');
         }
       });
@@ -170,7 +175,7 @@ export class ManageTeamComponent implements OnInit {
     //Added by Senthil Ramadoss on 5/13/2020
     //console.log(this.SugarCRMTeam);
     //this.SugarCRMTeam.createdBy = localStorage["userName"];
-    this.SugarCRMTeam.createdBy =this.SugarCRMTeam.updatedBy= "0";
+    this.SugarCRMTeam.createdBy = this.SugarCRMTeam.updatedBy = "0";
     this.SugarCRMTeam.createdDate = new Date();
     //this.SugarCRMTeam.updatedBy = localStorage["userName"];
     this.SugarCRMTeam.updateDate = new Date();
@@ -199,8 +204,12 @@ export class ManageTeamComponent implements OnInit {
       this.SugarCRMTeam.teamStatusId = this.SugarCRMTeam.isActive == true ? "true" : "false"
 
       // After loading territory details, fetch BDs based on selected region
-      if (this.SugarCRMTeam.regionId && this.SugarCRMTeam.regionId !== '') {
+      if (this.SugarCRMTeam.regionId &&
+        this.SugarCRMTeam.regionId !== '' &&
+        this.SugarCRMTeam.regionId !== '0') {
         this.fetchBDsByRegion(this.SugarCRMTeam.regionId);
+        // Set isRegionSelected to true since we have a region value for existing team
+        this.isRegionSelected = true;
       }
     });
   }
