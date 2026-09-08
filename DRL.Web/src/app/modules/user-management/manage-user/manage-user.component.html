@@ -110,6 +110,7 @@
               <label class="form-label">Default Team:</label>
               <div class="input-field">
                 <mat-select placeholder="Default Team" #defaultTeamId="ngModel" name="defaultTeamId"
+                  [compareWith]="compareTeams"
                   (selectionChange)="onDefaultTeamChange($event)" [(ngModel)]="SugarCRMUser.defaultTeamId">
                   <mat-option>
                     <ngx-mat-select-search [formControl]="defTeamSearchControl" placeholderLabel="Search teams..."
@@ -154,7 +155,7 @@
               </div>
             </div>
           </div>
-          <div class="col-lg-3 col-md-3 col-sm-6" *ngIf="SugarCRMUser.roleId == avpRole.roleId">
+          <div class="col-lg-3 col-md-3 col-sm-6" *ngIf="isAVPManager">
             <div class="form-field-row">
               <label class="form-label">AVP:
                 <span>*</span>
@@ -192,10 +193,30 @@
               </div>
             </div>
           </div>
+          <div class="col-lg-3 col-md-3 col-sm-6" *ngIf="showRegionDropdown">
+            <div class="form-field-row">
+              <label class="form-label">Region:
+                <span *ngIf="isRegionManager">*</span>
+              </label>
+              <div class="input-field">
+                <mat-select placeholder="Region" #regionId="ngModel" name="regionId" [(ngModel)]="SugarCRMUser.regionId"
+                  (selectionChange)="onRegionChange($event)" [required]="isRegionManager">
+                  <mat-option value="">Select Region</mat-option>
+                  <mat-option *ngFor="let item of regionList" [value]="item.recordId">
+                    {{item.value}}
+                  </mat-option>
+                </mat-select>
+              </div>
+              <div class="text-danger" *ngIf="isRegionManager && regionId.invalid && (regionId.dirty || regionId.touched)">
+                <p *ngIf="regionId.errors?.required">Region is required</p>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </mat-expansion-panel>
-    <mat-expansion-panel [expanded]="true" *ngIf="SugarCRMUser.roleId != avpRole.roleId">
+    <mat-expansion-panel [expanded]="true" *ngIf="!isAVPManager">
       <mat-expansion-panel-header>
         <mat-panel-title>
           Assign Team
@@ -247,7 +268,7 @@
         </div>
       </div>
     </mat-expansion-panel>
-    <mat-expansion-panel [expanded]="true" *ngIf="SugarCRMUser.roleId == avpRole.roleId">
+    <mat-expansion-panel [expanded]="true" *ngIf="isAVPManager">
       <mat-expansion-panel-header>
         <mat-panel-title>
           Assign Zone

@@ -32,6 +32,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   StatusTypeList: Array<any>;
   avpList: Array<any>;
   bdList: Array<any>;
+  regionList: Array<any>;
   titleText: string;
   btnText: string;
   SugarCRMUser = new UserModel();
@@ -39,12 +40,14 @@ export class ManageUserComponent implements OnInit, OnDestroy {
 
   myItems: TeamModel[] = [];
   bdTerritoryList: TeamModel[] = [];
+  regionTerritoryList: TeamModel[] = [];
   userZones: ZoneModel[] = [];
   selectedZoneId: number;
   allZones: ZoneModel[] = [];
   teamModel = new TeamModel();
   avpRole: RoleModel = new RoleModel();
   bdRole: RoleModel = new RoleModel();
+  regionManagerRole: RoleModel = new RoleModel();
   private unsubscribe$ = new Subject<void>();
 
   teamSearchControl = new FormControl('');
@@ -55,6 +58,8 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   private pinValidationSub: Subscription | null = null;
   bdRoleId: any = null;
   tmRoleId: any = null;
+  avpRoleId: any = null;
+  rmRoleId: any = null;
 
   ngOnDestroy() {
     this._appConstant.userId = undefined;
@@ -73,9 +78,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.GetAllStatusTypeList();
     this.GetAllAVPs();
     this.GetAllBDs();
+    this.GetAllRegions();
     this.getAllZones();
     this.getAVPRole();
     this.getbdRole();
+    this.getRegionManagerRole();
     if (this._appConstant.userId != '' && this._appConstant.userId != null) {
       this.titleText = "Edit User";
       this.btnText = "Update";
@@ -145,9 +152,31 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   }
 
   private filterDefTeams(value: string): any[] {
-    let sourceList = this.TeamList;
-    if (this.SugarCRMUser && this.bdRole && this.SugarCRMUser.roleId == this.bdRole.roleId) {
-      sourceList = this.bdTerritoryList;
+    let sourceList: TeamModel[] = this.TeamList || [];
+    if (this.isBDManager) {
+      if (this.bdTerritoryList && this.bdTerritoryList.length > 0) {
+        sourceList = this.bdTerritoryList;
+      } else if (this.myItems && this.myItems.length > 0) {
+        // Fallback to myItems while bdTerritories are loading
+        sourceList = this.myItems;
+      }
+    } else if (this.isRegionManager) {
+      if (this.regionTerritoryList && this.regionTerritoryList.length > 0) {
+        sourceList = this.regionTerritoryList;
+      } else if (this.myItems && this.myItems.length > 0) {
+        sourceList = this.myItems;
+      }
+    }
+
+    // Always ensure current defaultTeamId and user's assigned teams exist in sourceList
+    if (this.myItems && this.myItems.length > 0) {
+      const existingIds = new Set(sourceList.map(x => String(x.teamId)));
+      for (const item of this.myItems) {
+        if (item && item.teamId && !existingIds.has(String(item.teamId))) {
+          sourceList = [...sourceList, item];
+          existingIds.add(String(item.teamId));
+        }
+      }
     }
 
     if (!sourceList || !Array.isArray(sourceList)) {
@@ -225,9 +254,12 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       // Find IDs by name - no hardcode
       const bd = this.RoleList.find(r => r.value.toLowerCase().includes('bd manager'));
       const tm = this.RoleList.find(r => r.value.toLowerCase().includes('territory manager'));
+      const avp = this.RoleList.find(r => r.value.toLowerCase() === 'avp' || r.value.toLowerCase().includes('avp'));
 
-      this.bdRoleId = bd ? bd.recordId : null;
-      this.tmRoleId = tm ? tm.recordId : null;
+      this.bdRoleId = bd ? String(bd.recordId) : null;
+      this.tmRoleId = tm ? String(tm.recordId) : null;
+      this.avpRoleId = avp ? String(avp.recordId) : null;
+      this.checkAndTriggerRoleData();
     });
   }
   GetAllUsers() {
@@ -250,10 +282,18 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     });
   }
 
+  GetAllRegions() {
+    this._commonLookupData.GetAllRegionList().pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
+      var data = this._commonLookupData.parseData(response);
+      this.regionList = data.data;
+    });
+  }
+
   getAVPRole() {
     this._usersService.getRoleByName('AVP').pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
       var data = this._commonLookupData.parseData(response);
       this.avpRole = data.data as RoleModel;
+      this.checkAndTriggerRoleData();
     });
   }
 
@@ -261,7 +301,36 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this._usersService.getRoleByName('BD Manager').pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
       var data = this._commonLookupData.parseData(response);
       this.bdRole = data.data as RoleModel;
+      this.checkAndTriggerRoleData();
     });
+  }
+
+  getRegionManagerRole() {
+    this._usersService.getRoleByName('Region Manager').pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
+      var data = this._commonLookupData.parseData(response);
+      this.regionManagerRole = data.data as RoleModel;
+      this.checkAndTriggerRoleData();
+    });
+  }
+
+  checkAndTriggerRoleData(): void {
+    if (!this.SugarCRMUser || !this.SugarCRMUser.roleId) {
+      return;
+    }
+
+    if (this.isBDManager && this.SugarCRMUser.bdid && this.SugarCRMUser.bdid !== '0') {
+      this.onBDChange(undefined);
+    }
+
+    if (this.isRegionManager && this.SugarCRMUser.regionId && this.SugarCRMUser.regionId !== '0') {
+      this.onRegionChange(undefined);
+    }
+
+    if (this.isAVPManager) {
+      this.onAVPChange(undefined);
+    }
+
+    this.defTeamSearchControl.updateValueAndValidity();
   }
 
   GetUser() {
@@ -274,18 +343,21 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       this.SugarCRMUser.roleId = (this.SugarCRMUser.roleId != null && this.SugarCRMUser.roleId != '') ? this.SugarCRMUser.roleId.toString() : '';
       this.SugarCRMUser.bdid = (this.SugarCRMUser.bdid != null && this.SugarCRMUser.bdid != '') ? this.SugarCRMUser.bdid.toString() : '';
       this.SugarCRMUser.avpid = (this.SugarCRMUser.avpid != null && this.SugarCRMUser.avpid != '') ? this.SugarCRMUser.avpid.toString() : '';
-      this.SugarCRMUser.defaultTeamId = !this.SugarCRMUser.defaultTeamId ? '' : this.SugarCRMUser.defaultTeamId;
+      this.SugarCRMUser.regionId = (this.SugarCRMUser.regionId != null && this.SugarCRMUser.regionId != '') ? this.SugarCRMUser.regionId.toString() : '';
+      this.SugarCRMUser.defaultTeamId = (this.SugarCRMUser.defaultTeamId != null && this.SugarCRMUser.defaultTeamId !== '') ? this.SugarCRMUser.defaultTeamId.toString() : '';
       this.userDefaultTeamId = this.SugarCRMUser.defaultTeamId;
-      this.myItems = this.SugarCRMUser.teams;
-      
-      // ✅ NEW: If editing a BD Manager user with an existing BD, trigger onBDChange to correctly filter dropdowns immediately
-      if (this.SugarCRMUser.roleId == this.bdRole.roleId && this.SugarCRMUser.bdid) {
-        this.onBDChange(undefined);
+
+      if (this.SugarCRMUser.teams && Array.isArray(this.SugarCRMUser.teams)) {
+        this.SugarCRMUser.teams.forEach(t => {
+          if (t && t.teamId != null) {
+            t.teamId = t.teamId.toString();
+          }
+        });
       }
-      
-      if (this.SugarCRMUser.roleId == this.avpRole.roleId) {
-        this.onAVPChange(undefined);
-      }
+      this.myItems = this.SugarCRMUser.teams || [];
+
+      this.checkAndTriggerRoleData();
+      this.defTeamSearchControl.updateValueAndValidity();
       this.triggerEditValidation();
     });
 
@@ -353,6 +425,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.SugarCRMUser.defaultTeamId = this.SugarCRMUser.defaultTeamId == '' ? '' : this.SugarCRMUser.defaultTeamId;
     this.SugarCRMUser.bdid = this.SugarCRMUser.bdid == '' ? '0' : this.SugarCRMUser.bdid;
     this.SugarCRMUser.avpid = this.SugarCRMUser.bdid == '' ? '0' : this.SugarCRMUser.avpid;
+    this.SugarCRMUser.regionId = this.SugarCRMUser.regionId == '' ? '0' : this.SugarCRMUser.regionId;
     this.SugarCRMUser.territoryId = this.SugarCRMUser.territoryId == '' ? '0' : this.SugarCRMUser.territoryId;
 
     if (this.myItems.length == 1 && this.myItems[0].teamId == "0") {
@@ -442,7 +515,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     else {
       this._toasterService.pop('error', 'Error', "Please select team");
     }
-    
+
     // Update default team dropdown
     this.defTeamSearchControl.updateValueAndValidity();
   }
@@ -503,7 +576,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   getAllTerritories(): void {
     this._usersService.GetAllTerritories().pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
       var data = this._commonLookupData.parseData(res);
-      this.TeamList = (data.data || []) as TeamModel[];
+      const rawList = (data.data || []) as TeamModel[];
+      this.TeamList = rawList.map(t => ({
+        ...t,
+        teamId: t && t.teamId != null ? t.teamId.toString() : ''
+      }));
       this.teamSearchControl.updateValueAndValidity();
       this.defTeamSearchControl.updateValueAndValidity();
     });
@@ -518,26 +595,26 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   }
 
   onRoleChange(event: any): void {
-    const roleId = this.SugarCRMUser.roleId;
-
     // Clear fields based on role
-    this.SugarCRMUser.bdid = roleId === this.bdRole.roleId ? this.SugarCRMUser.bdid : '';
-    this.SugarCRMUser.avpid = roleId === this.avpRole.roleId ? this.SugarCRMUser.avpid : '';
+    this.SugarCRMUser.bdid = this.isBDManager ? this.SugarCRMUser.bdid : '';
+    this.SugarCRMUser.avpid = this.isAVPManager ? this.SugarCRMUser.avpid : '';
+    this.SugarCRMUser.regionId = this.isRegionManager ? this.SugarCRMUser.regionId : '';
 
     // ALWAYS keep the Default Territory in myItems when switching roles (for any role)
     let defaultTeam: TeamModel = null;
     if (this.SugarCRMUser.defaultTeamId) {
-      defaultTeam = this.myItems.find(x => x.teamId === this.SugarCRMUser.defaultTeamId) 
-                 || (this.TeamList ? this.TeamList.find(x => x.teamId === this.SugarCRMUser.defaultTeamId) : null);
+      defaultTeam = this.myItems.find(x => String(x.teamId) === String(this.SugarCRMUser.defaultTeamId))
+        || (this.TeamList ? this.TeamList.find(x => String(x.teamId) === String(this.SugarCRMUser.defaultTeamId)) : null);
     }
 
     this.myItems = defaultTeam ? [defaultTeam] : [];
     this.bdTerritoryList = [];
+    this.regionTerritoryList = [];
     this.userZones = [];
     this.defTeamSearchControl.updateValueAndValidity();
 
     // Load territories based on role
-    if (roleId === this.bdRole.roleId) {
+    if (this.isBDManager) {
       // For BD Manager, if a BD is already selected, apply filtering
       if (this.SugarCRMUser.bdid && this.SugarCRMUser.bdid !== '0' && this.SugarCRMUser.bdid !== '') {
         this.onBDChange(undefined); // Apply BD-based filtering
@@ -545,7 +622,14 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         // If no BD is selected yet, load all territories so user can select a BD
         this.getAllTerritories();
       }
-    } else if (roleId === this.avpRole.roleId) {
+    } else if (this.isRegionManager) {
+      // For Region Manager, if a Region is already selected, apply filtering
+      if (this.SugarCRMUser.regionId && this.SugarCRMUser.regionId !== '0' && this.SugarCRMUser.regionId !== '') {
+        this.onRegionChange(undefined);
+      } else {
+        this.getAllTerritories();
+      }
+    } else if (this.isAVPManager) {
       // For AVP role, zones will be handled separately
     } else {
       // For all other roles (including TM), just ensure the dropdown has all territories
@@ -581,19 +665,33 @@ export class ManageUserComponent implements OnInit, OnDestroy {
 
   onBDChange(event: any): void {
     const bdid = Number(this.SugarCRMUser.bdid);
-    const roleId = this.SugarCRMUser.roleId;
-    
+
     // Only apply BD filtering for BD Managers, not for Territory Managers
-    if (roleId == this.bdRole.roleId) { // Only for BD Manager role
+    if (this.isBDManager) { // Only for BD Manager role
       if (!isNaN(bdid) && bdid > 0) {
         // Fetch territories for the selected BD to auto-populate Assign Team and Default Territory dropdowns
         this._usersService.GetAllTerritoriesForBD(bdid).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
           const data = this._commonLookupData.parseData(res);
-          
+
           // Populate myItems and bdTerritoryList with the territories of the selected BD
-          this.bdTerritoryList = (data.data || []) as TeamModel[];
+          const rawBDList = (data.data || []) as TeamModel[];
+          this.bdTerritoryList = rawBDList.map(t => ({
+            ...t,
+            teamId: t && t.teamId != null ? t.teamId.toString() : ''
+          }));
+
+          // Merge user's assigned teams or default team so they are not wiped out
+          const existingIds = new Set(this.bdTerritoryList.map(x => String(x.teamId)));
+          if (this.myItems && this.myItems.length > 0) {
+            for (const item of this.myItems) {
+              if (item && item.teamId && !existingIds.has(String(item.teamId))) {
+                this.bdTerritoryList.push(item);
+                existingIds.add(String(item.teamId));
+              }
+            }
+          }
           this.myItems = [...this.bdTerritoryList];
-          
+
           // Trigger filter updates for the reactive form controls
           this.defTeamSearchControl.updateValueAndValidity();
         });
@@ -605,6 +703,44 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       }
     }
     // For Territory Managers, do nothing - they should see all territories regardless of BD selection
+  }
+
+  onRegionChange(event: any): void {
+    const regionId = Number(this.SugarCRMUser.regionId);
+
+    if (this.isRegionManager) {
+      if (!isNaN(regionId) && regionId > 0) {
+        // Fetch territories for the selected Region
+        this._usersService.GetAllTerritoriesForRegion(regionId).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
+          const data = this._commonLookupData.parseData(res);
+
+          const rawList = (data.data || []) as TeamModel[];
+          this.regionTerritoryList = rawList.map(t => ({
+            ...t,
+            teamId: t && t.teamId != null ? t.teamId.toString() : ''
+          }));
+
+          // Merge user's already-assigned teams so they are not wiped out
+          const existingIds = new Set(this.regionTerritoryList.map(x => String(x.teamId)));
+          if (this.myItems && this.myItems.length > 0) {
+            for (const item of this.myItems) {
+              if (item && item.teamId && !existingIds.has(String(item.teamId))) {
+                this.regionTerritoryList.push(item);
+                existingIds.add(String(item.teamId));
+              }
+            }
+          }
+          this.myItems = [...this.regionTerritoryList];
+
+          this.defTeamSearchControl.updateValueAndValidity();
+        });
+      } else {
+        // If Region is cleared, reset lists
+        this.myItems = [];
+        this.regionTerritoryList = [];
+        this.defTeamSearchControl.updateValueAndValidity();
+      }
+    }
   }
 
   // Update territory data
@@ -627,15 +763,41 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Helper for HTML
+  // Helper for HTML and Component
   get showBDDropdown(): boolean {
-    return this.SugarCRMUser.roleId == this.bdRoleId
-      || this.SugarCRMUser.roleId == this.tmRoleId;
+    return this.isBDManager;
+  }
+  get showRegionDropdown(): boolean {
+    return this.isRegionManager;
   }
   get isBDManager(): boolean {
-    return this.SugarCRMUser.roleId == this.bdRoleId;
+    if (!this.SugarCRMUser || !this.SugarCRMUser.roleId) return false;
+    const currentRoleId = String(this.SugarCRMUser.roleId);
+    return (this.bdRoleId != null && currentRoleId === String(this.bdRoleId))
+      || (this.bdRole && this.bdRole.roleId != null && this.bdRole.roleId !== '' && currentRoleId === String(this.bdRole.roleId));
   }
   get isTMManager(): boolean {
-    return this.SugarCRMUser.roleId == this.tmRoleId;
+    if (!this.SugarCRMUser || !this.SugarCRMUser.roleId) return false;
+    const currentRoleId = String(this.SugarCRMUser.roleId);
+    return (this.tmRoleId != null && currentRoleId === String(this.tmRoleId));
+  }
+  get isAVPManager(): boolean {
+    if (!this.SugarCRMUser || !this.SugarCRMUser.roleId) return false;
+    const currentRoleId = String(this.SugarCRMUser.roleId);
+    return (this.avpRoleId != null && currentRoleId === String(this.avpRoleId))
+      || (this.avpRole && this.avpRole.roleId != null && this.avpRole.roleId !== '' && currentRoleId === String(this.avpRole.roleId));
+  }
+  get isRegionManager(): boolean {
+    if (!this.SugarCRMUser || !this.SugarCRMUser.roleId) return false;
+    const currentRoleId = String(this.SugarCRMUser.roleId);
+    return (this.rmRoleId != null && currentRoleId === String(this.rmRoleId))
+      || (this.regionManagerRole && this.regionManagerRole.roleId != null && this.regionManagerRole.roleId !== '' && currentRoleId === String(this.regionManagerRole.roleId));
+  }
+
+  compareTeams(t1: any, t2: any): boolean {
+    if (t1 == null || t2 == null) {
+      return t1 === t2;
+    }
+    return String(t1) === String(t2);
   }
 }

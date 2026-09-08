@@ -481,6 +481,20 @@ namespace DRL.Core.Service
             }
             return true;
         }
+
+        public List<ENTLookUpItem> GetTerritoriesByRegionId(int regionId)
+        {
+            List<ENTLookUpItem> result = new List<ENTLookUpItem>();
+            try
+            {
+                result = _territoryRepository.GetTerritoriesByRegionId(regionId).Select(p => Configuration.Mapper.Map<ENTLookUpItem>(p)).ToList();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.GetTerritoriesByRegionId" + ex);
+            }
+            return result;
+        }
     }
 }
 

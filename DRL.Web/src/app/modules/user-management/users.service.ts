@@ -180,5 +180,10 @@ export class UsersService {
       const apiURL = this._appConstant.APIUrl + `Role/GetRoleByName/${roleName}`;
       return this.http.get(apiURL);
   }
-  
+
+  GetAllTerritoriesForRegion(regionId: number) {
+    const apiURL = this._appConstant.APIUrl + `Territory/GetTeamListFromRegionId/${regionId}`;
+    return this.http.get(apiURL);
+  }
+
 }

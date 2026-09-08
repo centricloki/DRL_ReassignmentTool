@@ -38,7 +38,6 @@ namespace DRL.Model.Repository.Implementation
             return result;
         }
 
-
         public List<EF.TerritoryMaster> GetAllTerritoryByUserId(long UserId)
         {
             var result = new List<EF.TerritoryMaster>();
@@ -169,5 +168,24 @@ namespace DRL.Model.Repository.Implementation
             }
             return result;
         }
+
+        public List<EF.TerritoryMaster> GetTerritoriesByRegionId(int regionId)
+        {
+            var result = new List<EF.TerritoryMaster>();
+            try
+            {
+                logger.Info(Constants.ACTION_ENTRY, "TerritoryRepository.GetTerritoriesByRegionId");
+                result = base.GetAllNoTracking()
+                    .Where(x => x.RegionId== regionId && (x.IsDeleted == false && x.IsActive == true))
+                    .OrderBy(x => x.TerritoryName).ToList();
+                logger.Info(Constants.ACTION_EXIT, "TerritoryRepository.GetTerritoriesByRegionId");
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, ex);
+            }
+            return result;
+        }
+
     }
 }

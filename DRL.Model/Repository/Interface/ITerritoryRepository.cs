@@ -13,5 +13,6 @@ namespace DRL.Model.Repository.Interface
         List<EF.TerritoryMaster> GetAllUnDeletedTerritories();
         List<EF.TerritoryMaster> GetCustReassignTerritoriesByRoleIds(string[] RoleId);
         List<EF.TerritoryMaster> GetCustReassignTeamByRoleIds(string[] RoleId);
+        List<EF.TerritoryMaster> GetTerritoriesByRegionId(int regionId);
     }
 }

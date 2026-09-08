@@ -177,7 +177,6 @@ export class ManageTeamComponent implements OnInit {
     //this.SugarCRMTeam.createdBy = localStorage["userName"];
     this.SugarCRMTeam.createdBy = this.SugarCRMTeam.updatedBy = "0";
     this.SugarCRMTeam.createdDate = new Date();
-    //this.SugarCRMTeam.updatedBy = localStorage["userName"];
     this.SugarCRMTeam.updateDate = new Date();
     this._teamService.ManageTeam(this.SugarCRMTeam).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
       var data = this._commonLookupData.parseData(res);
@@ -202,7 +201,7 @@ export class ManageTeamComponent implements OnInit {
       // Changed handling back to bdid
       this.SugarCRMTeam.bdid = this.SugarCRMTeam.bdid != null ? this.SugarCRMTeam.bdid.toString() : '';
       this.SugarCRMTeam.teamStatusId = this.SugarCRMTeam.isActive == true ? "true" : "false"
-
+      if (this.SugarCRMTeam.bdid == '0') this.SugarCRMTeam.bdid = '';
       // After loading territory details, fetch BDs based on selected region
       if (this.SugarCRMTeam.regionId &&
         this.SugarCRMTeam.regionId !== '' &&

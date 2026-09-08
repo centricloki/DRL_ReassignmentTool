@@ -35,8 +35,8 @@
             <label class="form-label">Description:
             </label>
             <div class="input-field">
-              <input type="text" matInput #description="ngModel" name="description" [(ngModel)]="SugarCRMTeam.description"
-                 placeholder="Description">
+              <input type="text" matInput #description="ngModel" name="description"
+                [(ngModel)]="SugarCRMTeam.description" placeholder="Description">
             </div>
           </div>
         </div>
@@ -44,8 +44,8 @@
           <div class="form-field-row">
             <label class="form-label">Status: <span>*</span></label>
             <div class="input-field">
-              <mat-select placeholder="Status" #teamStatusId="ngModel" name="teamStatusId" [(ngModel)]="SugarCRMTeam.teamStatusId"
-                 required>
+              <mat-select placeholder="Status" #teamStatusId="ngModel" name="teamStatusId"
+                [(ngModel)]="SugarCRMTeam.teamStatusId" required>
                 <mat-option value="">Select Status</mat-option>
                 <mat-option *ngFor="let item of TeamStatusList" [value]="item.recordId">
                   {{item.value}}
@@ -71,7 +71,6 @@
             </div>
           </div>
         </div>
-        <!-- Conditionally show BD dropdown only when a region is selected -->
         <div class="col-lg-3 col-md-3 col-sm-6" *ngIf="isRegionSelected">
           <div class="form-field-row">
             <label class="form-label">BD:</label>
@@ -89,7 +88,8 @@
     </div>
     <div class="btn-groups">
       <input class="btn btn-gray" type="button" value="Cancel" (click)="cancelTeamClick()">
-      <input class="btn btn-blue" type="submit" value="{{_appConstant.teamId == '' ?  'Save' : 'Update'}}" [disabled]="formTeam.invalid">
+      <input class="btn btn-blue" type="submit" value="{{_appConstant.teamId == '' ?  'Save' : 'Update'}}"
+        [disabled]="formTeam.invalid">
     </div>
   </form>
 </div>

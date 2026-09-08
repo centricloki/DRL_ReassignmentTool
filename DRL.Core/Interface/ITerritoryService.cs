@@ -25,5 +25,6 @@ namespace DRL.Core.Interface
         bool SyncBDTerritories(int BDId, List<int> territoryIds, long currentUserId);
         bool AssignBDToTerritories(int BDId, List<int> territoryIds, long currentUserId);
         bool RemoveBDFromTerritories(List<int> territoryIds, long currentUserId);
+        List<ENTLookUpItem> GetTerritoriesByRegionId(int regionId);
     }
 }
