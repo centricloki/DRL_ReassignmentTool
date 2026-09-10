@@ -2,6 +2,7 @@ import { LookupItemModel } from './LookupItemModel';
 import { RoleModel } from './RoleModel';
 import { TeamModel } from './TeamModel';
 import { ZoneModel } from './ZoneModel';
+import { RegionModel } from './RegionModel';
 
 export class UserModel {
 
@@ -34,6 +35,7 @@ export class UserModel {
     bdid:string;  // Using original property name
     avpid:string; // Reverted back to original property name
     zones:ZoneModel[];
+    regions:RegionModel[];  // For Zone Manager: assigned regions
 
     constructor() {
         this.userId = '';
@@ -63,6 +65,7 @@ export class UserModel {
         this.bdid=''; // Initialize the bdid property
         this.avpid=''; // Initialize the avpid property
         this.zones = [];
+        this.regions = [];  // Initialize regions for Zone Manager
     }
 }
 

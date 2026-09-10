@@ -53,6 +53,23 @@ namespace DRL.Core.Service
             return result;
         }
 
+        public List<ENTLookUpItem> GetRegionsByZoneIdLookup(int zoneId)
+        {
+            List<ENTLookUpItem> result = new List<ENTLookUpItem>();
+            try
+            {
+                result = _regionRepository.FindByNoTracking(x => x.IsActive == true && x.IsDeleted == false && x.ZoneId == zoneId)
+                    .OrderBy(x => x.Regioname)
+                    .Select(p => Configuration.Mapper.Map<ENTLookUpItem>(p))
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, "RegionService.GetRegionsByZoneIdLookup" + ex);
+            }
+            return result;
+        }
+
         public ENTRegion GetRegion(long RegionId)
         {
             ENTRegion result = new ENTRegion();

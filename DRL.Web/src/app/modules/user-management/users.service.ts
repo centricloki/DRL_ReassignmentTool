@@ -186,4 +186,10 @@ export class UsersService {
     return this.http.get(apiURL);
   }
 
+  // Zone Manager: fetch territories for a zone (used for Default Territory dropdown only)
+  GetAllTerritoriesForZone(zoneId: number) {
+    const apiURL = this._appConstant.APIUrl + `User/Zone/${zoneId}/Territories`;
+    return this.http.get(apiURL);
+  }
+
 }

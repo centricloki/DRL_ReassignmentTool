@@ -12,6 +12,7 @@ import { map, startWith, takeUntil, debounceTime, distinctUntilChanged, filter, 
 import { LookupItemModel } from 'src/app/Models/LookupItemModel';
 import { ZoneModel } from 'src/app/Models/ZoneModel';
 import { RoleModel } from 'src/app/Models/RoleModel';
+import { RegionModel } from 'src/app/Models/RegionModel';
 
 declare var $: any;
 
@@ -49,6 +50,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   avpRole: RoleModel = new RoleModel();
   bdRole: RoleModel = new RoleModel();
   regionManagerRole: RoleModel = new RoleModel();
+  zoneManagerRole: RoleModel = new RoleModel();
   regionList: Array<any>;
   private unsubscribe$ = new Subject<void>();
 
@@ -62,10 +64,17 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   tmRoleId: any = null;
   avpRoleId: any = null;
   rmRoleId: any = null;
+  zmRoleId: any = null;
   private loaderCount: number = 0;
   private loaderInterval: any = null;
   private loadedRegionId: number | null = null;
   private loadedBDId: number | null = null;
+  private loadedZoneId: number | null = null;
+  // Zone Manager specific
+  zmTerritoryList: TeamModel[] = [];   // territories from selected zone (Default Territory only)
+  zmRegionList: Array<any> = [];       // regions belonging to the selected zone
+  userRegions: RegionModel[] = [];     // assigned regions (like userZones for AVP)
+  selectedRegionIdForZM: string = '';  // selected region in Assign Region panel
 
   ngOnDestroy() {
     this._appConstant.userId = undefined;
@@ -94,6 +103,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.getAVPRole();
     this.getbdRole();
     this.getRegionManagerRole();
+    this.getZoneManagerRole();
     if (this._appConstant.userId != '' && this._appConstant.userId != null) {
       this.titleText = "Edit User";
       this.btnText = "Update";
@@ -168,6 +178,9 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       sourceList = this.bdTerritoryList || [];
     } else if (this.isRegionManager) {
       sourceList = this.regionTerritoryList || [];
+    } else if (this.isZoneManager) {
+      // Zone Manager: Default Territory shows territories from selected zone
+      sourceList = this.zmTerritoryList || [];
     } else {
       sourceList = this.TeamList || [];
     }
@@ -249,11 +262,13 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       const tm = this.RoleList.find(r => r.value.toLowerCase().includes('territory manager'));
       const avp = this.RoleList.find(r => r.value.toLowerCase() === 'avp' || r.value.toLowerCase().includes('avp'));
       const rm = this.RoleList.find(r => r.value && (r.value.toLowerCase().includes('region manager') || r.value.toLowerCase().includes('regional manager')));
+      const zm = this.RoleList.find(r => r.value && r.value.toLowerCase().includes('zone manager'));
 
       this.bdRoleId = bd ? String(bd.recordId) : null;
       this.tmRoleId = tm ? String(tm.recordId) : null;
       this.avpRoleId = avp ? String(avp.recordId) : null;
       this.rmRoleId = rm ? String(rm.recordId) : null;
+      this.zmRoleId = zm ? String(zm.recordId) : null;
       this.checkAndTriggerRoleData();
     });
   }
@@ -307,6 +322,14 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     });
   }
 
+  getZoneManagerRole() {
+    this._usersService.getRoleByName('Zone Manager').pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
+      var data = this._commonLookupData.parseData(response);
+      this.zoneManagerRole = data.data as RoleModel;
+      this.checkAndTriggerRoleData();
+    });
+  }
+
   checkAndTriggerRoleData(): void {
     if (!this.SugarCRMUser || !this.SugarCRMUser.roleId) {
       return;
@@ -322,6 +345,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
 
     if (this.isAVPManager) {
       this.onAVPChange(undefined);
+    }
+
+    // Zone Manager: trigger zone territory load for Default Territory dropdown
+    if (this.isZoneManager && this.SugarCRMUser.zoneId && this.SugarCRMUser.zoneId !== '0') {
+      this.onZoneChange(undefined);
     }
 
     this.defTeamSearchControl.updateValueAndValidity();
@@ -341,6 +369,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       this.SugarCRMUser.bdid = (this.SugarCRMUser.bdid != null && this.SugarCRMUser.bdid != '') ? this.SugarCRMUser.bdid.toString() : '';
       this.SugarCRMUser.avpid = (this.SugarCRMUser.avpid != null && this.SugarCRMUser.avpid != '') ? this.SugarCRMUser.avpid.toString() : '';
       this.SugarCRMUser.regionId = (this.SugarCRMUser.regionId != null && this.SugarCRMUser.regionId != '') ? this.SugarCRMUser.regionId.toString() : '';
+      this.SugarCRMUser.zoneId = (this.SugarCRMUser.zoneId != null && this.SugarCRMUser.zoneId !== '') ? this.SugarCRMUser.zoneId.toString() : '';
       this.SugarCRMUser.defaultTeamId = (this.SugarCRMUser.defaultTeamId != null && this.SugarCRMUser.defaultTeamId !== '') ? this.SugarCRMUser.defaultTeamId.toString() : '';
       this.userDefaultTeamId = this.SugarCRMUser.defaultTeamId;
 
@@ -352,6 +381,13 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         });
       }
       this.myItems = this.SugarCRMUser.teams || [];
+
+      // Zone Manager: restore assigned regions from API
+      if (this.SugarCRMUser.regions && Array.isArray(this.SugarCRMUser.regions)) {
+        this.userRegions = this.SugarCRMUser.regions;
+      } else {
+        this.userRegions = [];
+      }
 
       this.checkAndTriggerRoleData();
       this.defTeamSearchControl.updateValueAndValidity();
@@ -425,6 +461,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.SugarCRMUser.bdid = this.SugarCRMUser.bdid == '' ? '0' : this.SugarCRMUser.bdid;
     this.SugarCRMUser.avpid = (this.SugarCRMUser.avpid == '' || this.SugarCRMUser.avpid == null) ? '0' : this.SugarCRMUser.avpid;
     this.SugarCRMUser.regionId = this.SugarCRMUser.regionId == '' ? '0' : this.SugarCRMUser.regionId;
+    this.SugarCRMUser.zoneId = (this.SugarCRMUser.zoneId == '' || this.SugarCRMUser.zoneId == null) ? '0' : this.SugarCRMUser.zoneId;
     this.SugarCRMUser.territoryId = this.SugarCRMUser.territoryId == '' ? '0' : this.SugarCRMUser.territoryId;
 
     if (this.myItems.length == 1 && this.myItems[0].teamId == "0") {
@@ -432,8 +469,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     }
     this.SugarCRMUser.teams = this.myItems;
     this.SugarCRMUser.zones = this.userZones;
+    // Zone Manager: pass assigned regions (maps to @RegionIds in SP)
+    this.SugarCRMUser.regions = this.isZoneManager ? this.userRegions : [];
 
-    if (this.SugarCRMUser.roleId != this.avpRole.roleId) {
+    // Build territoryId from teams — skip for AVP and Zone Manager (backend derives from zones/regions)
+    if (this.SugarCRMUser.roleId != this.avpRole.roleId && !this.isZoneManager) {
       if (this.SugarCRMUser.teams.length > 0) {
         this.SugarCRMUser.territoryId = "";
         for (var i = 0; i < this.SugarCRMUser.teams.length; i++) {
@@ -600,13 +640,19 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.SugarCRMUser.bdid = this.isBDManager ? this.SugarCRMUser.bdid : '';
     this.SugarCRMUser.avpid = this.isAVPManager ? this.SugarCRMUser.avpid : '';
     this.SugarCRMUser.regionId = this.isRegionManager ? this.SugarCRMUser.regionId : '';
+    this.SugarCRMUser.zoneId = this.isZoneManager ? this.SugarCRMUser.zoneId : '';
 
     this.myItems = [];
     this.bdTerritoryList = [];
     this.regionTerritoryList = [];
     this.userZones = [];
+    this.userRegions = [];
+    this.zmTerritoryList = [];
+    this.zmRegionList = [];
+    this.selectedRegionIdForZM = '';
     this.loadedRegionId = null;
     this.loadedBDId = null;
+    this.loadedZoneId = null;
     this.SugarCRMUser.defaultTeamId = '';
     this.userDefaultTeamId = '';
     this.defTeamSearchControl.updateValueAndValidity();
@@ -630,6 +676,17 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       }
     } else if (this.isAVPManager) {
       // For AVP role, zones will be handled separately
+    } else if (this.isZoneManager) {
+      // For Zone Manager: zone drives Default Territory and Assign Region list
+      this.zmTerritoryList = [];
+      this.zmRegionList = [];
+      this.userRegions = [];
+      this.selectedRegionIdForZM = '';
+      if (this.SugarCRMUser.zoneId && this.SugarCRMUser.zoneId !== '0' && this.SugarCRMUser.zoneId !== '') {
+        this.onZoneChange(undefined);
+      } else {
+        this.defTeamSearchControl.updateValueAndValidity();
+      }
     } else {
       // For all other roles (including TM), just ensure the dropdown has all territories
       if (!this.TeamList || this.TeamList.length === 0) {
@@ -640,7 +697,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
 
   onDefaultTeamChange(event: any): void {
     const defaultTeamId = this.SugarCRMUser.defaultTeamId;
-    if (!this.isRegionManager && !this.isBDManager) {
+    if (!this.isRegionManager && !this.isBDManager && !this.isZoneManager) {
       if ((this.userDefaultTeamId != "") && (this.userDefaultTeamId != defaultTeamId)) {
         const previousItem = this.myItems.find(x => String(x.teamId) === String(this.userDefaultTeamId));
         if (previousItem) {
@@ -848,6 +905,141 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     const currentRoleId = String(this.SugarCRMUser.roleId);
     return (this.rmRoleId != null && currentRoleId === String(this.rmRoleId))
       || (this.regionManagerRole && this.regionManagerRole.roleId != null && this.regionManagerRole.roleId !== '' && currentRoleId === String(this.regionManagerRole.roleId));
+  }
+  get isZoneManager(): boolean {
+    if (!this.SugarCRMUser || !this.SugarCRMUser.roleId) return false;
+    const currentRoleId = String(this.SugarCRMUser.roleId);
+    return (this.zmRoleId != null && currentRoleId === String(this.zmRoleId))
+      || (this.zoneManagerRole && this.zoneManagerRole.roleId != null && this.zoneManagerRole.roleId !== '' && currentRoleId === String(this.zoneManagerRole.roleId));
+  }
+  get showZoneDropdown(): boolean {
+    return this.isZoneManager;
+  }
+
+  // Zone Manager: fetches territories (for Default Territory) and regions (for Assign Region) for selected zone
+  onZoneChange(event: any): void {
+    const zoneId = Number(this.SugarCRMUser.zoneId);
+    if (this.isZoneManager) {
+      if (!isNaN(zoneId) && zoneId > 0) {
+        // 1. Fetch regions belonging to the selected Zone
+        this._commonLookupData.GetRegionsByZoneId(zoneId).pipe(
+          takeUntil(this.unsubscribe$)
+        ).subscribe(res => {
+          const data = this._commonLookupData.parseData(res);
+          this.zmRegionList = data.data || [];
+
+          // Pre-populate userRegions with all regions from the selected Zone
+          if (event === undefined) {
+            // On load: if userRegions is empty, auto-populate all regions of the zone
+            if (!this.userRegions || this.userRegions.length === 0) {
+              this.userRegions = this.zmRegionList.map(r => {
+                const reg = new RegionModel();
+                reg.regionId = String(r.recordId);
+                reg.regioname = r.value;
+                return reg;
+              });
+            } else {
+              // Ensure region names are populated for existing userRegions
+              const regionMap = new Map<string, string>();
+              this.zmRegionList.forEach(r => regionMap.set(String(r.recordId), r.value));
+              this.userRegions.forEach(ur => {
+                if (!ur.regioname && regionMap.has(String(ur.regionId))) {
+                  ur.regioname = regionMap.get(String(ur.regionId));
+                }
+              });
+            }
+          } else {
+            // When user explicitly changes Zone: auto-populate all regions of the new Zone
+            this.userRegions = this.zmRegionList.map(r => {
+              const reg = new RegionModel();
+              reg.regionId = String(r.recordId);
+              reg.regioname = r.value;
+              return reg;
+            });
+          }
+        }, (error: any) => {
+          // Fallback: filter from loaded regionList by code (ZoneId)
+          if (this.regionList && this.regionList.length > 0) {
+            this.zmRegionList = this.regionList.filter(r => String(r.code) === String(zoneId));
+            if (!this.userRegions || this.userRegions.length === 0 || event !== undefined) {
+              this.userRegions = this.zmRegionList.map(r => {
+                const reg = new RegionModel();
+                reg.regionId = String(r.recordId);
+                reg.regioname = r.value;
+                return reg;
+              });
+            }
+          } else {
+            this.zmRegionList = [];
+          }
+        });
+
+        // 2. Fetch territories for Default Territory dropdown
+        if (event === undefined && this.loadedZoneId === zoneId && this.zmTerritoryList && this.zmTerritoryList.length > 0) {
+          return; // already loaded territories, skip re-fetch
+        }
+        this.loadedZoneId = zoneId;
+        this.showLoader();
+        this._usersService.GetAllTerritoriesForZone(zoneId).pipe(
+          takeUntil(this.unsubscribe$),
+          finalize(() => this.hideLoader())
+        ).subscribe(res => {
+          const data = this._commonLookupData.parseData(res);
+          const rawList = (data.data || []) as TeamModel[];
+          this.zmTerritoryList = rawList.map(t => ({
+            ...t,
+            teamId: t && t.teamId != null ? t.teamId.toString() : ''
+          }));
+          // If current defaultTeamId is no longer in the new zone's territory list, clear it
+          if (event !== undefined && this.SugarCRMUser.defaultTeamId &&
+              !this.zmTerritoryList.some(t => String(t.teamId) === String(this.SugarCRMUser.defaultTeamId))) {
+            this.SugarCRMUser.defaultTeamId = '';
+            this.userDefaultTeamId = '';
+          }
+          this.defTeamSearchControl.updateValueAndValidity();
+        }, (error: any) => {
+          this._toasterService.pop('error', 'Error', error.message || 'Failed to load territories for zone');
+        });
+      } else {
+        this.loadedZoneId = null;
+        this.zmTerritoryList = [];
+        this.zmRegionList = [];
+        this.selectedRegionIdForZM = '';
+        this.SugarCRMUser.defaultTeamId = '';
+        this.userDefaultTeamId = '';
+        this.defTeamSearchControl.updateValueAndValidity();
+      }
+    }
+  }
+
+  // Zone Manager: add a region to the assigned regions list
+  addUserRegion(): void {
+    if (this.selectedRegionIdForZM && this.selectedRegionIdForZM !== '' && this.selectedRegionIdForZM !== '0') {
+      if (this.userRegions.find(r => String(r.regionId) === String(this.selectedRegionIdForZM))) {
+        this._toasterService.pop('error', 'Error', 'Region already exists');
+      } else {
+        const sourceList = (this.zmRegionList && this.zmRegionList.length > 0) ? this.zmRegionList : (this.regionList || []);
+        const selectedRegion = sourceList.find(r => String(r.recordId) === String(this.selectedRegionIdForZM));
+        if (selectedRegion) {
+          const newRegion = new RegionModel();
+          newRegion.regionId = String(selectedRegion.recordId);
+          newRegion.regioname = selectedRegion.value;
+          this.userRegions.push(newRegion);
+        }
+      }
+      this.selectedRegionIdForZM = '';
+    } else {
+      this._toasterService.pop('error', 'Error', 'Please select a region');
+    }
+  }
+
+  // Zone Manager: remove a region from the assigned regions list
+  deleteUserRegion(index: number): void {
+    this._commonLookupData.confirmDialog('Are you sure you want to delete this region?', (result: any) => {
+      if (result) {
+        this.userRegions.splice(index, 1);
+      }
+    });
   }
 
   compareTeams(t1: any, t2: any): boolean {

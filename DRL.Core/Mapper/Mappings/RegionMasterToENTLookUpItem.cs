@@ -1,4 +1,4 @@
-﻿using AutoMapper;
+using AutoMapper;
 using DRL.Entity;
 using EF = DRL.Model.Models;
 
@@ -14,6 +14,7 @@ namespace DRL.Core.Mapper.Mappings
 
             destination.RecordId = source.RegionId.ToString();
             destination.Value = source.Regioname;
+            destination.Code = source.ZoneId.ToString();
 
             return destination;
         }

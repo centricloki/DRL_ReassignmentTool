@@ -161,6 +161,11 @@ namespace DRL.Core.Manager
                 string zoneCsv = string.Join(",",
                     user.Zones?.Select(x => x.ZoneId) ?? new List<int>());
 
+                // Region CSV for Zone Manager only (e.g., 1,2)
+                string regionCsv = string.Join(",",
+                    user.Regions?.Where(x => x.RegionId.HasValue).Select(x => x.RegionId.Value)
+                    ?? new List<int>());
+
                 string conn = _configuration.GetConnectionString("DefaultConnection");
 
                 // Effective CreatedBy / UpdatedBy - proc checks UserId=0 for INSERT
@@ -200,8 +205,10 @@ namespace DRL.Core.Manager
     new SqlParameter("@RegionId", user.RegionId), // Now using the property from ENTUser
     new SqlParameter("@BDID", user.BDID), // Removed ?? 0 since BDID is int not int?
     new SqlParameter("@AVPID", user.AVPID), // Removed ?? 0 since AVPID is int not int?
+    new SqlParameter("@ManagerId", user.ManagerId), // Reports to manager
     new SqlParameter("@TerritoryIds", string.IsNullOrWhiteSpace(territoryCsv) ? (object)DBNull.Value : territoryCsv),
     new SqlParameter("@ZoneIds", string.IsNullOrWhiteSpace(zoneCsv) ? (object)DBNull.Value : zoneCsv),
+    new SqlParameter("@RegionIds", string.IsNullOrWhiteSpace(regionCsv) ? (object)DBNull.Value : regionCsv), // Zone Manager
     new SqlParameter("@DefTerritoryId", user.DefaultTeamId ?? 0), // Using DefaultTeamId instead of DefTerritoryId
     
     // ✅ V33 CRITICAL FIX: Handle empty strings to prevent wiping out existing DB values

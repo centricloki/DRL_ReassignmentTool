@@ -236,5 +236,14 @@ namespace DRL.API.Controllers
             response.Data = _territoryService.GetTerritoriesByRegionId(regionId);
             return response;
         }
+
+        [HttpGet("GetRegions/{zoneId}")]
+        public BaseResponse<List<ENTLookUpItem>> GetRegionsByZoneId(int zoneId)
+        {
+            // Not cached: Zone-specific data
+            var response = new BaseResponse<List<ENTLookUpItem>>(true);
+            response.Data = _regionService.GetRegionsByZoneIdLookup(zoneId);
+            return response;
+        }
     }
 }

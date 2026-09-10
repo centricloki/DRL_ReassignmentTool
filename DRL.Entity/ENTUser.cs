@@ -27,6 +27,7 @@ namespace DRL.Entity
         public int RegionId { get; set; }
         public List<ENTTeam> Teams { get; set; }
         public List<ENTZone> Zones { get; set; }
+        public List<ENTRegion> Regions { get; set; }  // Zone Manager assigned regions
     }
 
 

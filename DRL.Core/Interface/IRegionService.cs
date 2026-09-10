@@ -1,4 +1,4 @@
-﻿using DRL.Entity;
+using DRL.Entity;
 using DRL.Entity.Response;
 using DRL.Library;
 using System;
@@ -10,6 +10,7 @@ namespace DRL.Core.Interface
     public interface IRegionService
     {
         List<ENTLookUpItem> GetAllRegionLookup();
+        List<ENTLookUpItem> GetRegionsByZoneIdLookup(int zoneId);
         ENTRegion GetRegion(long RegionId);
         List<ENTRegion> GetAllRegions();
         ActionStatus CheckRegionNameExists(string regionName, int regionId);

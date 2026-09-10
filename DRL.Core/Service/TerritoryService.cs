@@ -1,4 +1,4 @@
-﻿using DRL.Core.Interface;
+using DRL.Core.Interface;
 using DRL.Core.Mapper;
 using DRL.Entity;
 using DRL.Framework.Log;
@@ -393,6 +393,27 @@ namespace DRL.Core.Service
             catch (Exception ex)
             {
                 logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.GetTeamListFromRegionId", ex);
+            }
+            return result;
+        }
+
+        public List<ENTTeam> GetTeamListFromZoneId(long zoneId)
+        {
+            List<ENTTeam> result = new List<ENTTeam>();
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+            try
+            {
+                string strQuery = string.Format("EXEC [sp_DSD_GetTeamListFromZoneId] @ZoneId={0}", zoneId);
+
+                result = SqlDBHelper.RawSqlQuery(strQuery, x => new ENTTeam
+                {
+                    TeamId = Convert.ToInt32(x[0]),
+                    Name = x[1].ToString(),
+                }, connString).ToList();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.GetTeamListFromZoneId", ex);
             }
             return result;
         }

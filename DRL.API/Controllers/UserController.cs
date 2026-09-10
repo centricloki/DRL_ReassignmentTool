@@ -517,6 +517,20 @@ namespace DRL.API.Controllers
         }
 
         /// <summary>
+        ///     Get All Territory List for Zone (Zone Manager Default Territory dropdown)
+        /// </summary>
+        /// <returns>
+        ///     ENTTeam  Model
+        /// </returns>
+        [HttpGet("Zone/{zoneId}/Territories")]
+        public BaseResponse<List<ENTTeam>> GetTerritoriesByZone(int zoneId)
+        {
+            var response = new BaseResponse<List<ENTTeam>>(true);
+            response.Data = _territoryService.GetTeamListFromZoneId(zoneId);
+            return response;
+        }
+
+        /// <summary>
         ///     Get All Territory List
         /// </summary>
         /// <returns>

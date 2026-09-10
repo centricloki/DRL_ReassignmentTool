@@ -1,4 +1,4 @@
-﻿using DRL.Entity;
+using DRL.Entity;
 using DRL.Library;
 
 using System;
@@ -22,6 +22,7 @@ namespace DRL.Core.Interface
         List<ENTLookUpItem> GetCustReassignTerritoriesByRoleIds(string[] roleIds);
         List<ENTLookUpItem> GetCustReassignTeamsByRoleIds(string[] roleIds);
         List<ENTTeam> GetTeamListFromRegionId(long regionId);
+        List<ENTTeam> GetTeamListFromZoneId(long zoneId);
         bool SyncBDTerritories(int BDId, List<int> territoryIds, long currentUserId);
         bool AssignBDToTerritories(int BDId, List<int> territoryIds, long currentUserId);
         bool RemoveBDFromTerritories(List<int> territoryIds, long currentUserId);

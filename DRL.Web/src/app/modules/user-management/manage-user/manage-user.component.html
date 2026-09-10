@@ -212,10 +212,30 @@
               </div>
             </div>
           </div>
+          <!-- Zone Manager: Zone selection drives Default Territory dropdown only -->
+          <div class="col-lg-3 col-md-3 col-sm-6" *ngIf="showZoneDropdown">
+            <div class="form-field-row">
+              <label class="form-label">Zone:
+                <span>*</span>
+              </label>
+              <div class="input-field">
+                <mat-select placeholder="Zone" #zmZoneId="ngModel" name="zmZoneId" [compareWith]="compareTeams" [(ngModel)]="SugarCRMUser.zoneId"
+                  (selectionChange)="onZoneChange($event)" required>
+                  <mat-option value="">Select Zone</mat-option>
+                  <mat-option *ngFor="let item of allZones" [value]="item.zoneId">
+                    {{item.zoneName}}
+                  </mat-option>
+                </mat-select>
+              </div>
+              <div class="text-danger" *ngIf="zmZoneId.invalid && (zmZoneId.dirty || zmZoneId.touched)">
+                <p *ngIf="zmZoneId.errors?.required">Zone is required</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </mat-expansion-panel>
-    <mat-expansion-panel [expanded]="true" *ngIf="!isAVPManager">
+    <mat-expansion-panel [expanded]="true" *ngIf="!isAVPManager && !isZoneManager">
       <mat-expansion-panel-header>
         <mat-panel-title>
           Assign Team
@@ -267,10 +287,58 @@
         </div>
       </div>
     </mat-expansion-panel>
+    <!-- Zone Manager: Assign Region panel (mirroring AVP's Assign Zone) -->
+    <mat-expansion-panel [expanded]="true" *ngIf="isZoneManager">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          Assign Region
+        </mat-panel-title>
+      </mat-expansion-panel-header>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row">
+              <label class="form-label">Region:
+              </label>
+              <div class="select-field">
+                <mat-select placeholder="Region" #zmRegion="ngModel" name="zmRegion" [(ngModel)]="selectedRegionIdForZM">
+                  <mat-option value="">Select Region</mat-option>
+                  <mat-option *ngFor="let item of zmRegionList" [value]="item.recordId">
+                    {{item.value}}
+                  </mat-option>
+                </mat-select>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-3 col-md-3 col-sm-6">
+            <div class="form-field-row"> <label class="form-label"></label>
+              <div class="select-field">
+                <input class="btn btn-default site-btn" type="button" value="Add" (click)="addUserRegion()">
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="readony-row" *ngFor="let region of userRegions; let idx = index">
+          <div class="row">
+            <div class="col-md-6 col-lg-2">
+              <div class="readony form-field">
+                <label>Region:</label>
+                <span>{{region.regioname}}</span>
+              </div>
+            </div>
+            <div class="col align-self-end text-right">
+              <a class="link-icon" matTooltip="Delete Region" style="cursor: pointer;" (click)="deleteUserRegion(idx)"><i
+                  class="fa fa-trash-o"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-expansion-panel>
     <mat-expansion-panel [expanded]="true" *ngIf="isAVPManager">
       <mat-expansion-panel-header>
         <mat-panel-title>
           Assign Zone
+
         </mat-panel-title>
       </mat-expansion-panel-header>
       <div class="container-fluid">

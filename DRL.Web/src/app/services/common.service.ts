@@ -96,6 +96,11 @@ export class CommonService {
         const apiURL = this._appConstant.APIUrl + 'Lookup/GetRegions';
         return this.http.get(apiURL);
     }
+
+    GetRegionsByZoneId(zoneId: number | string) {
+        const apiURL = this._appConstant.APIUrl + 'Lookup/GetRegions/' + zoneId;
+        return this.http.get(apiURL);
+    }
     GetTerritories(userId) {
         const apiURL = this._appConstant.APIUrl + 'Lookup/GetTerritories/' + userId;
         return this.http.get(apiURL);
