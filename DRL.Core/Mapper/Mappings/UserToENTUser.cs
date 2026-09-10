@@ -1,5 +1,7 @@
 ﻿using DRL.Entity;
+
 using EF = DRL.Model.Models;
+
 using AutoMapper;
 
 namespace DRL.Core.Mapper.Mappings
@@ -21,7 +23,6 @@ namespace DRL.Core.Mapper.Mappings
             destination.RoleId = source.RoleId;
             destination.DefaultTeamId = source.DefTerritoryId;
             destination.ManagerId = source.ManagerId;
-            //destination.RoleName = source.Role.RoleName;
             destination.IsActive = !source.IsInActive;
             destination.IsDeleted = source.IsDeleted;
             destination.CreatedBy = source.CreatedBy;
@@ -31,6 +32,8 @@ namespace DRL.Core.Mapper.Mappings
             destination.TerritoryId = source.TerritoryId;
             destination.AVPID = source.AVPID;
             destination.BDID = source.BDID;
+            destination.RegionId = source.RegionId;
+            destination.ZoneId = source.ZoneId;
             return destination;
         }
     }

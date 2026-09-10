@@ -386,7 +386,8 @@ namespace DRL.Core.Service
 
                 result = SqlDBHelper.RawSqlQuery(strQuery, x => new ENTTeam
                 {
-                    Name = x[0].ToString(),
+                    TeamId = Convert.ToInt32(x[0]),
+                    Name = x[1].ToString(),
                 }, connString).ToList();
             }
             catch (Exception ex)

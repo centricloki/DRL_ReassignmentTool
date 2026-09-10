@@ -23,18 +23,11 @@ namespace DRL.Entity
         public long ManagerId { get; set; }
         public int BDID { get; set; }
         public int AVPID { get; set; }
-        public int ZoneId { get; set; }       // Adding missing property
-        public int RegionId { get; set; }     // Adding missing property
-
-        //public string RoleName { get; set; }
-        //public string ManagerName { get; set; }
-        //public string ZoneName { get; set; }
-        //public string RegionName { get; set; }
-        //public string DefTerritoryName { get; set; }
-
+        public int ZoneId { get; set; }
+        public int RegionId { get; set; }
         public List<ENTTeam> Teams { get; set; }
         public List<ENTZone> Zones { get; set; }
     }
 
-    
+
 }

@@ -8,10 +8,12 @@ import { UsersService } from '../users.service';
 import { AppConstant } from '../../../app.constants';
 import { ToasterService } from 'angular2-toaster';
 import { Observable, Subject, Subscription } from 'rxjs';
-import { map, startWith, takeUntil, debounceTime, distinctUntilChanged, filter } from 'rxjs/operators';
+import { map, startWith, takeUntil, debounceTime, distinctUntilChanged, filter, finalize } from 'rxjs/operators';
 import { LookupItemModel } from 'src/app/Models/LookupItemModel';
 import { ZoneModel } from 'src/app/Models/ZoneModel';
 import { RoleModel } from 'src/app/Models/RoleModel';
+
+declare var $: any;
 
 @Component({
   selector: 'app-manage-user',
@@ -32,7 +34,6 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   StatusTypeList: Array<any>;
   avpList: Array<any>;
   bdList: Array<any>;
-  regionList: Array<any>;
   titleText: string;
   btnText: string;
   SugarCRMUser = new UserModel();
@@ -48,6 +49,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   avpRole: RoleModel = new RoleModel();
   bdRole: RoleModel = new RoleModel();
   regionManagerRole: RoleModel = new RoleModel();
+  regionList: Array<any>;
   private unsubscribe$ = new Subject<void>();
 
   teamSearchControl = new FormControl('');
@@ -60,6 +62,10 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   tmRoleId: any = null;
   avpRoleId: any = null;
   rmRoleId: any = null;
+  private loaderCount: number = 0;
+  private loaderInterval: any = null;
+  private loadedRegionId: number | null = null;
+  private loadedBDId: number | null = null;
 
   ngOnDestroy() {
     this._appConstant.userId = undefined;
@@ -67,6 +73,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.unsubscribe$.complete();
     if (this.pinValidationSub)
       this.pinValidationSub.unsubscribe();
+    this.clearLoaderInterval();
+    this.loaderCount = 0;
+    if (typeof $ !== 'undefined') {
+      $('.ajax-loading').hide();
+    }
   }
   ngOnInit() {
     this.titleText = "Create User";
@@ -152,31 +163,13 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   }
 
   private filterDefTeams(value: string): any[] {
-    let sourceList: TeamModel[] = this.TeamList || [];
+    let sourceList: TeamModel[] = [];
     if (this.isBDManager) {
-      if (this.bdTerritoryList && this.bdTerritoryList.length > 0) {
-        sourceList = this.bdTerritoryList;
-      } else if (this.myItems && this.myItems.length > 0) {
-        // Fallback to myItems while bdTerritories are loading
-        sourceList = this.myItems;
-      }
+      sourceList = this.bdTerritoryList || [];
     } else if (this.isRegionManager) {
-      if (this.regionTerritoryList && this.regionTerritoryList.length > 0) {
-        sourceList = this.regionTerritoryList;
-      } else if (this.myItems && this.myItems.length > 0) {
-        sourceList = this.myItems;
-      }
-    }
-
-    // Always ensure current defaultTeamId and user's assigned teams exist in sourceList
-    if (this.myItems && this.myItems.length > 0) {
-      const existingIds = new Set(sourceList.map(x => String(x.teamId)));
-      for (const item of this.myItems) {
-        if (item && item.teamId && !existingIds.has(String(item.teamId))) {
-          sourceList = [...sourceList, item];
-          existingIds.add(String(item.teamId));
-        }
-      }
+      sourceList = this.regionTerritoryList || [];
+    } else {
+      sourceList = this.TeamList || [];
     }
 
     if (!sourceList || !Array.isArray(sourceList)) {
@@ -255,10 +248,12 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       const bd = this.RoleList.find(r => r.value.toLowerCase().includes('bd manager'));
       const tm = this.RoleList.find(r => r.value.toLowerCase().includes('territory manager'));
       const avp = this.RoleList.find(r => r.value.toLowerCase() === 'avp' || r.value.toLowerCase().includes('avp'));
+      const rm = this.RoleList.find(r => r.value && (r.value.toLowerCase().includes('region manager') || r.value.toLowerCase().includes('regional manager')));
 
       this.bdRoleId = bd ? String(bd.recordId) : null;
       this.tmRoleId = tm ? String(tm.recordId) : null;
       this.avpRoleId = avp ? String(avp.recordId) : null;
+      this.rmRoleId = rm ? String(rm.recordId) : null;
       this.checkAndTriggerRoleData();
     });
   }
@@ -281,7 +276,6 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       this.bdList = data.data;
     });
   }
-
   GetAllRegions() {
     this._commonLookupData.GetAllRegionList().pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
       var data = this._commonLookupData.parseData(response);
@@ -334,8 +328,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   }
 
   GetUser() {
-
-    this._usersService.GetUser(this._appConstant.userId).pipe(takeUntil(this.unsubscribe$)).subscribe(response => {
+    this.showLoader();
+    this._usersService.GetUser(this._appConstant.userId).pipe(
+      takeUntil(this.unsubscribe$),
+      finalize(() => this.hideLoader())
+    ).subscribe(response => {
       var data = this._commonLookupData.parseData(response);
       this.SugarCRMUser = data.data;
       this.SugarCRMUser.managerId = (this.SugarCRMUser.managerId != null && this.SugarCRMUser.managerId != '') ? this.SugarCRMUser.managerId.toString() : '0';
@@ -359,6 +356,8 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       this.checkAndTriggerRoleData();
       this.defTeamSearchControl.updateValueAndValidity();
       this.triggerEditValidation();
+    }, (error: any) => {
+      this._toasterService.pop('error', 'Error', error.message || 'Failed to load user');
     });
 
     this.teamModel = new TeamModel();
@@ -424,7 +423,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.SugarCRMUser.roleId = this.SugarCRMUser.roleId == '' ? '0' : this.SugarCRMUser.roleId;
     this.SugarCRMUser.defaultTeamId = this.SugarCRMUser.defaultTeamId == '' ? '' : this.SugarCRMUser.defaultTeamId;
     this.SugarCRMUser.bdid = this.SugarCRMUser.bdid == '' ? '0' : this.SugarCRMUser.bdid;
-    this.SugarCRMUser.avpid = this.SugarCRMUser.bdid == '' ? '0' : this.SugarCRMUser.avpid;
+    this.SugarCRMUser.avpid = (this.SugarCRMUser.avpid == '' || this.SugarCRMUser.avpid == null) ? '0' : this.SugarCRMUser.avpid;
     this.SugarCRMUser.regionId = this.SugarCRMUser.regionId == '' ? '0' : this.SugarCRMUser.regionId;
     this.SugarCRMUser.territoryId = this.SugarCRMUser.territoryId == '' ? '0' : this.SugarCRMUser.territoryId;
 
@@ -485,8 +484,6 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         const team = this.TeamList.find(x => x.teamId == this.teamModel.teamId);
 
         if (team && this.SugarCRMUser.roleId == this.bdRole.roleId && team.bdid && Number(team.bdid) != 0 && String(team.bdid) !== this.SugarCRMUser.bdid) {
-          //this._commonLookupData.confirmDialog('This territory is assigned to another BD manager. Do you want to override?', (result: any) => {
-          //if (result) {
           this.teamModel.createdBy = "0";
           this.teamModel.createdDate = new Date();
           this.teamModel.updatedBy = "0";
@@ -495,8 +492,6 @@ export class ManageUserComponent implements OnInit, OnDestroy {
           this.myItems.push(
             this.teamModel
           );
-          //}
-          // });
         } else if (team) {
           this.teamModel.createdBy = "0";
           this.teamModel.createdDate = new Date();
@@ -510,6 +505,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
             this.teamModel
           );
         }
+        this.teamModel = new TeamModel();
       }
     }
     else {
@@ -522,7 +518,12 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   deleteTeamDetail(i) {
     this._commonLookupData.confirmDialog('Are you sure you want to delete this team?', (result: any) => {
       if (result) {
+        const deleted = this.myItems[i];
         this.myItems.splice(i, 1);
+        if (deleted && String(deleted.teamId) === String(this.SugarCRMUser.defaultTeamId)) {
+          this.SugarCRMUser.defaultTeamId = '';
+          this.userDefaultTeamId = '';
+        }
         this.defTeamSearchControl.updateValueAndValidity();
       }
       this.teamModel = new TeamModel();
@@ -600,17 +601,14 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.SugarCRMUser.avpid = this.isAVPManager ? this.SugarCRMUser.avpid : '';
     this.SugarCRMUser.regionId = this.isRegionManager ? this.SugarCRMUser.regionId : '';
 
-    // ALWAYS keep the Default Territory in myItems when switching roles (for any role)
-    let defaultTeam: TeamModel = null;
-    if (this.SugarCRMUser.defaultTeamId) {
-      defaultTeam = this.myItems.find(x => String(x.teamId) === String(this.SugarCRMUser.defaultTeamId))
-        || (this.TeamList ? this.TeamList.find(x => String(x.teamId) === String(this.SugarCRMUser.defaultTeamId)) : null);
-    }
-
-    this.myItems = defaultTeam ? [defaultTeam] : [];
+    this.myItems = [];
     this.bdTerritoryList = [];
     this.regionTerritoryList = [];
     this.userZones = [];
+    this.loadedRegionId = null;
+    this.loadedBDId = null;
+    this.SugarCRMUser.defaultTeamId = '';
+    this.userDefaultTeamId = '';
     this.defTeamSearchControl.updateValueAndValidity();
 
     // Load territories based on role
@@ -619,36 +617,41 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       if (this.SugarCRMUser.bdid && this.SugarCRMUser.bdid !== '0' && this.SugarCRMUser.bdid !== '') {
         this.onBDChange(undefined); // Apply BD-based filtering
       } else {
-        // If no BD is selected yet, load all territories so user can select a BD
-        this.getAllTerritories();
+        this.bdTerritoryList = [];
+        this.defTeamSearchControl.updateValueAndValidity();
       }
     } else if (this.isRegionManager) {
       // For Region Manager, if a Region is already selected, apply filtering
       if (this.SugarCRMUser.regionId && this.SugarCRMUser.regionId !== '0' && this.SugarCRMUser.regionId !== '') {
         this.onRegionChange(undefined);
       } else {
-        this.getAllTerritories();
+        this.regionTerritoryList = [];
+        this.defTeamSearchControl.updateValueAndValidity();
       }
     } else if (this.isAVPManager) {
       // For AVP role, zones will be handled separately
     } else {
       // For all other roles (including TM), just ensure the dropdown has all territories
-      this.getAllTerritories();
+      if (!this.TeamList || this.TeamList.length === 0) {
+        this.getAllTerritories();
+      }
     }
   }
 
   onDefaultTeamChange(event: any): void {
     const defaultTeamId = this.SugarCRMUser.defaultTeamId;
-    if ((this.userDefaultTeamId != "") && (this.userDefaultTeamId != defaultTeamId)) {
-      const previousItem = this.myItems.find(x => x.teamId == this.userDefaultTeamId);
-      if (previousItem) {
-        const itemIndex = this.myItems.indexOf(previousItem);
-        this.myItems.splice(itemIndex, 1);
+    if (!this.isRegionManager && !this.isBDManager) {
+      if ((this.userDefaultTeamId != "") && (this.userDefaultTeamId != defaultTeamId)) {
+        const previousItem = this.myItems.find(x => String(x.teamId) === String(this.userDefaultTeamId));
+        if (previousItem) {
+          const itemIndex = this.myItems.indexOf(previousItem);
+          this.myItems.splice(itemIndex, 1);
+        }
       }
     }
-    if (!this.myItems.find(x => x.teamId == defaultTeamId)) {
+    this.userDefaultTeamId = defaultTeamId;
+    if (defaultTeamId && !this.myItems.some(x => String(x.teamId) === String(defaultTeamId))) {
       this.teamModel.teamId = defaultTeamId;
-      this.userDefaultTeamId = defaultTeamId;
       this.addUserToTeam();
     }
   }
@@ -669,36 +672,62 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     // Only apply BD filtering for BD Managers, not for Territory Managers
     if (this.isBDManager) { // Only for BD Manager role
       if (!isNaN(bdid) && bdid > 0) {
+        if (event === undefined && this.loadedBDId === bdid && this.bdTerritoryList && this.bdTerritoryList.length > 0) {
+          return;
+        }
+        this.loadedBDId = bdid;
+        this.showLoader();
         // Fetch territories for the selected BD to auto-populate Assign Team and Default Territory dropdowns
-        this._usersService.GetAllTerritoriesForBD(bdid).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
+        this._usersService.GetAllTerritoriesForBD(bdid).pipe(
+          takeUntil(this.unsubscribe$),
+          finalize(() => this.hideLoader())
+        ).subscribe(res => {
           const data = this._commonLookupData.parseData(res);
 
-          // Populate myItems and bdTerritoryList with the territories of the selected BD
           const rawBDList = (data.data || []) as TeamModel[];
-          this.bdTerritoryList = rawBDList.map(t => ({
+          const bdTeams = rawBDList.map(t => ({
             ...t,
             teamId: t && t.teamId != null ? t.teamId.toString() : ''
           }));
 
-          // Merge user's assigned teams or default team so they are not wiped out
-          const existingIds = new Set(this.bdTerritoryList.map(x => String(x.teamId)));
-          if (this.myItems && this.myItems.length > 0) {
-            for (const item of this.myItems) {
-              if (item && item.teamId && !existingIds.has(String(item.teamId))) {
-                this.bdTerritoryList.push(item);
-                existingIds.add(String(item.teamId));
-              }
+          // Default Territory dropdown uses this list exclusively
+          this.bdTerritoryList = bdTeams;
+
+          if (event === undefined) {
+            // Initial load: bring all territories of the BD into myItems, plus any existing saved teams
+            const teamMap = new Map<string, TeamModel>();
+            bdTeams.forEach(t => teamMap.set(String(t.teamId), { ...t }));
+            if (this.myItems && this.myItems.length > 0) {
+              this.myItems.forEach(t => {
+                if (t && t.teamId && !teamMap.has(String(t.teamId))) {
+                  teamMap.set(String(t.teamId), { ...t });
+                }
+              });
+            }
+            this.myItems = Array.from(teamMap.values());
+          } else {
+            // User explicitly changed the BD dropdown:
+            // Reset myItems strictly to the new BD's territories!
+            this.myItems = bdTeams.map(t => ({ ...t }));
+            // Also reset defaultTeamId if it does not belong to the new BD
+            if (this.SugarCRMUser.defaultTeamId && !bdTeams.some(t => String(t.teamId) === String(this.SugarCRMUser.defaultTeamId))) {
+              this.SugarCRMUser.defaultTeamId = '';
+              this.userDefaultTeamId = '';
             }
           }
-          this.myItems = [...this.bdTerritoryList];
 
           // Trigger filter updates for the reactive form controls
           this.defTeamSearchControl.updateValueAndValidity();
+        }, (error: any) => {
+          this._toasterService.pop('error', 'Error', error.message || 'Failed to load territories for BD');
         });
       } else {
-        // If BD is cleared, clear myItems and bdTerritoryList
+        this.loadedBDId = null;
+        // If BD is cleared, clear myItems, bdTerritoryList, and defaultTeamId
         this.myItems = [];
         this.bdTerritoryList = [];
+        this.SugarCRMUser.defaultTeamId = '';
+        this.userDefaultTeamId = '';
         this.defTeamSearchControl.updateValueAndValidity();
       }
     }
@@ -710,34 +739,61 @@ export class ManageUserComponent implements OnInit, OnDestroy {
 
     if (this.isRegionManager) {
       if (!isNaN(regionId) && regionId > 0) {
+        if (event === undefined && this.loadedRegionId === regionId && this.regionTerritoryList && this.regionTerritoryList.length > 0) {
+          return;
+        }
+        this.loadedRegionId = regionId;
+        this.showLoader();
         // Fetch territories for the selected Region
-        this._usersService.GetAllTerritoriesForRegion(regionId).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
+        this._usersService.GetAllTerritoriesForRegion(regionId).pipe(
+          takeUntil(this.unsubscribe$),
+          finalize(() => this.hideLoader())
+        ).subscribe(res => {
           const data = this._commonLookupData.parseData(res);
 
           const rawList = (data.data || []) as TeamModel[];
-          this.regionTerritoryList = rawList.map(t => ({
+          const regionTeams = rawList.map(t => ({
             ...t,
             teamId: t && t.teamId != null ? t.teamId.toString() : ''
           }));
 
-          // Merge user's already-assigned teams so they are not wiped out
-          const existingIds = new Set(this.regionTerritoryList.map(x => String(x.teamId)));
-          if (this.myItems && this.myItems.length > 0) {
-            for (const item of this.myItems) {
-              if (item && item.teamId && !existingIds.has(String(item.teamId))) {
-                this.regionTerritoryList.push(item);
-                existingIds.add(String(item.teamId));
-              }
+          // Default Territory dropdown uses this list exclusively
+          this.regionTerritoryList = regionTeams;
+
+          if (event === undefined) {
+            // Initial load: bring all territories of the region into myItems, plus any existing saved teams
+            const teamMap = new Map<string, TeamModel>();
+            regionTeams.forEach(t => teamMap.set(String(t.teamId), { ...t }));
+            if (this.myItems && this.myItems.length > 0) {
+              this.myItems.forEach(t => {
+                if (t && t.teamId && !teamMap.has(String(t.teamId))) {
+                  teamMap.set(String(t.teamId), { ...t });
+                }
+              });
+            }
+            this.myItems = Array.from(teamMap.values());
+          } else {
+            // User explicitly changed the Region dropdown:
+            // Reset myItems strictly to the new region's territories!
+            this.myItems = regionTeams.map(t => ({ ...t }));
+            // Also reset defaultTeamId if it does not belong to the new region
+            if (this.SugarCRMUser.defaultTeamId && !regionTeams.some(t => String(t.teamId) === String(this.SugarCRMUser.defaultTeamId))) {
+              this.SugarCRMUser.defaultTeamId = '';
+              this.userDefaultTeamId = '';
             }
           }
-          this.myItems = [...this.regionTerritoryList];
 
           this.defTeamSearchControl.updateValueAndValidity();
+        }, (error: any) => {
+          this._toasterService.pop('error', 'Error', error.message || 'Failed to load territories for region');
         });
       } else {
-        // If Region is cleared, reset lists
+        this.loadedRegionId = null;
+        // If Region is cleared, clear myItems, regionTerritoryList, and defaultTeamId
         this.myItems = [];
         this.regionTerritoryList = [];
+        this.SugarCRMUser.defaultTeamId = '';
+        this.userDefaultTeamId = '';
         this.defTeamSearchControl.updateValueAndValidity();
       }
     }
@@ -799,5 +855,38 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       return t1 === t2;
     }
     return String(t1) === String(t2);
+  }
+
+  private showLoader(): void {
+    this.loaderCount++;
+    if (typeof $ !== 'undefined') {
+      $('.ajax-loading').show();
+      if (!this.loaderInterval) {
+        this.loaderInterval = setInterval(() => {
+          if (this.loaderCount > 0 && typeof $ !== 'undefined') {
+            $('.ajax-loading').show();
+          } else {
+            this.clearLoaderInterval();
+          }
+        }, 50);
+      }
+    }
+  }
+
+  private hideLoader(): void {
+    this.loaderCount = Math.max(0, this.loaderCount - 1);
+    if (this.loaderCount === 0) {
+      this.clearLoaderInterval();
+      if (typeof $ !== 'undefined') {
+        $('.ajax-loading').hide();
+      }
+    }
+  }
+
+  private clearLoaderInterval(): void {
+    if (this.loaderInterval) {
+      clearInterval(this.loaderInterval);
+      this.loaderInterval = null;
+    }
   }
 }

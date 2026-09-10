@@ -199,7 +199,7 @@
                 <span *ngIf="isRegionManager">*</span>
               </label>
               <div class="input-field">
-                <mat-select placeholder="Region" #regionId="ngModel" name="regionId" [(ngModel)]="SugarCRMUser.regionId"
+                <mat-select placeholder="Region" #regionId="ngModel" name="regionId" [compareWith]="compareTeams" [(ngModel)]="SugarCRMUser.regionId"
                   (selectionChange)="onRegionChange($event)" [required]="isRegionManager">
                   <mat-option value="">Select Region</mat-option>
                   <mat-option *ngFor="let item of regionList" [value]="item.recordId">
@@ -212,7 +212,6 @@
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </mat-expansion-panel>
