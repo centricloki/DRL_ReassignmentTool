@@ -467,13 +467,13 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     if (this.myItems.length == 1 && this.myItems[0].teamId == "0") {
       this.myItems.splice(0, 1);
     }
-    this.SugarCRMUser.teams = this.myItems;
-    this.SugarCRMUser.zones = this.userZones;
-    // Zone Manager: pass assigned regions (maps to @RegionIds in SP)
-    this.SugarCRMUser.regions = this.isZoneManager ? this.userRegions : [];
 
-    // Build territoryId from teams — skip for AVP and Zone Manager (backend derives from zones/regions)
-    if (this.SugarCRMUser.roleId != this.avpRole.roleId && !this.isZoneManager) {
+    // Territory assignment: only needed for TM, BD, RM. For ZM and AVP it's not needed (ZM uses regions, AVP uses zones)
+    if (this.isZoneManager || this.isAVPManager || (this.avpRole && this.SugarCRMUser.roleId == this.avpRole.roleId)) {
+      this.SugarCRMUser.teams = [];
+      this.SugarCRMUser.territoryId = "0";
+    } else {
+      this.SugarCRMUser.teams = this.myItems;
       if (this.SugarCRMUser.teams.length > 0) {
         this.SugarCRMUser.territoryId = "";
         for (var i = 0; i < this.SugarCRMUser.teams.length; i++) {
@@ -483,6 +483,9 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         this.SugarCRMUser.territoryId = "0";
       }
     }
+    this.SugarCRMUser.zones = this.userZones;
+    // Zone Manager: pass assigned regions (maps to @RegionIds in SP)
+    this.SugarCRMUser.regions = this.isZoneManager ? this.userRegions : [];
 
     if (this._appConstant.userId == "0" || this._appConstant.userId == null || this._appConstant.userId == '') {
       this.SugarCRMUser.pin = Math.floor(1000 + Math.random() * 9000).toString();

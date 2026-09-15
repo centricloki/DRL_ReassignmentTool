@@ -152,8 +152,33 @@ namespace DRL.Core.Manager
         {
             try
             {
-                // Territory CSV from Teams list (e.g., TW102 = 102)
-                string territoryCsv = string.Join(",",
+                // Check if role is Zone Manager or AVP (territories not needed for ZM and AVP)
+                bool isZMOrAVP = false;
+                try
+                {
+                    var role = _unitofwork.DbContext.RoleMaster.AsNoTracking().FirstOrDefault(r => r.RoleId == user.RoleId);
+                    if (role != null)
+                    {
+                        string roleName = role.RoleName?.Trim().ToLowerInvariant() ?? "";
+                        isZMOrAVP = roleName.Contains("zone manager") || roleName == "avp" || roleName.Contains("avp");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(Constants.ACTION_EXCEPTION, "UserService.Update Role check" + ex);
+                }
+
+                if (!isZMOrAVP)
+                {
+                    // Fallback safeguard: if user has Regions (ZM) or Zones (AVP) passed, skip territoryCsv
+                    if ((user.Regions != null && user.Regions.Count > 0) || (user.Zones != null && user.Zones.Count > 0))
+                    {
+                        isZMOrAVP = true;
+                    }
+                }
+
+                // Territory CSV from Teams list (only for TM, BD, RM - skip for ZM and AVP)
+                string territoryCsv = isZMOrAVP ? null : string.Join(",",
                     user.Teams?.Where(x => x.TeamId.HasValue).Select(x => x.TeamId.Value)
                     ?? new List<int>());
 
