@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
 
@@ -282,97 +283,30 @@ namespace DRL.Core.Service
             return actionStatus;
         }
 
-        public ActionStatus Insert(ENTZone zone)
+        public ActionStatus ManageZone(ENTZone zone)
         {
             var actionStatus = new ActionStatus();
-            try
-            {
-                var zoneMaster = new EF.ZoneMaster
-                {
-                    ZoneName = zone.ZoneName,
-                    SugarZoneId = zone.SugarZoneId,
-                    ImportedFrom = zone.ImportedFrom,
-                    AVPID = zone.AVPID,
-                    IsActive = zone.IsActive,
-                    IsDeleted = zone.IsDeleted,
-                    UpdateDate = DateTime.UtcNow,
-                };
-
-                _zoneRepository.Insert(zoneMaster);
-                _unitofwork.SaveAndContinue();
-
-                actionStatus.Success = true;
-                actionStatus.Result = Configuration.Mapper.Map<ENTZone>(zoneMaster);
-            }
-            catch (Exception ex)
-            {
-                actionStatus.Success = false;
-                actionStatus.Message = ex.Message;
-                logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.Insert" + ex);
-            }
-            return actionStatus;
-        }
-
-        public ActionStatus Update(ENTZone zone)
-        {
-            var actionStatus = new ActionStatus();
-            try
-            {
-                var existingZone = _zoneRepository.GetZoneFindById(zone.ZoneId);
-                if (existingZone == null)
-                {
-                    actionStatus.Success = false;
-                    actionStatus.Message = "Zone not found.";
-                    return actionStatus;
-                }
-
-                bool avpChanged = existingZone.AVPID != zone.AVPID;
-
-                if (avpChanged)
-                {
-                    actionStatus = UpdateZoneAndMappingTables(zone);
-                }
-                else
-                {
-                    existingZone.ZoneName = zone.ZoneName;
-                    existingZone.SugarZoneId = zone.SugarZoneId;
-                    existingZone.ImportedFrom = zone.ImportedFrom;
-                    existingZone.IsActive = zone.IsActive;
-                    existingZone.IsDeleted = zone.IsDeleted;
-                    existingZone.UpdateDate = DateTime.UtcNow;
-
-                    _zoneRepository.Update(existingZone);
-                    _unitofwork.SaveAndContinue();
-
-                    actionStatus.Success = true;
-                }
-
-                actionStatus.Result = Configuration.Mapper.Map<ENTZone>(existingZone);
-            }
-            catch (Exception ex)
-            {
-                actionStatus.Success = false;
-                actionStatus.Message = ex.Message;
-                logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.Update" + ex);
-            }
-            return actionStatus;
-        }
-
-        public ActionStatus UpdateZoneAndMappingTables(ENTZone zone)
-        {
-            ActionStatus result = new ActionStatus();
             try
             {
                 string connString = _configuration.GetConnectionString("DefaultConnection");
+
+                var zoneIdParam = new SqlParameter("@ZoneId", SqlDbType.Int)
+                {
+                    Direction = ParameterDirection.InputOutput,
+                    Value = zone.ZoneId > 0 ? (object)zone.ZoneId : 0
+                };
+
                 List<SqlParameter> sqlParameters = new List<SqlParameter>()
                 {
-                    new SqlParameter("@UpdateZoneId", zone.ZoneId),
-                    new SqlParameter("@UpdateName", zone.ZoneName),
-                    new SqlParameter("@UpdateAVPID", (object)zone.AVPID ?? DBNull.Value),
-                    new SqlParameter("@UpdateIsActive", zone.IsActive)
+                    zoneIdParam,
+                    new SqlParameter("@ZoneName", (object)zone.ZoneName ?? DBNull.Value),
+                    new SqlParameter("@AVPID", (object)zone.AVPID ?? 0),
+                    new SqlParameter("@IsActive", zone.IsActive),
+                    new SqlParameter("@UpdatedBy", zone.UpdatedBy.HasValue ? (object)Convert.ToInt32(zone.UpdatedBy.Value) : 0)
                 };
 
                 string errorMsg;
+                // Note: SqlDBHelper.ExecuteNonQueryWithErrorHandling automatically adds @ErrorMessage OUTPUT parameter
                 bool bSuccess = SqlDBHelper.ExecuteNonQueryWithErrorHandling(
                     "sp_DSD_ZoneUpdateAndCorrectMappingTables",
                     ref sqlParameters,
@@ -381,8 +315,14 @@ namespace DRL.Core.Service
 
                 if (bSuccess)
                 {
-                    result.Success = true;
-                    result.Message = "";
+                    if (zoneIdParam.Value != null && zoneIdParam.Value != DBNull.Value)
+                    {
+                        zone.ZoneId = Convert.ToInt32(zoneIdParam.Value);
+                    }
+
+                    var dbZone = _zoneRepository.GetZoneFindById(zone.ZoneId);
+                    actionStatus.Success = true;
+                    actionStatus.Result = dbZone != null ? Configuration.Mapper.Map<ENTZone>(dbZone) : zone;
                 }
                 else
                 {
@@ -391,14 +331,26 @@ namespace DRL.Core.Service
             }
             catch (Exception ex)
             {
-                logger.Error(Constants.ACTION_EXCEPTION, nameof(UpdateZoneAndMappingTables) + ex);
-                result = new ActionStatus
-                {
-                    Success = false,
-                    Message = ex.Message
-                };
+                logger.Error(Constants.ACTION_EXCEPTION, "ZoneService.ManageZone: " + ex.Message);
+                actionStatus.Success = false;
+                actionStatus.Message = ex.Message;
             }
-            return result;
+            return actionStatus;
+        }
+
+        public ActionStatus Insert(ENTZone zone)
+        {
+            return ManageZone(zone);
+        }
+
+        public ActionStatus Update(ENTZone zone)
+        {
+            return ManageZone(zone);
+        }
+
+        public ActionStatus UpdateZoneAndMappingTables(ENTZone zone)
+        {
+            return ManageZone(zone);
         }
 
         public ActionStatus DeleteZone(ENTPatchRequest activeStatus)
@@ -437,22 +389,19 @@ namespace DRL.Core.Service
             var actionStatus = new ActionStatus();
             try
             {
-                var zone = _zoneRepository.GetZoneFindById(activeStatus.Id);
-                if (zone != null)
-                {
-                    zone.IsActive = activeStatus.status;
-                    zone.UpdateDate = DateTime.UtcNow;
-
-                    _zoneRepository.Update(zone);
-                    _unitofwork.SaveAndContinue();
-
-                    actionStatus.Success = true;
-                }
-                else
+                var existingZone = _zoneRepository.GetZoneFindById(activeStatus.Id);
+                if (existingZone == null)
                 {
                     actionStatus.Success = false;
                     actionStatus.Message = "Zone not found.";
+                    return actionStatus;
                 }
+
+                var zone = Configuration.Mapper.Map<ENTZone>(existingZone);
+                zone.IsActive = activeStatus.status;
+                zone.UpdatedBy = activeStatus.UpdatedBy;
+
+                return ManageZone(zone);
             }
             catch (Exception ex)
             {

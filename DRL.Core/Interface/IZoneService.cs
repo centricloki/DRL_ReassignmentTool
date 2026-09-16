@@ -19,6 +19,7 @@ namespace DRL.Core.Interface
         ENTZone GetZone(int zoneId);
         List<ENTZoneResponse> GetZoneList();
         ActionStatus CheckZoneNameExists(string zoneName, int zoneId);
+        ActionStatus ManageZone(ENTZone zone);
         ActionStatus Insert(ENTZone zone);
         ActionStatus Update(ENTZone zone);
         ActionStatus DeleteZone(ENTPatchRequest activeStatus);

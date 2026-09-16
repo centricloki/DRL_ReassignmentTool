@@ -74,43 +74,27 @@ namespace DRL.API.Controllers
         {
             BaseResponse<ENTZone> response = new BaseResponse<ENTZone>();
             var serviceResponse = new ActionStatus();
+
+            Zone.UpdatedBy = CurrentUserId > 0 ? CurrentUserId : 1;
             Zone.ImportedFrom = 0;
+
             serviceResponse = _ZoneService.CheckZoneNameExists(Zone.ZoneName, Zone.ZoneId);
             if (!serviceResponse.Success)
             {
-                if (Zone.ZoneId <= 0 || Zone.ZoneId == null)
+                bool isInsert = Zone.ZoneId <= 0;
+                serviceResponse = _ZoneService.ManageZone(Zone);
+                if (serviceResponse.Success)
                 {
-                    serviceResponse = _ZoneService.Insert(Zone);
-                    if (serviceResponse.Success)
-                    {
-                        response.IsSuccess = true;
-                        response.Message = "Zone added successfully";
-                        response.Data = serviceResponse.Result as ENTZone;
-                        ClearZoneCaches();
-                    }
-                    else
-                    {
-                        response.IsSuccess = false;
-                        response.Message = serviceResponse.Message ?? "Failed to add zone. Please ensure all required fields are filled correctly.";
-                        response.Data = null;
-                    }
+                    response.IsSuccess = true;
+                    response.Message = isInsert ? "Zone added successfully" : "Zone updated successfully";
+                    response.Data = serviceResponse.Result as ENTZone;
+                    ClearZoneCaches();
                 }
                 else
                 {
-                    serviceResponse = _ZoneService.Update(Zone);
-                    if (serviceResponse.Success)
-                    {
-                        response.IsSuccess = true;
-                        response.Message = "Zone updated successfully";
-                        response.Data = serviceResponse.Result as ENTZone;
-                        ClearZoneCaches();
-                    }
-                    else
-                    {
-                        response.IsSuccess = false;
-                        response.Message = serviceResponse.Message ?? "Failed to update zone. Please ensure all required fields are filled correctly.";
-                        response.Data = null;
-                    }
+                    response.IsSuccess = false;
+                    response.Message = serviceResponse.Message ?? (isInsert ? "Failed to add zone. Please ensure all required fields are filled correctly." : "Failed to update zone. Please ensure all required fields are filled correctly.");
+                    response.Data = null;
                 }
             }
             else
@@ -173,7 +157,7 @@ namespace DRL.API.Controllers
                 else
                     msg = "inactivated";
 
-                activeStatus.UpdatedBy = CurrentUserId;
+                activeStatus.UpdatedBy = CurrentUserId > 0 ? CurrentUserId : 1;
                 var serviceResponse = _ZoneService.ManageZoneStatus(activeStatus);
                 if (serviceResponse.Success)
                 {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -14,5 +14,6 @@ namespace DRL.Entity
         public int? AVPID { get; set; } = 0;
         public bool IsActive { get; set; } = true;
         public bool IsDeleted { get; set; }
+        public long? UpdatedBy { get; set; }
     }
 }
