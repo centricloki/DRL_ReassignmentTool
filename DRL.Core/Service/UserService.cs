@@ -241,6 +241,8 @@ namespace DRL.Core.Manager
     new SqlParameter("@LastName", string.IsNullOrWhiteSpace(user.LastName) ? DBNull.Value : (object)user.LastName),
     new SqlParameter("@UserName", string.IsNullOrWhiteSpace(user.UserName) ? DBNull.Value : (object)user.UserName),
     new SqlParameter("@EmailID", string.IsNullOrWhiteSpace(user.Email) ? DBNull.Value : (object)user.Email), // Using Email instead of EmailID
+    new SqlParameter("@PIN", string.IsNullOrWhiteSpace(user.Pin) ? (object)DBNull.Value : user.Pin.Trim()),
+    new SqlParameter("@IsActive", user.IsActive),
     new SqlParameter("@CreatedBy", user.CreatedBy), // Removed ?? 1 since CreatedBy is long not long?
     new SqlParameter("@UpdatedBy", user.UpdatedBy ?? 1), // Kept ?? 1 since UpdatedBy is long?
     new SqlParameter("@ErrorMessage", SqlDbType.NVarChar, 4000) { Direction = ParameterDirection.Output }

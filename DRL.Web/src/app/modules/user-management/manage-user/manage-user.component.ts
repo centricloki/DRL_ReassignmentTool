@@ -43,6 +43,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   myItems: TeamModel[] = [];
   bdTerritoryList: TeamModel[] = [];
   regionTerritoryList: TeamModel[] = [];
+  avpTerritoryList: TeamModel[] = [];
   userZones: ZoneModel[] = [];
   selectedZoneId: number;
   allZones: ZoneModel[] = [];
@@ -70,6 +71,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   private loadedRegionId: number | null = null;
   private loadedBDId: number | null = null;
   private loadedZoneId: number | null = null;
+  private loadedAVPId: number | null = null;
   // Zone Manager specific
   zmTerritoryList: TeamModel[] = [];   // territories from selected zone (Default Territory only)
   zmRegionList: Array<any> = [];       // regions belonging to the selected zone
@@ -181,6 +183,9 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     } else if (this.isZoneManager) {
       // Zone Manager: Default Territory shows territories from selected zone
       sourceList = this.zmTerritoryList || [];
+    } else if (this.isAVPManager) {
+      // AVP: Default Territory shows territories belonging to selected AVP
+      sourceList = this.avpTerritoryList || [];
     } else {
       sourceList = this.TeamList || [];
     }
@@ -387,6 +392,13 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         this.userRegions = this.SugarCRMUser.regions;
       } else {
         this.userRegions = [];
+      }
+
+      // AVP: restore assigned zones from API
+      if (this.SugarCRMUser.zones && Array.isArray(this.SugarCRMUser.zones)) {
+        this.userZones = this.SugarCRMUser.zones;
+      } else {
+        this.userZones = [];
       }
 
       this.checkAndTriggerRoleData();
@@ -610,10 +622,22 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     });
   }
 
-  getAllAVPZones(avpid: number): void {
+  getAllAVPZones(avpid: number, isInitialLoad: boolean = false): void {
     this._usersService.GetAllZonesForAVP(avpid).pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
       var data = this._commonLookupData.parseData(res);
-      this.userZones = (data.data || []) as ZoneModel[];
+      const avpZones = (data.data || []) as ZoneModel[];
+      if (isInitialLoad && this.userZones && this.userZones.length > 0) {
+        const zoneMap = new Map<number, ZoneModel>();
+        avpZones.forEach(z => zoneMap.set(z.zoneId, z));
+        this.userZones.forEach(z => {
+          if (!zoneMap.has(z.zoneId)) {
+            zoneMap.set(z.zoneId, z);
+          }
+        });
+        this.userZones = Array.from(zoneMap.values());
+      } else {
+        this.userZones = avpZones;
+      }
     });
   }
 
@@ -652,10 +676,12 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.userRegions = [];
     this.zmTerritoryList = [];
     this.zmRegionList = [];
+    this.avpTerritoryList = [];
     this.selectedRegionIdForZM = '';
     this.loadedRegionId = null;
     this.loadedBDId = null;
     this.loadedZoneId = null;
+    this.loadedAVPId = null;
     this.SugarCRMUser.defaultTeamId = '';
     this.userDefaultTeamId = '';
     this.defTeamSearchControl.updateValueAndValidity();
@@ -678,7 +704,14 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         this.defTeamSearchControl.updateValueAndValidity();
       }
     } else if (this.isAVPManager) {
-      // For AVP role, zones will be handled separately
+      // For AVP role, AVP selection drives Default Territory and Assign Zone list
+      this.avpTerritoryList = [];
+      this.userZones = [];
+      if (this.SugarCRMUser.avpid && this.SugarCRMUser.avpid !== '0' && this.SugarCRMUser.avpid !== '') {
+        this.onAVPChange(undefined);
+      } else {
+        this.defTeamSearchControl.updateValueAndValidity();
+      }
     } else if (this.isZoneManager) {
       // For Zone Manager: zone drives Default Territory and Assign Region list
       this.zmTerritoryList = [];
@@ -717,12 +750,47 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   }
 
   onAVPChange(event: any): void {
-    let avpId = Number(this.SugarCRMUser.avpid);
-    if (!isNaN(avpId)) {
-      this.getAllAVPZones(avpId);
-    }
-    else {
-      this.userZones = [];
+    const avpId = Number(this.SugarCRMUser.avpid);
+    if (this.isAVPManager) {
+      if (!isNaN(avpId) && avpId > 0) {
+        // 1. Auto-populate assigned zones for this AVP
+        this.getAllAVPZones(avpId, event === undefined);
+
+        // 2. Fetch territories for this AVP for Default Territory dropdown
+        if (event === undefined && this.loadedAVPId === avpId && this.avpTerritoryList && this.avpTerritoryList.length > 0) {
+          return;
+        }
+        this.loadedAVPId = avpId;
+        this.showLoader();
+        this._usersService.GetAllTerritoriesForAVP(avpId).pipe(
+          takeUntil(this.unsubscribe$),
+          finalize(() => this.hideLoader())
+        ).subscribe(res => {
+          const data = this._commonLookupData.parseData(res);
+          const rawList = (data.data || []) as TeamModel[];
+          this.avpTerritoryList = rawList.map(t => ({
+            ...t,
+            teamId: t && t.teamId != null ? t.teamId.toString() : ''
+          }));
+
+          // If current defaultTeamId is no longer in the new AVP's territory list, clear it
+          if (event !== undefined && this.SugarCRMUser.defaultTeamId &&
+              !this.avpTerritoryList.some(t => String(t.teamId) === String(this.SugarCRMUser.defaultTeamId))) {
+            this.SugarCRMUser.defaultTeamId = '';
+            this.userDefaultTeamId = '';
+          }
+          this.defTeamSearchControl.updateValueAndValidity();
+        }, (error: any) => {
+          this._toasterService.pop('error', 'Error', error.message || 'Failed to load territories for AVP');
+        });
+      } else {
+        this.loadedAVPId = null;
+        this.userZones = [];
+        this.avpTerritoryList = [];
+        this.SugarCRMUser.defaultTeamId = '';
+        this.userDefaultTeamId = '';
+        this.defTeamSearchControl.updateValueAndValidity();
+      }
     }
   }
 

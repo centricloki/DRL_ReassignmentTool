@@ -215,6 +215,21 @@ namespace DRL.API.Controllers
             return response;
         }
 
+        /// <summary>
+        ///     Get All Territory List for AVP (AVP Default Territory dropdown)
+        /// </summary>
+        /// <returns>
+        ///     ENTTeam  Model
+        /// </returns>
+        [HttpGet("AVP/{avpId}/Territories")]
+        [HttpGet("GetTeamListFromAVPId/{avpId}")]
+        public BaseResponse<List<ENTTeam>> GetTerritoriesByAVP(int avpId)
+        {
+            var response = new BaseResponse<List<ENTTeam>>(true);
+            response.Data = _territoryService.GetTeamListFromAVPId(avpId);
+            return response;
+        }
+
         private void ClearTerritoryCaches()
         {
             // 🔑 MUST MATCH EXACT KEYS USED IN LookupController

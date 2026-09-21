@@ -192,4 +192,9 @@ export class UsersService {
     return this.http.get(apiURL);
   }
 
+  // AVP: fetch territories for an AVP (used for Default Territory dropdown only)
+  GetAllTerritoriesForAVP(avpId: number) {
+    const apiURL = this._appConstant.APIUrl + `Territory/AVP/${avpId}/Territories`;
+    return this.http.get(apiURL);
+  }
 }

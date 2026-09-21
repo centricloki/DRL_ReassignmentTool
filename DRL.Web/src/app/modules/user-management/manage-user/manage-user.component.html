@@ -350,7 +350,7 @@
               </label>
               <div class="select-field">
                 <mat-select placeholder="Zone" #zone="ngModel" name="zone" [(ngModel)]="selectedZoneId">
-                  <mat-option value="">Select Team</mat-option>
+                  <mat-option value="">Select Zone</mat-option>
                   <mat-option *ngFor="let item of allZones" [value]="item.zoneId">
                     {{item.zoneName}}
                   </mat-option>

@@ -23,6 +23,7 @@ namespace DRL.Core.Interface
         List<ENTLookUpItem> GetCustReassignTeamsByRoleIds(string[] roleIds);
         List<ENTTeam> GetTeamListFromRegionId(long regionId);
         List<ENTTeam> GetTeamListFromZoneId(long zoneId);
+        List<ENTTeam> GetTeamListFromAVPId(long avpId);
         bool SyncBDTerritories(int BDId, List<int> territoryIds, long currentUserId);
         bool AssignBDToTerritories(int BDId, List<int> territoryIds, long currentUserId);
         bool RemoveBDFromTerritories(List<int> territoryIds, long currentUserId);

@@ -418,6 +418,27 @@ namespace DRL.Core.Service
             return result;
         }
 
+        public List<ENTTeam> GetTeamListFromAVPId(long avpId)
+        {
+            List<ENTTeam> result = new List<ENTTeam>();
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+            try
+            {
+                string strQuery = string.Format("EXEC [sp_DSD_GetTeamListFromAVPId] @AVPId={0}", avpId);
+
+                result = SqlDBHelper.RawSqlQuery(strQuery, x => new ENTTeam
+                {
+                    TeamId = Convert.ToInt32(x[0]),
+                    Name = x[1].ToString(),
+                }, connString).ToList();
+            }
+            catch (Exception ex)
+            {
+                logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.GetTeamListFromAVPId", ex);
+            }
+            return result;
+        }
+
         public bool SyncBDTerritories(int BDId, List<int> territoryIds, long currentUserId)
         {
             try
