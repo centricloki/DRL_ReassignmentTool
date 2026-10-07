@@ -92,7 +92,7 @@ export class AuthGuardService implements CanActivate {
 
     // Attempt to authenticate silently
     return this.authenticationService.Authentication({} as any).pipe(
-      timeout(5000), // 5 second timeout to prevent hanging
+      timeout(3 * 60 * 1000), // 3 minutes timeout to prevent hanging
       map(data => {
         if (data != null) {
           // Parse authentication response

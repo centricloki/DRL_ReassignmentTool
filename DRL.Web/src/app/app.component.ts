@@ -1,11 +1,12 @@
 import { ChangeDetectionStrategy, Component, HostListener, } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, NavigationStart } from '@angular/router';
 import { ToasterService } from 'angular2-toaster';
 import { AuthenticationService } from './services/authentication.service';
 import { UserModel } from './Models/UserModel';
 import { CommonService } from './services/common.service';
 import { AppConstant } from './app.constants';
 import { SessionTimeoutService } from './services/SessionTimeoutService';
+import { HttpService } from './services/Httpservice';
 import { take } from 'rxjs/operators';
 import { ResponseParser } from './helpers/response-parser.helper';
 
@@ -32,6 +33,13 @@ export class AppComponent {
   // }
 
   ngOnInit() {
+    // Reset loader on route navigation so in-flight requests from a previous page never freeze the new page
+    this._router.events.subscribe(event => {
+      if (event instanceof NavigationStart) {
+        HttpService.resetLoader();
+      }
+    });
+
     const name = localStorage.getItem('userName');
     const perms = localStorage.getItem('userPermissions');
     if (name && perms) {

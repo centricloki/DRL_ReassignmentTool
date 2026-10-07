@@ -302,8 +302,13 @@
               </label>
               <div class="select-field">
                 <mat-select placeholder="Region" #zmRegion="ngModel" name="zmRegion" [(ngModel)]="selectedRegionIdForZM">
+                  <mat-option>
+                    <ngx-mat-select-search [formControl]="zmRegionSearchControl" placeholderLabel="Search regions..."
+                      noEntriesFoundLabel="No regions found">
+                    </ngx-mat-select-search>
+                  </mat-option>
                   <mat-option value="">Select Region</mat-option>
-                  <mat-option *ngFor="let item of zmRegionList" [value]="item.recordId">
+                  <mat-option *ngFor="let item of filteredZmRegionList | async" [value]="item.recordId">
                     {{item.value}}
                   </mat-option>
                 </mat-select>

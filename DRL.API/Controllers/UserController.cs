@@ -185,7 +185,7 @@ namespace DRL.API.Controllers
                         else
                         {
                             response.IsSuccess = false;
-                            response.Message = "";
+                            response.Message = serviceResponse.Message;
                             response.Data = serviceResponse.Result as ENTUser;
                         }
                     }

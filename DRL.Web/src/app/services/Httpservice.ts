@@ -17,6 +17,13 @@ declare var $: any;
 
 @Injectable()
 export class HttpService extends Http {
+
+    // Tracks active in-flight request IDs across ALL services to prevent count mismatches
+    private static activeRequestIds: Set<number> = new Set<number>();
+    private static requestCounter: number = 0;
+    private static watchdogTimer: any = null;
+    private static readonly WATCHDOG_TIMEOUT_MS: number = 3 * 60 * 1000; // 3 mins auto-recovery safeguard
+
     constructor(
         backend: XHRBackend,
         defaultOptions: RequestOptions
@@ -24,52 +31,65 @@ export class HttpService extends Http {
         super(backend, defaultOptions);
     }
 
-    get(url: string, options?: RequestOptionsArgs): Observable<any> {
+    /**
+     * Resets the loader and invalidates all currently tracked requests.
+     * Useful on route navigation or emergency recovery to ensure the loader never stays stuck.
+     */
+    public static resetLoader(): void {
+        HttpService.activeRequestIds.clear();
+        HttpService.clearWatchdog();
+        if (typeof $ !== 'undefined') {
+            $('.ajax-loading').hide();
+        }
+    }
 
-        this.showLoader();
+    get(url: string, options?: RequestOptionsArgs): Observable<any> {
+        const reqId = ++HttpService.requestCounter;
+        this.showLoader(reqId);
 
         return super.get(url, this.requestOptions(options))
-            .catch(this.onCatch)
+            .catch(this.onCatch.bind(this))
             .do((res: Response) => {
                 this.onSuccess(res);
             }, (error: any) => {
                 this.onError(error);
             })
             .finally(() => {
-                this.onEnd();
+                this.onEnd(reqId);
             });
 
     }
 
     post(url: string, body: any, options?: RequestOptionsArgs): Observable<any> {
-        this.showLoader();
+        const reqId = ++HttpService.requestCounter;
+        this.showLoader(reqId);
 
         return super.post(url, body, this.requestOptions(options))
-            .catch(this.onCatch)
+            .catch(this.onCatch.bind(this))
             .do((res: Response) => {
                 this.onSuccess(res);
             }, (error: any) => {
                 this.onError(error);
             })
             .finally(() => {
-                this.onEnd();
+                this.onEnd(reqId);
             });
 
     }
 
     patch(url: string, body: any, options?: RequestOptionsArgs): Observable<any> {
-
-        this.showLoader();
+        const reqId = ++HttpService.requestCounter;
+        this.showLoader(reqId);
 
         return super.patch(url, body, this.requestOptions(options))
-            .catch(this.onCatch)
+            .catch(this.onCatch.bind(this))
             .do((res: Response) => {
                 this.onSuccess(res);
             }, (error: any) => {
                 this.onError(error);
             })
             .finally(() => {
-                this.onEnd();
+                this.onEnd(reqId);
             });
 
     }
@@ -93,8 +113,8 @@ export class HttpService extends Http {
     }
 
     private onCatch(error: any, caught: Observable<any>): Observable<any> {
-        $('.ajax-loading').hide();
         if (error.statusText == "Unauthorized") {
+            HttpService.resetLoader();
             localStorage.clear();
             sessionStorage.clear();
             console.clear();
@@ -108,19 +128,55 @@ export class HttpService extends Http {
     }
 
     private onError(res: Response): void {
-        $('.ajax-loading').hide();
+        // onEnd() will also be called via finally — no direct hide here
         //console.log('Error, status code: ' + res.status);
     }
 
-    private onEnd(): void {
-        this.hideLoader();
+    private onEnd(reqId: number): void {
+        this.hideLoader(reqId);
     }
 
-    private showLoader(): void {
-        $('.ajax-loading').show();
+    private showLoader(reqId: number): void {
+        HttpService.activeRequestIds.add(reqId);
+        // Only touch DOM on first request (0→1 transition)
+        if (HttpService.activeRequestIds.size === 1 && typeof $ !== 'undefined') {
+            $('.ajax-loading').show();
+        }
+        HttpService.startWatchdog();
     }
 
-    private hideLoader(): void {
-        $('.ajax-loading').hide();
+    private hideLoader(reqId: number): void {
+        // If this request ID was already cleared (e.g. by route navigation or watchdog reset), ignore it
+        if (!HttpService.activeRequestIds.has(reqId)) {
+            return;
+        }
+
+        HttpService.activeRequestIds.delete(reqId);
+
+        // Only hide when truly all active requests across the app are finished
+        if (HttpService.activeRequestIds.size === 0) {
+            HttpService.clearWatchdog();
+            if (typeof $ !== 'undefined') {
+                $('.ajax-loading').hide();
+            }
+        }
+    }
+
+    private static startWatchdog(): void {
+        if (!HttpService.watchdogTimer) {
+            HttpService.watchdogTimer = setTimeout(() => {
+                if (HttpService.activeRequestIds.size > 0) {
+                    console.warn(`[HttpService] Watchdog auto-reset: ${HttpService.activeRequestIds.size} request(s) exceeded ${HttpService.WATCHDOG_TIMEOUT_MS / 1000}s limit.`);
+                    HttpService.resetLoader();
+                }
+            }, HttpService.WATCHDOG_TIMEOUT_MS);
+        }
+    }
+
+    private static clearWatchdog(): void {
+        if (HttpService.watchdogTimer) {
+            clearTimeout(HttpService.watchdogTimer);
+            HttpService.watchdogTimer = null;
+        }
     }
 }
