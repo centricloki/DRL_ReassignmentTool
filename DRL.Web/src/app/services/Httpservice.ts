@@ -32,6 +32,16 @@ export class HttpService extends Http {
     }
 
     /**
+     * Shows the loader directly.
+     * Useful on initial app bootstrap before or during authentication.
+     */
+    public static showLoader(): void {
+        if (typeof $ !== 'undefined') {
+            $('.ajax-loading').show();
+        }
+    }
+
+    /**
      * Resets the loader and invalidates all currently tracked requests.
      * Useful on route navigation or emergency recovery to ensure the loader never stays stuck.
      */

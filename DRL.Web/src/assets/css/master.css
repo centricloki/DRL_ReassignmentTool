@@ -1,4 +1,4 @@
-﻿* {
+* {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -1640,7 +1640,7 @@ mat-expansion-panel-header {
 }
 
 div.ajax-loading {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     height: 100%;

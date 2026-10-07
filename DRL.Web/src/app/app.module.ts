@@ -29,8 +29,9 @@ import { SessionTimeoutService } from './services/SessionTimeoutService';
 import { ToastHelper } from './helpers/toast.helper';
 
 const routes: Routes = [
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
   {
-    path: 'dashboard', component: DashboardComponent, data: { pageTitle: 'User Landing' }, pathMatch: 'full', redirectTo: ''
+    path: 'dashboard', component: DashboardComponent, data: { pageTitle: 'User Landing' }
     , canActivate: [AuthGuardService]
   },
   { path: 'error', component: ErrorComponent, data: { pageTitle: 'Error' } },
@@ -76,11 +77,7 @@ const routes: Routes = [
     data: { pageTitle: 'Customer Reassignment Management' }
     , canActivate: [AuthGuardService]
   },
-  {
-    path: 'error',
-    component: ErrorComponent
-    // , canActivate: [AuthGuardService]
-  }
+  { path: '**', redirectTo: 'dashboard' }
 ];
 @NgModule({
   declarations: [

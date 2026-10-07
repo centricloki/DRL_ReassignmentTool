@@ -4,6 +4,7 @@ import { AppConstant } from '../app.constants';
 import { AuthenticationService } from './authentication.service';
 import { Observable, of } from 'rxjs';
 import { catchError, map, switchMap, timeout } from 'rxjs/operators';
+import { ResponseParser } from '../helpers/response-parser.helper';
 
 @Injectable({
   providedIn: 'root'
@@ -25,18 +26,19 @@ export class AuthGuardService implements CanActivate {
       // Try to restore from localStorage if available
       const savedUserName = localStorage.getItem('userName');
       const savedPermissions = localStorage.getItem('userPermissions');
+      const savedGroupValue = localStorage.getItem('groupValue');
 
       if (savedUserName && savedPermissions) {
         try {
           this._appConstant.userDisplayName = savedUserName;
           this._appConstant.userPermissions = JSON.parse(savedPermissions);
+          this._appConstant.groupValue = savedGroupValue || '';
           this._appConstant.isAuthenticate = true;
-          // Group value might need to be inferred or we need to re-authenticate
-          // For now, proceed with authentication check
         } catch (e) {
           // Clear invalid data and force re-authentication
           localStorage.removeItem('userName');
           localStorage.removeItem('userPermissions');
+          localStorage.removeItem('groupValue');
           return this.handleAuthentication();
         }
       } else {
@@ -44,7 +46,6 @@ export class AuthGuardService implements CanActivate {
       }
     }
 
-    // ✅ FIXED: Traditional null-safe access (no optional chaining)
     let requiredLinkCode: string = '';
 
     // Check current route first
@@ -64,22 +65,17 @@ export class AuthGuardService implements CanActivate {
       }
     }
 
-    // if (!requiredLinkCode) {
-    //   // No permission check required
-    //   if (this._appConstant.groupValue.toLowerCase() == "drl it") {
-    //     return true;
-    //   }
-    //   else if (this._appConstant.groupValue.toLowerCase() == "rpb sales admin") {
-    //     return false;
-    //   }
-    // }
+    // If route requires no specific link code (e.g. dashboard), allow access
+    if (!requiredLinkCode) {
+      return true;
+    }
 
     const hasAccess = this._appConstant.hasLinkAccess(requiredLinkCode);
 
     if (!hasAccess) {
       sessionStorage.removeItem('lastUrl');
-      // Redirect to dashboard if access denied
-      this.router.navigate(['/dashboard']);
+      // Redirect to error if access denied
+      this.router.navigate(['/error']);
       return false;
     }
 
@@ -95,42 +91,35 @@ export class AuthGuardService implements CanActivate {
       timeout(3 * 60 * 1000), // 3 minutes timeout to prevent hanging
       map(data => {
         if (data != null) {
-          // Parse authentication response
-          let body: any;
-          try {
-            body = this.parseAuthResponse(data);
-          } catch (e) {
-            console.error('Failed to parse auth response', e);
-            this.router.navigate(['/login']);
-            return false;
-          }
-
-          if (body.isSuccess && body.data != null) {
-            var userData = JSON.parse(JSON.stringify(body.data));
-            if (userData.userName != null) {
+          const body = ResponseParser.parseLegacyResponse(data);
+          if (body && body.isSuccess && body.data) {
+            const userData = body.data;
+            const userName = userData.userName || userData.UserName;
+            if (userName) {
               this._appConstant.isAuthenticate = true;
-              localStorage["userName"] = userData.userName;
-              this._appConstant.groupValue = userData.userGroup;
-              this._appConstant.userDisplayName = userData.userName;
-              this._appConstant.userPermissions = userData.linkPermissions || [];
-              localStorage["userPermissions"] = JSON.stringify(userData.linkPermissions || []);
+              localStorage["userName"] = userName;
+              localStorage["groupValue"] = userData.userGroup || userData.UserGroup || '';
+              this._appConstant.groupValue = userData.userGroup || userData.UserGroup || '';
+              this._appConstant.userDisplayName = userName;
+              this._appConstant.userPermissions = userData.linkPermissions || userData.LinkPermissions || [];
+              localStorage["userPermissions"] = JSON.stringify(this._appConstant.userPermissions);
 
-              // Restore last URL and navigate
+              // Restore last URL and navigate if not dashboard/error
               const lastUrl = sessionStorage.getItem('lastUrl');
-              if (lastUrl) {
+              if (lastUrl && lastUrl.trim() !== '' && lastUrl !== 'dashboard' && lastUrl !== '/dashboard' && lastUrl !== 'error' && lastUrl !== '/error') {
                 sessionStorage.removeItem('lastUrl');
-                this.router.navigate([lastUrl]);
+                this.router.navigate([lastUrl.startsWith('/') ? lastUrl : '/' + lastUrl]);
               }
               return true;
             }
           }
         }
-        this.router.navigate(['/login']);
+        this.router.navigate(['/error']);
         return false;
       }),
       catchError((error) => {
         console.error('Authentication failed', error);
-        this.router.navigate(['/login']);
+        this.router.navigate(['/error']);
         return of(false);
       })
     );

@@ -1,8 +1,7 @@
-<!--The content below is only a placeholder and can be replaced.-->
-<app-header id="divheader"></app-header>
+<app-header id="divheader" *ngIf="_appConstant.isAuthenticate"></app-header>
 <toaster-container></toaster-container>
-<app-sitelayout></app-sitelayout>
-<section class="right-section">
+<app-sitelayout *ngIf="_appConstant.isAuthenticate"></app-sitelayout>
+<section [ngClass]="_appConstant.isAuthenticate ? 'right-section' : 'full-section'">
     <router-outlet></router-outlet>
 </section>
-<app-footer id="divfooter"></app-footer>
+<app-footer id="divfooter" *ngIf="_appConstant.isAuthenticate"></app-footer>
