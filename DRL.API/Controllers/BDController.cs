@@ -11,6 +11,8 @@ using Microsoft.Extensions.Configuration;
 
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 
 namespace DRL.API.Controllers
@@ -64,57 +66,29 @@ namespace DRL.API.Controllers
             if (!serviceResponse.Success)
             {
                 if (bd.BDID <= 0)
-                {
                     bd.CreatedBy = CurrentUserId;
-                    serviceResponse = _bdService.Insert(bd);
-                    if (serviceResponse.Success)
+                else
+                    bd.UpdatedBy = CurrentUserId;
+
+                serviceResponse = bd.BDID <= 0 ? _bdService.Insert(bd) : _bdService.Update(bd);
+                
+                if (serviceResponse.Success)
+                {
+                    var savedBD = serviceResponse.Result as ENTBD;
+                    if (savedBD != null)
                     {
-                        var createdBD = serviceResponse.Result as ENTBD;
-                        if (bd.Teams != null && createdBD != null)
-                        {
-                            var territoryIds = bd.Teams.Where(x => x.TeamId.HasValue).Select(x => x.TeamId.Value).ToList();
-                            _territoryService.SyncBDTerritories(createdBD.BDID, territoryIds, CurrentUserId);
-                            createdBD.Teams = _territoryService.GetAllBDTerritories(createdBD.BDID);
-                        }
-                        response.IsSuccess = true;
-                        response.Message = "BD added successfully";
-                        response.Data = createdBD;
-                        ClearBDCaches();
+                        savedBD.Teams = _territoryService.GetAllBDTerritories(savedBD.BDID);
                     }
-                    else
-                    {
-                        response.IsSuccess = false;
-                        response.Message = serviceResponse.Message ?? "Failed to add BD. Please ensure all required fields are filled correctly.";
-                        response.Data = null;
-                    }
+                    response.IsSuccess = true;
+                    response.Message = (bd.BDID <= 0) ? "BD added successfully" : "BD updated successfully";
+                    response.Data = savedBD;
+                    ClearBDCaches();
                 }
                 else
                 {
-                    bd.UpdatedBy = CurrentUserId;
-                    serviceResponse = _bdService.Update(bd);
-                    if (serviceResponse.Success)
-                    {
-                        if (bd.Teams != null)
-                        {
-                            var territoryIds = bd.Teams.Where(x => x.TeamId.HasValue).Select(x => x.TeamId.Value).ToList();
-                            _territoryService.SyncBDTerritories(bd.BDID, territoryIds, CurrentUserId);
-                        }
-                        var updatedBD = serviceResponse.Result as ENTBD;
-                        if (updatedBD != null)
-                        {
-                            updatedBD.Teams = _territoryService.GetAllBDTerritories(updatedBD.BDID);
-                        }
-                        response.IsSuccess = true;
-                        response.Message = "BD updated successfully";
-                        response.Data = updatedBD;
-                        ClearBDCaches();
-                    }
-                    else
-                    {
-                        response.IsSuccess = false;
-                        response.Message = serviceResponse.Message ?? "Failed to update BD. Please ensure all required fields are filled correctly.";
-                        response.Data = null;
-                    }
+                    response.IsSuccess = false;
+                    response.Message = serviceResponse.Message ?? "Failed to save BD. Please ensure all required fields are filled correctly.";
+                    response.Data = null;
                 }
             }
             else

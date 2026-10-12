@@ -11,9 +11,12 @@ using DRL.Model.Repository.Interface;
 using DRL.Model.UnitOfWork.Interface;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 
@@ -27,13 +30,14 @@ namespace DRL.Core.Service
         private readonly IUnitOfWork _unitofwork;
         private readonly ILogger logger;
         private readonly CommonHelper CommonHelper;
-
-        public BDService(IUnitOfWork unitofwork, IBDMasterRepository bdRepository, ILogManager logManager)
+        private readonly IConfiguration _configuration;
+        public BDService(IUnitOfWork unitofwork, IBDMasterRepository bdRepository, ILogManager logManager, IConfiguration configuration)
         {
             _bdRepository = bdRepository;
             _unitofwork = unitofwork;
             logger = logManager.GetLogger(this.GetType());
             CommonHelper = new CommonHelper();
+            _configuration = configuration;
         }
         public List<ENTLookUpItem> GetBDsLookup()
         {
@@ -122,68 +126,82 @@ namespace DRL.Core.Service
 
         public ActionStatus Insert(ENTBD bd)
         {
-            var actionStatus = new ActionStatus();
-            try
-            {
-                var bdMaster = new EF.BDMaster
-                {
-                    BDName = bd.BDName,
-                    IsActive = bd.IsActive,
-                    IsDeleted = bd.IsDeleted,
-                    Approver = bd.Approver,
-                    CreatedBy = bd.CreatedBy,
-                    CreatedDate = DateTime.UtcNow,
-                    UpdateDate = DateTime.UtcNow,
-                };
-
-                _bdRepository.Insert(bdMaster);
-                _unitofwork.SaveAndContinue();
-
-                actionStatus.Success = true;
-                actionStatus.Result = Configuration.Mapper.Map<ENTBD>(bdMaster);
-            }
-            catch (Exception ex)
-            {
-                actionStatus.Success = false;
-                actionStatus.Message = ex.Message;
-                logger.Error(Constants.ACTION_EXCEPTION, "BDService.Insert" + ex);
-            }
-            return actionStatus;
+            return UpdateBDAndMappingTables(bd);
         }
 
         public ActionStatus Update(ENTBD bd)
         {
-            var actionStatus = new ActionStatus();
+            return UpdateBDAndMappingTables(bd);
+        }
+
+        private ActionStatus UpdateBDAndMappingTables(ENTBD bd)
+        {
+            ActionStatus result = new ActionStatus();
+            
+            // Add validation
+            if (string.IsNullOrWhiteSpace(bd.BDName))
+            {
+                return new ActionStatus
+                {
+                    Success = false,
+                    Message = "BD Name is required."
+                };
+            }
+            
             try
             {
-                var existingBD = _bdRepository.GetBDFindById(bd.BDID);
-                if (existingBD == null)
+                string territoryIdsCsv = null;
+                if (bd.Teams != null && bd.Teams.Any())
                 {
-                    actionStatus.Success = false;
-                    actionStatus.Message = "BD not found.";
-                    return actionStatus;
+                    var ids = bd.Teams.Where(x => x.TeamId.HasValue).Select(x => x.TeamId.Value.ToString());
+                    territoryIdsCsv = string.Join(",", ids);
                 }
 
-                existingBD.BDName = bd.BDName;
-                existingBD.IsActive = bd.IsActive;
-                existingBD.IsDeleted = bd.IsDeleted;
-                existingBD.Approver = bd.Approver;
-                existingBD.UpdatedBy = bd.UpdatedBy;
-                existingBD.UpdateDate = DateTime.UtcNow;
+                string connString = _configuration.GetConnectionString("DefaultConnection");
+                var sqlParameters = new List<SqlParameter>()
+                {
+                    new SqlParameter("@UpdateBdId", bd.BDID) { Direction = ParameterDirection.InputOutput },
+                    new SqlParameter("@UpdateName", bd.BDName ?? (object)DBNull.Value),
+                    new SqlParameter("@UpdateIsActive", bd.IsActive),
+                    new SqlParameter("@UpdateApprover", bd.Approver),
+                    new SqlParameter("@TerritoryIds", string.IsNullOrEmpty(territoryIdsCsv) ? (object)DBNull.Value : territoryIdsCsv),
+                    new SqlParameter("@UpdatedBy", bd.UpdatedBy.HasValue && bd.UpdatedBy.Value > 0 ? bd.UpdatedBy.Value : bd.CreatedBy)
+                };
 
-                _bdRepository.Update(existingBD);
-                _unitofwork.SaveAndContinue();
+                string errorMsg;
+                bool bSuccess = SqlDBHelper.ExecuteNonQueryWithErrorHandling("sp_DSD_BDUpdateAndCorrectMappingTables", ref sqlParameters, connString, out errorMsg);
 
-                actionStatus.Success = true;
-                actionStatus.Result = Configuration.Mapper.Map<ENTBD>(existingBD);
+                if (bSuccess)
+                {
+                    var newIdParam = sqlParameters.FirstOrDefault(p => p.ParameterName == "@UpdateBdId");
+                    if (newIdParam != null && newIdParam.Value != null && newIdParam.Value != DBNull.Value)
+                    {
+                        int savedBdId = Convert.ToInt32(newIdParam.Value);
+                        bd.BDID = savedBdId;
+                    }
+
+                    return new ActionStatus
+                    {
+                        Success = true,
+                        Message = "",
+                        Result = bd
+                    };
+                }
+                else
+                {
+                    throw new Exception(errorMsg);
+                }
             }
             catch (Exception ex)
             {
-                actionStatus.Success = false;
-                actionStatus.Message = ex.Message;
-                logger.Error(Constants.ACTION_EXCEPTION, "BDService.Update" + ex);
+                logger.Error(Constants.ACTION_EXCEPTION, nameof(UpdateBDAndMappingTables) + ex);
+                result = new ActionStatus
+                {
+                    Success = false,
+                    Message = ex.Message
+                };
             }
-            return actionStatus;
+            return result;
         }
 
         public ActionStatus DeleteBD(ENTPatchRequest activeStatus)

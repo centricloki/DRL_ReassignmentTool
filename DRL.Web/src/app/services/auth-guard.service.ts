@@ -88,7 +88,7 @@ export class AuthGuardService implements CanActivate {
 
     // Attempt to authenticate silently
     return this.authenticationService.Authentication({} as any).pipe(
-      timeout(3 * 60 * 1000), // 3 minutes timeout to prevent hanging
+      timeout(1 * 60 * 1000), // 1 minute timeout to prevent hanging
       map(data => {
         if (data != null) {
           const body = ResponseParser.parseLegacyResponse(data);

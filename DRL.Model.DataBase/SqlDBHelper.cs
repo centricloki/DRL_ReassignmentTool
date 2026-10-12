@@ -51,6 +51,7 @@ namespace DRL.Model.DataBase
                         };
                         command.Parameters.Add(errMessageParam);
                         // Execute
+                        DebugSqlStatement(command, procedureName);
                         command.ExecuteNonQuery();
 
                         // Retrieve output values
