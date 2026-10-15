@@ -30,5 +30,4 @@ namespace DRL.Entity
         public List<ENTRegion> Regions { get; set; }  // Zone Manager assigned regions
     }
 
-
 }

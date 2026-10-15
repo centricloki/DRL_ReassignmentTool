@@ -472,6 +472,47 @@ namespace DRL.API.Controllers
         }
 
         /// <summary>
+        /// Derives the Manager ID and Name based strictly on RoleId and DefTerritoryId.
+        /// Enforces: TM->RM->ZM->AVP->National, BD->RM, RM->ZM.
+        /// </summary>
+        /// <param name="request">Contains RoleId and DefTerritoryId</param>
+        /// <returns>ENTDerivedManagerResponse</returns>
+        [HttpPost("GetDerivedManager")]
+        public BaseResponse<ENTDerivedManagerResponse> GetDerivedManager([FromBody] ENTDerivedManagerRequest request)
+        {
+            var response = new BaseResponse<ENTDerivedManagerResponse>(true);
+            
+            if (request == null || request.RoleId == 0)
+            {
+                response.IsSuccess = false;
+                response.Message = "RoleId is required to derive manager.";
+                return response;
+            }
+
+            try
+            {
+                response.Data = _userService.GetDerivedManager(request);
+                
+                if (response.Data != null && response.Data.ManagerId > 0)
+                {
+                    response.Message = "Manager derived successfully.";
+                }
+                else
+                {
+                    response.Message = "No active manager found in the hierarchy chain for this territory.";
+                }
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.Message = ex.Message;
+                // BaseController doesn't have logger, so we don't log here
+            }
+
+            return response;
+        }
+
+        /// <summary>
         ///     Get All Territory List for BD
         /// </summary>
         /// <returns>

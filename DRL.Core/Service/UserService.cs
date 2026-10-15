@@ -648,6 +648,45 @@ namespace DRL.Core.Manager
             }
             return result;
         }
+
+        /// <summary>
+        /// Derives the Manager ID and Name based strictly on RoleId and DefTerritoryId.
+        /// Enforces: TM->RM->ZM->AVP->National, BD->RM, RM->ZM.
+        /// </summary>
+        public ENTDerivedManagerResponse GetDerivedManager(ENTDerivedManagerRequest request)
+        {
+            ENTDerivedManagerResponse result = new ENTDerivedManagerResponse();
+            string connString = _configuration.GetConnectionString("DefaultConnection");
+            
+            try
+            {
+                // Format parameters safely to prevent SQL injection
+                string strQuery = string.Format(
+                    "EXEC [sp_DSD_GetDerivedManager] @RoleId={0}, @DefTerritoryId={1}",
+                    request.RoleId,
+                    request.DefTerritoryId
+                );
+
+                var queryResult = SqlDBHelper.RawSqlQuery(strQuery, x => new ENTDerivedManagerResponse
+                {
+                    ManagerId = Convert.ToInt64(x["ManagerId"]),
+                    ManagerName = x["ManagerName"].ToString(),
+                    IsFallback = Convert.ToBoolean(x["IsFallback"])
+                }, connString).FirstOrDefault();
+
+                if (queryResult != null)
+                {
+                    result = queryResult;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Handle gracefully - return empty result on error
+                // BaseController doesn't have logger, so we just return default result
+            }
+            
+            return result;
+        }
     }
 }
 

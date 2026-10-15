@@ -197,4 +197,10 @@ export class UsersService {
     const apiURL = this._appConstant.APIUrl + `Territory/AVP/${avpId}/Territories`;
     return this.http.get(apiURL);
   }
+
+  // Derive manager based on hierarchy rules (RM->ZM, BD->RM, TM->RM->ZM->AVP->National)
+  GetDerivedManager(payload: any) {
+    const apiURL = this._appConstant.APIUrl + 'User/GetDerivedManager';
+    return this.http.post(apiURL, payload);
+  }
 }

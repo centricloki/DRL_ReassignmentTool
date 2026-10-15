@@ -71,6 +71,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   private loadedBDId: number | null = null;
   private loadedZoneId: number | null = null;
   private loadedAVPId: number | null = null;
+  
+  // New properties for derived manager
+  derivedManagerName: string = '';
+  isNationalFallback: boolean = false;
+  
   // Zone Manager specific
   zmTerritoryList: TeamModel[] = [];   // territories from selected zone (Default Territory only)
   zmRegionList: Array<any> = [];       // all available regions for Zone Manager to assign
@@ -236,6 +241,58 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         }
       });
     }
+  }
+
+  /**
+   * Derives the manager based strictly on RoleId and DefTerritoryId
+   * Backend handles all hierarchy resolution: TM->RM->ZM->AVP->National, BD->RM, RM->ZM
+   */
+  deriveManager(): void {
+    // Only derive manager when we have a valid DefTerritoryId
+    const roleId = this.SugarCRMUser.roleId;
+    const defTerritoryId = this.SugarCRMUser.defaultTeamId;
+    
+    console.log('deriveManager called:', { roleId, defTerritoryId });
+    
+    // Validate that both RoleId and DefTerritoryId are present and non-zero
+    if (!roleId || !defTerritoryId || Number(defTerritoryId) === 0) {
+      console.log('deriveManager skipped: Missing or invalid DefTerritoryId/RoleId');
+      this.derivedManagerName = '';
+      this.SugarCRMUser.managerId = '0';
+      this.isNationalFallback = false;
+      return;
+    }
+
+    console.log('Deriving manager for DefTerritoryId:', defTerritoryId);
+    
+    const payload = {
+      roleId: Number(roleId),
+      defTerritoryId: Number(defTerritoryId)
+    };
+
+    this._usersService.GetDerivedManager(payload).pipe(takeUntil(this.unsubscribe$)).subscribe(
+      (response: any) => {
+        const data = this._commonLookupData.parseData(response);
+        if (data && data.data) {
+          this.SugarCRMUser.managerId = data.data.managerId ? data.data.managerId.toString() : '0';
+          this.derivedManagerName = data.data.managerName || '';
+          this.isNationalFallback = data.data.isFallback || false;
+          console.log('Manager derived successfully:', { managerId: this.SugarCRMUser.managerId, managerName: this.derivedManagerName });
+        } else {
+          this.derivedManagerName = '';
+          this.SugarCRMUser.managerId = '0';
+          this.isNationalFallback = false;
+          console.log('No manager found for the given territory');
+        }
+      },
+      (error: any) => {
+        this._toasterService.pop('error', 'Error', 'Failed to derive reporting manager');
+        this.derivedManagerName = '';
+        this.SugarCRMUser.managerId = '0';
+        this.isNationalFallback = false;
+        console.error('Error deriving manager:', error);
+      }
+    );
   }
 
 
@@ -439,6 +496,9 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       this.checkAndTriggerRoleData();
       this.defTeamSearchControl.updateValueAndValidity();
       this.triggerEditValidation();
+      
+      // Derive manager based on loaded user data (role, region, territory, etc.)
+      this.deriveManager();
     }, (error: any) => {
       this._toasterService.pop('error', 'Error', error.message || 'Failed to load user');
     });
@@ -782,6 +842,9 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       this.teamModel.teamId = defaultTeamId;
       this.addUserToTeam();
     }
+    
+    // Derive manager based on new territory selection
+    this.deriveManager();
   }
 
   onAVPChange(event: any): void {
@@ -813,6 +876,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
             this.userDefaultTeamId = '';
           }
           this.defTeamSearchControl.updateValueAndValidity();
+          
         }, (error: any) => {
           this._toasterService.pop('error', 'Error', error.message || 'Failed to load territories for AVP');
         });
@@ -823,6 +887,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         this.SugarCRMUser.defaultTeamId = '';
         this.userDefaultTeamId = '';
         this.defTeamSearchControl.updateValueAndValidity();
+        
+        // Clear derived manager when AVP is cleared
+        this.derivedManagerName = '';
+        this.SugarCRMUser.managerId = '0';
+        this.isNationalFallback = false;
       }
     }
   }
@@ -952,6 +1021,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         this.SugarCRMUser.defaultTeamId = '';
         this.userDefaultTeamId = '';
         this.defTeamSearchControl.updateValueAndValidity();
+        
+        // Clear derived manager when region is cleared
+        this.derivedManagerName = '';
+        this.SugarCRMUser.managerId = '0';
+        this.isNationalFallback = false;
       }
     }
   }
@@ -1103,6 +1177,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         this.SugarCRMUser.defaultTeamId = '';
         this.userDefaultTeamId = '';
         this.defTeamSearchControl.updateValueAndValidity();
+        
+        // Clear derived manager when zone is cleared
+        this.derivedManagerName = '';
+        this.SugarCRMUser.managerId = '0';
+        this.isNationalFallback = false;
       }
     }
   }

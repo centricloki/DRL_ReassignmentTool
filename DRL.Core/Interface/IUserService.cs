@@ -30,5 +30,11 @@ namespace DRL.Core.Interface
         List<ENTTerriotyUsers> GetUsersByTerritoryIdAndUserId(Int32 TerritoryId, Int32 UserId);
 
         int GetUserIdByUserName(string Username);
+        
+        /// <summary>
+        /// Derives the Manager ID and Name based on strict hierarchy rules
+        /// (RM->ZM, BD->RM, TM->RM->ZM->AVP->National)
+        /// </summary>
+        ENTDerivedManagerResponse GetDerivedManager(ENTDerivedManagerRequest request);
     }
 }
