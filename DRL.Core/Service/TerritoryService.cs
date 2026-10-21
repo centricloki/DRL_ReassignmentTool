@@ -23,20 +23,25 @@ using EF = DRL.Model.Models;
 namespace DRL.Core.Service
 {
     public class TerritoryService : ITerritoryService
-    {
+    {        
         private readonly ITerritoryRepository _territoryRepository;
         private readonly IUnitOfWork _unitofwork;
         private readonly ILogger logger;
         private readonly CommonHelper CommonHelper;
         private readonly IConfiguration _configuration;
+        private readonly IUserRepository _userRepository;
+        private readonly IRoleRepository _RoleRepository;
 
-        public TerritoryService(IUnitOfWork unitofwork, ITerritoryRepository territoryRepository, ILogManager logManager, IConfiguration configuration)
+        public TerritoryService(IUnitOfWork unitofwork, ITerritoryRepository territoryRepository
+            , ILogManager logManager, IConfiguration configuration, IUserRepository userRepository, IRoleRepository RoleRepository)
         {
             _territoryRepository = territoryRepository;
             _unitofwork = unitofwork;
             logger = logManager.GetLogger(this.GetType());
             CommonHelper = new CommonHelper();
             _configuration = configuration;
+            _userRepository = userRepository;
+            _RoleRepository = RoleRepository;
         }
 
         public List<ENTLookUpItem> GetAllTerritoryLookup()
@@ -115,11 +120,37 @@ namespace DRL.Core.Service
             List<ENTTeam> result = new List<ENTTeam>();
             try
             {
-                result = _territoryRepository.GetAll().Where(x => x.IsActive && !x.IsDeleted && x.BDID.HasValue && x.BDID.Value == bdId).Select(p => Configuration.Mapper.Map<ENTTeam>(p)).ToList();
+                // 1. Define the target role names for easy maintenance
+                var targetRoleNames = new[] { "National Director", "AVP", "Zone Manager", "Region Manager" };
+
+                // 2. Get RoleIds for these roles (must be active and not deleted)
+                var parentRoleIds = _RoleRepository
+                    .FindByNoTracking(x => x.IsActive && !x.IsDeleted && targetRoleNames.Contains(x.RoleName))
+                    .Select(x => x.RoleId)
+                    .ToList(); // .ToList() is crucial here to execute the query and get a local list of IDs
+
+                var regionId = _territoryRepository.FindByNoTracking(x => x.BDID == bdId && x.IsActive && !x.IsDeleted).FirstOrDefault()?.RegionId;
+                // 3. Get DefTerritoryIds of active, non-deleted users who have these parent roles AND a valid DefTerritoryId
+                // NOTE: If DefTerritoryId is NOT nullable in your database model, remove ".HasValue" and ".Value"
+                var parentDefTerritoryIds = _userRepository
+                    .FindByNoTracking(x => !x.IsInActive && !x.IsDeleted && parentRoleIds.Contains(x.RoleId) 
+                    && x.DefTerritoryId.HasValue
+                    && x.RegionId==regionId)
+                    .Select(x => x.DefTerritoryId.Value)
+                    .ToList(); // .ToList() materializes the list for the final Contains check
+
+                // 4. Get territories for the given BD, that are active, not deleted, and NOT in the excluded territory IDs
+                result = _territoryRepository.GetAll()
+                    .Where(x => x.IsActive && !x.IsDeleted
+                             && x.BDID.HasValue && x.BDID.Value == bdId
+                             && !parentDefTerritoryIds.Contains(x.TerritoryId)) 
+                    .Select(p => Configuration.Mapper.Map<ENTTeam>(p))
+                    .ToList();
             }
             catch (Exception ex)
             {
-                logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.GetAllTerritories" + ex);
+                // Pass 'ex' as a separate argument for proper structured logging and stack trace capture
+                logger.Error(Constants.ACTION_EXCEPTION, "TerritoryService.GetAllBDTerritories", ex);
             }
             return result;
         }

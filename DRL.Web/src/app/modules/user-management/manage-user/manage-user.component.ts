@@ -781,6 +781,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.userDefaultTeamId = '';
     this.defTeamSearchControl.updateValueAndValidity();
 
+    // Clear derived manager when role changes (since Default Team is reset)
+    this.derivedManagerName = '';
+    this.SugarCRMUser.managerId = '0';
+    this.isNationalFallback = false;
+
     // Load territories based on role
     if (this.isBDManager) {
       // For BD Manager, if a BD is already selected, apply filtering
@@ -874,6 +879,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
               !this.avpTerritoryList.some(t => String(t.teamId) === String(this.SugarCRMUser.defaultTeamId))) {
             this.SugarCRMUser.defaultTeamId = '';
             this.userDefaultTeamId = '';
+            
+            // Clear derived manager when Default Team is reset
+            this.derivedManagerName = '';
+            this.SugarCRMUser.managerId = '0';
+            this.isNationalFallback = false;
           }
           this.defTeamSearchControl.updateValueAndValidity();
           
@@ -941,9 +951,13 @@ export class ManageUserComponent implements OnInit, OnDestroy {
             if (this.SugarCRMUser.defaultTeamId && !bdTeams.some(t => String(t.teamId) === String(this.SugarCRMUser.defaultTeamId))) {
               this.SugarCRMUser.defaultTeamId = '';
               this.userDefaultTeamId = '';
+              
+              // Clear derived manager when Default Team is reset
+              this.derivedManagerName = '';
+              this.SugarCRMUser.managerId = '0';
+              this.isNationalFallback = false;
             }
           }
-
           // Trigger filter updates for the reactive form controls
           this.defTeamSearchControl.updateValueAndValidity();
         }, (error: any) => {
@@ -957,6 +971,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
         this.SugarCRMUser.defaultTeamId = '';
         this.userDefaultTeamId = '';
         this.defTeamSearchControl.updateValueAndValidity();
+        
+        // Clear derived manager when BD is cleared (Default Team is reset)
+        this.derivedManagerName = '';
+        this.SugarCRMUser.managerId = '0';
+        this.isNationalFallback = false;
       }
     }
     // For Territory Managers, do nothing - they should see all territories regardless of BD selection
@@ -1006,6 +1025,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
             if (this.SugarCRMUser.defaultTeamId && !regionTeams.some(t => String(t.teamId) === String(this.SugarCRMUser.defaultTeamId))) {
               this.SugarCRMUser.defaultTeamId = '';
               this.userDefaultTeamId = '';
+              
+              // Clear derived manager when Default Team is reset
+              this.derivedManagerName = '';
+              this.SugarCRMUser.managerId = '0';
+              this.isNationalFallback = false;
             }
           }
 
@@ -1165,6 +1189,11 @@ export class ManageUserComponent implements OnInit, OnDestroy {
               !this.zmTerritoryList.some(t => String(t.teamId) === String(this.SugarCRMUser.defaultTeamId))) {
             this.SugarCRMUser.defaultTeamId = '';
             this.userDefaultTeamId = '';
+            
+            // Clear derived manager when Default Team is reset
+            this.derivedManagerName = '';
+            this.SugarCRMUser.managerId = '0';
+            this.isNationalFallback = false;
           }
           this.defTeamSearchControl.updateValueAndValidity();
         }, (error: any) => {

@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace DRL.API.Controllers
 {
-    [CustomAuthorizeAttribute]
+    //[CustomAuthorizeAttribute]
     [Route("api/Lookup")]
     public class LookupController : BaseController
     {
