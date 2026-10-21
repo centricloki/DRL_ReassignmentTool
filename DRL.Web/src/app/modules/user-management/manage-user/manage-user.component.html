@@ -20,15 +20,27 @@
         <div class="row">
           <div class="col-lg-3 col-md-3 col-sm-6">
             <div class="form-field-row">
-              <label class="form-label">User Name:
+              <label class="form-label">
+                User Name:
                 <span>*</span>
               </label>
               <div class="input-field">
-                <input type="text" matInput placeholder="User Name" #userName="ngModel" name="userName"
-                  [(ngModel)]="SugarCRMUser.userName" required>
+                <input 
+                  type="text" 
+                  matInput 
+                  placeholder="User Name" 
+                  #userName="ngModel" 
+                  name="userName"
+                  [(ngModel)]="SugarCRMUser.userName" 
+                  required 
+                  maxlength="6" 
+                  pattern="^[a-zA-Z]+$" 
+                  (input)="onUserNameInput($event)">
               </div>
               <div class="text-danger" *ngIf="userName.invalid && (userName.dirty || userName.touched)">
-                <p *ngIf="userName.errors.required">User Name is required</p>
+                <p *ngIf="userName.errors?.required">User Name is required</p>
+                <p *ngIf="userName.errors?.pattern">User Name must contain only alphabetic characters (a-z, A-Z)</p>
+                <p *ngIf="userName.errors?.maxlength">User Name cannot exceed 6 characters</p>
               </div>
             </div>
           </div>

@@ -339,6 +339,24 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.SugarCRMUser.pin = digitsOnly; // Sync with model
   }
 
+  /**
+   * Proactively sanitizes the User Name input to allow only alphabetic characters 
+   * and enforces a maximum length of 6 characters as the user types.
+   */
+  onUserNameInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    
+    // 1. Remove any character that is NOT a letter (a-z or A-Z)
+    // 2. Enforce maximum length of 6 characters
+    const sanitizedValue = input.value.replace(/[^a-zA-Z]/g, '').slice(0, 6);
+    
+    // 3. Update the bound model. Angular's [(ngModel)] will automatically 
+    //    sync this back to the input field, ensuring the view stays clean.
+    if (this.SugarCRMUser.userName !== sanitizedValue) {
+      this.SugarCRMUser.userName = sanitizedValue;
+    }
+  }
+
   canDeactivate(): Promise<boolean> | boolean {
     return this.userInfoForm.dirty && this.userInfoForm.touched;
   };
