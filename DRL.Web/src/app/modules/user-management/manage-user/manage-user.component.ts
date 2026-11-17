@@ -96,21 +96,41 @@ export class ManageUserComponent implements OnInit, OnDestroy {
     this.btnText = "Save";
 
     this.GetAllRoles();
-    this.getAllTerritories();
-    this.GetAllUsers();
-    this.GetAllStatusTypeList();
-    this.GetAllAVPs();
-    this.GetAllBDs();
-    this.GetAllRegions();
-    this.getAllZones();
-    this.getAVPRole();
-    this.getbdRole();
-    this.getRegionManagerRole();
-    this.getZoneManagerRole();
+    
+    // ✅ CRITICAL FIX: Load territories BEFORE GetUser() for edit mode
+    // This ensures TeamList is populated when we need to match territoryId
     if (this._appConstant.userId != '' && this._appConstant.userId != null) {
       this.titleText = "Edit User";
       this.btnText = "Update";
+      
+      // Load master data first (especially getAllTerritories for TeamList)
+      this.getAllTerritories();
+      this.GetAllUsers();
+      this.GetAllStatusTypeList();
+      this.GetAllAVPs();
+      this.GetAllBDs();
+      this.GetAllRegions();
+      this.getAllZones();
+      this.getAVPRole();
+      this.getbdRole();
+      this.getRegionManagerRole();
+      this.getZoneManagerRole();
+      
+      // Then load user data (will have TeamList ready)
       this.GetUser();
+    } else {
+      // Add mode - load everything in parallel
+      this.getAllTerritories();
+      this.GetAllUsers();
+      this.GetAllStatusTypeList();
+      this.GetAllAVPs();
+      this.GetAllBDs();
+      this.GetAllRegions();
+      this.getAllZones();
+      this.getAVPRole();
+      this.getbdRole();
+      this.getRegionManagerRole();
+      this.getZoneManagerRole();
     }
 
     this.filteredTeamList = this.teamSearchControl.valueChanges.pipe(
@@ -496,6 +516,21 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       }
       this.myItems = this.SugarCRMUser.teams || [];
 
+      // ✅ FIX: For non-manager roles (TM, etc.), load territory from UserMaster.TerritoryId
+      if (!this.isBDManager && !this.isRegionManager && !this.isZoneManager && !this.isAVPManager) {
+        if (this.SugarCRMUser.territoryId && this.SugarCRMUser.territoryId !== '' && this.SugarCRMUser.territoryId !== '0') {
+          // Find the territory from TeamList (with fallback if TeamList is still loading)
+          const territory = (this.TeamList || []).find(t => String(t.teamId) === String(this.SugarCRMUser.territoryId));
+          
+          if (territory) {
+            // Add to myItems if not already present to prevent duplicates
+            if (!this.myItems.some(t => String(t.teamId) === String(territory.teamId))) {
+              this.myItems.push(territory);
+            }
+          }
+        }
+      }
+
       // Zone Manager: restore assigned regions from API
       if (this.SugarCRMUser.regions && Array.isArray(this.SugarCRMUser.regions)) {
         this.userRegions = this.SugarCRMUser.regions;
@@ -846,6 +881,18 @@ export class ManageUserComponent implements OnInit, OnDestroy {
       if (!this.TeamList || this.TeamList.length === 0) {
         this.getAllTerritories();
       }
+      
+      // ✅ FIX: For non-manager roles, load territory from UserMaster.TerritoryId when role changes
+      if (this.SugarCRMUser.territoryId && this.SugarCRMUser.territoryId !== '' && this.SugarCRMUser.territoryId !== '0') {
+        const territory = (this.TeamList || []).find(t => String(t.teamId) === String(this.SugarCRMUser.territoryId));
+        
+        if (territory) {
+          // Add to myItems if not already present to prevent duplicates
+          if (!this.myItems.some(t => String(t.teamId) === String(territory.teamId))) {
+            this.myItems.push(territory);
+          }
+        }
+      }
     }
   }
 
@@ -1130,6 +1177,12 @@ export class ManageUserComponent implements OnInit, OnDestroy {
   }
   get showZoneDropdown(): boolean {
     return this.isZoneManager;
+  }
+  
+  // ✅ Helper to determine if delete team button should be shown
+  // Show delete button only for special administrative roles (not BD, Region, Zone, AVP, TM)
+  get canDeleteTeams(): boolean {
+    return !this.isBDManager && !this.isRegionManager && !this.isZoneManager && !this.isAVPManager && !this.isTMManager;
   }
 
   // Zone Manager: fetches territories (for Default Territory) and allocated regions for selected zone

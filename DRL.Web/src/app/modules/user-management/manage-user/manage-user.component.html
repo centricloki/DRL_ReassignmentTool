@@ -297,10 +297,11 @@
                 <span>{{team.name}}</span>
               </div>
             </div>
-            <!-- <div class="col align-self-end text-right">
+            <!-- ✅ Show delete button only for special administrative roles (not BD, Region, Zone, AVP, TM) -->
+            <div class="col align-self-end text-right" *ngIf="canDeleteTeams">
               <a class="link-icon" matTooltip="Delete Team" style="cursor: pointer;" (click)="deleteTeamDetail(idx)"><i
                   class="fa fa-trash-o"></i></a>
-            </div> -->
+            </div>
           </div>
         </div>
       </div>
