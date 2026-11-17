@@ -361,7 +361,7 @@ export class ManageUserComponent implements OnInit, OnDestroy {
 
   /**
    * Proactively sanitizes the User Name input to allow only alphabetic characters 
-   * and enforces a maximum length of 6 characters as the user types.
+   * and enforces a strict maximum length of 6 characters as the user types.
    */
   onUserNameInput(event: Event): void {
     const input = event.target as HTMLInputElement;

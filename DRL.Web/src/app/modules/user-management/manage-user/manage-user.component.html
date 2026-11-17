@@ -33,14 +33,15 @@
                   name="userName"
                   [(ngModel)]="SugarCRMUser.userName" 
                   required 
+                  minlength="6"
                   maxlength="6" 
                   pattern="^[a-zA-Z]+$" 
                   (input)="onUserNameInput($event)">
               </div>
               <div class="text-danger" *ngIf="userName.invalid && (userName.dirty || userName.touched)">
                 <p *ngIf="userName.errors?.required">User Name is required</p>
-                <p *ngIf="userName.errors?.pattern">User Name must contain only alphabetic characters (a-z, A-Z)</p>
-                <p *ngIf="userName.errors?.maxlength">User Name cannot exceed 6 characters</p>
+                <p *ngIf="userName.errors?.minlength || userName.errors?.maxlength">Only 6 characters allowed</p>
+                <p *ngIf="userName.errors?.pattern && !userName.errors?.minlength && !userName.errors?.maxlength">User Name must contain only alphabetic characters (a-z, A-Z)</p>
               </div>
             </div>
           </div>
